@@ -1,0 +1,30 @@
+name: Bug report
+description: Report incorrect SeniorOS runtime or skill behavior.
+title: "[bug] "
+labels: [bug]
+body:
+  - type: textarea
+    id: observed
+    attributes:
+      label: Observed behavior
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction / evidence
+      description: Commands, prompt, trace, files, or logs needed to reproduce.
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host / agent
+      placeholder: Claude Code, Codex, other

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "detectedAt": "2026-10-25T16:09:31.939Z",
+  "stack": {
+    "root": ".",
+    "language": [
+      "TypeScript",
+      "JavaScript/Node.js"
+    ],
+    "frameworks": [],
+    "packageManager": "npm",
+    "database": [],
+    "auth": [],
+    "deployment": [],
+    "testFrameworks": []
+  }
+}

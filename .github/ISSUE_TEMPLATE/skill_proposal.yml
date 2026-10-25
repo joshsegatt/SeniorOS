@@ -1,0 +1,33 @@
+name: Skill proposal
+description: Propose a new reusable engineering workflow or a material skill change.
+title: "[skill] "
+labels: [skill]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Recognizable user goal
+      description: What request should cause this skill to be considered?
+    validations:
+      required: true
+  - type: textarea
+    id: failure
+    attributes:
+      label: Failure mode
+      description: What repeatable problem does the skill prevent?
+    validations:
+      required: true
+  - type: textarea
+    id: ownership
+    attributes:
+      label: Why this belongs in a skill
+      description: Why not AGENTS.md, a reference file, or a deterministic script?
+    validations:
+      required: true
+  - type: textarea
+    id: evals
+    attributes:
+      label: Proposed evals
+      description: Include trigger, non-trigger, and edge/failure cases.
+    validations:
+      required: true
