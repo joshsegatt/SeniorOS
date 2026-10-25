@@ -2,6 +2,7 @@ import path from 'node:path';
 import { spawnSync, type StdioOptions } from 'node:child_process';
 import { readJson } from './fs-utils.js';
 import type { ProofCheck, ProofReport } from '../types.js';
+import type { ProofCheckConfig } from './config.js';
 
 interface PackageJson {
   scripts?: Record<string, string>;
@@ -28,42 +29,68 @@ export interface ProofOptions {
    * Defaults to `inherit`.
    */
   childOutput?: 'inherit' | 'stderr';
+  /** Checks from `.senior/config.json`; when present they replace the package-script baseline. */
+  checks?: ProofCheckConfig[];
+}
+
+interface PlannedCheck {
+  name: string;
+  /** Display command; null when the check is unavailable. */
+  command: string | null;
+  skipReason?: string;
+  file?: string;
+  args?: string[];
+  shell?: boolean;
+}
+
+function packageScriptPlan(pkg: PackageJson | null, packageManager: string | null): PlannedCheck[] {
+  const scripts = pkg?.scripts ?? {};
+  const manager = packageRunner(packageManager);
+  return ORDER.map((name) => {
+    if (!scripts[name]) {
+      return { name, command: null, skipReason: pkg ? `no "${name}" script in package.json` : 'no package.json' };
+    }
+    const args = argsFor(manager, name);
+    return { name, command: `${manager} ${args.join(' ')}`, file: manager, args, shell: process.platform === 'win32' };
+  });
+}
+
+function configPlan(checks: ProofCheckConfig[]): PlannedCheck[] {
+  // The whole command line goes to the shell as one string (no separate args array).
+  return checks.map(({ name, command }) => ({ name, command, file: command, shell: true }));
 }
 
 export async function runProof(root: string, packageManager: string | null, options: ProofOptions = {}): Promise<ProofReport> {
-  const pkg = await readJson<PackageJson>(path.join(root, 'package.json'));
-  const scripts = pkg?.scripts ?? {};
-  const manager = packageRunner(packageManager);
-  const checks: ProofCheck[] = [];
+  const source: ProofReport['source'] = options.checks ? 'config' : 'package-scripts';
+  const plan = options.checks
+    ? configPlan(options.checks)
+    : packageScriptPlan(await readJson<PackageJson>(path.join(root, 'package.json')), packageManager);
   const stdio: StdioOptions = options.childOutput === 'stderr' ? ['inherit', 2, 2] : 'inherit';
+  const checks: ProofCheck[] = [];
   let blockedBy: string | null = null;
   let availableChecks = 0;
 
-  for (const name of ORDER) {
-    if (!scripts[name]) {
-      const reason = pkg ? `no "${name}" script in package.json` : 'no package.json';
-      checks.push({ name, command: null, status: 'skip', exitCode: null, durationMs: 0, reason });
+  for (const planned of plan) {
+    const { name, command } = planned;
+    if (command === null || planned.file === undefined) {
+      checks.push({ name, command: null, status: 'skip', exitCode: null, durationMs: 0, reason: planned.skipReason ?? 'unavailable' });
       continue;
     }
 
     availableChecks += 1;
-    const command = `${manager} ${argsFor(manager, name).join(' ')}`;
     if (blockedBy) {
       checks.push({ name, command, status: 'skip', exitCode: null, durationMs: 0, reason: `not run: "${blockedBy}" failed` });
       continue;
     }
 
     const started = Date.now();
-    const result = spawnSync(manager, argsFor(manager, name), {
-      cwd: root,
-      stdio,
-      shell: process.platform === 'win32'
-    });
+    const spawnOptions = { cwd: root, stdio, shell: planned.shell ?? false };
+    const result = planned.args ? spawnSync(planned.file, planned.args, spawnOptions) : spawnSync(planned.file, spawnOptions);
     const durationMs = Date.now() - started;
 
     if (result.error || result.status === null) {
       const reason = result.error
-        ? `could not run ${manager}: ${result.error.message}`
+        ? `could not run "${command}": ${result.error.message}`
         : `terminated by signal ${result.signal ?? 'unknown'}`;
       checks.push({ name, command, status: 'fail', exitCode: null, durationMs, reason });
       blockedBy = name;
@@ -75,5 +102,5 @@ export async function runProof(root: string, packageManager: string | null, opti
   }
 
   const baselinePassed = availableChecks > 0 && checks.every((check) => check.status === 'pass' || check.command === null);
-  return { checks, baselinePassed, availableChecks, totalChecks: ORDER.length };
+  return { source, checks, baselinePassed, availableChecks, totalChecks: plan.length };
 }

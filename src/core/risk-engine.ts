@@ -1,5 +1,6 @@
 import type { RiskLevel, RiskReport, RiskSignal } from '../types.js';
 import type { ChangedFile } from './git.js';
+import { globToRegExp, type RiskRuleConfig } from './config.js';
 
 interface Rule {
   code: string;
@@ -25,11 +26,29 @@ function levelFor(score: number): RiskLevel {
   return 'low';
 }
 
-export function assessRisk(files: ChangedFile[]): RiskReport {
-  const signals: RiskSignal[] = [];
+export interface RiskOptions {
+  /** Project rules from `.senior/config.json`, added to the built-in rules. */
+  extraRules?: RiskRuleConfig[];
+  /** Globs for paths that do not count toward risk. They never hide the built-in secrets rule. */
+  ignore?: string[];
+}
 
-  for (const rule of RULES) {
-    const matched = files.filter((file) => rule.pattern.test(file.path)).map((file) => file.path);
+export function assessRisk(allFiles: ChangedFile[], options: RiskOptions = {}): RiskReport {
+  const signals: RiskSignal[] = [];
+  const ignoreMatchers = (options.ignore ?? []).map(globToRegExp);
+  const isIgnored = (file: ChangedFile) => ignoreMatchers.some((matcher) => matcher.test(file.path));
+  const files = allFiles.filter((file) => !isIgnored(file));
+  const ignored = allFiles.filter(isIgnored).map((file) => file.path);
+
+  const rules: Rule[] = [
+    ...RULES,
+    ...(options.extraRules ?? []).map((rule) => ({ ...rule, pattern: new RegExp(rule.pattern, 'i') }))
+  ];
+
+  for (const rule of rules) {
+    // Secrets are checked against every changed file, ignored or not.
+    const candidates = rule.code === 'secrets' ? allFiles : files;
+    const matched = candidates.filter((file) => rule.pattern.test(file.path)).map((file) => file.path);
     if (matched.length > 0) {
       signals.push({ code: rule.code, points: rule.points, reason: rule.reason, files: matched });
     }
@@ -56,5 +75,5 @@ export function assessRisk(files: ChangedFile[]): RiskReport {
         ? ['explicit acceptance criteria', 'full relevant verification', 'independent review', 'rollback/recovery check']
         : ['explicit acceptance criteria', 'human approval for destructive/external actions', 'full verification', 'independent review', 'rollback/recovery plan'];
 
-  return { level, score, signals, gates, files: files.map((file) => file.path) };
+  return { level, score, signals, gates, files: files.map((file) => file.path), ignored };
 }

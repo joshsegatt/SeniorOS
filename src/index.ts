@@ -7,6 +7,7 @@ import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
 import { doctor } from './core/doctor.js';
+import { CONFIG_PATH, loadConfig } from './core/config.js';
 
 const VERSION = '0.1.0';
 
@@ -59,16 +60,21 @@ async function main(): Promise<void> {
 
   if (command === 'risk') {
     const base = valueAfter(args, '--base');
+    const config = await loadConfig(root);
     const changeSet = getChangeSet(root, base === undefined ? {} : { base });
-    const result = assessRisk(changeSet.files);
+    const result = assessRisk(changeSet.files, { extraRules: config?.risk?.rules ?? [], ignore: config?.risk?.ignore ?? [] });
     console.log(json ? JSON.stringify({ scope: changeSet.scope, ...result }, null, 2) : formatRisk(result, changeSet.scope));
     return;
   }
 
   if (command === 'finish') {
+    const config = await loadConfig(root);
     const stack = await detectStack(root);
     // In JSON mode, script output goes to stderr so stdout stays parseable.
-    const result = await runProof(root, stack.packageManager, { childOutput: json ? 'stderr' : 'inherit' });
+    const result = await runProof(root, stack.packageManager, {
+      childOutput: json ? 'stderr' : 'inherit',
+      ...(config?.proof ? { checks: config.proof.checks } : {})
+    });
     if (json) console.log(JSON.stringify(result, null, 2));
     else {
       for (const check of result.checks) {
@@ -76,7 +82,8 @@ async function main(): Promise<void> {
         console.log(`${check.status.toUpperCase().padEnd(4)} ${check.name}${detail ? `  (${detail})` : ''}`);
       }
       const coverage = `${result.availableChecks}/${result.totalChecks}`;
-      console.log(`\nPROOF BASELINE: ${result.baselinePassed ? 'PASS' : 'NOT PROVEN'} (${coverage} standard checks available)`);
+      const kind = result.source === 'config' ? `configured checks from ${CONFIG_PATH}` : 'standard checks available';
+      console.log(`\nPROOF BASELINE: ${result.baselinePassed ? 'PASS' : 'NOT PROVEN'} (${coverage} ${kind})`);
       console.log('Final ship readiness still depends on task-specific acceptance criteria and risk.');
     }
     if (!result.baselinePassed) process.exitCode = 1;
@@ -89,6 +96,7 @@ async function main(): Promise<void> {
       `Node: ${result.node}`,
       `Git repository: ${result.gitRepository ? 'yes' : 'no'}`,
       `SeniorOS state: ${result.seniorState ? 'yes' : 'no'}`,
+      `Config: ${result.config}`,
       `Skills: claude=${result.hostSkills.claude ? 'yes' : 'no'} codex=${result.hostSkills.codex ? 'yes' : 'no'} generic=${result.hostSkills.generic ? 'yes' : 'no'}`,
       formatStack(result.stack)
     ].join('\n'));

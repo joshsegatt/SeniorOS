@@ -24,6 +24,8 @@ export interface RiskReport {
   signals: RiskSignal[];
   gates: string[];
   files: string[];
+  /** Changed paths excluded by `risk.ignore` in `.senior/config.json`. */
+  ignored: string[];
 }
 
 export interface ProofCheck {
@@ -37,6 +39,8 @@ export interface ProofCheck {
 }
 
 export interface ProofReport {
+  /** `config` when checks come from `.senior/config.json`, otherwise the package-script baseline. */
+  source: 'package-scripts' | 'config';
   checks: ProofCheck[];
   baselinePassed: boolean;
   availableChecks: number;
