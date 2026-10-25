@@ -2,7 +2,7 @@
 import process from 'node:process';
 import { detectStack } from './core/detect-stack.js';
 import { initProject } from './core/project-state.js';
-import { getChangedFiles } from './core/git.js';
+import { getChangeSet, type ChangeScope } from './core/git.js';
 import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { installSkills, type InstallScope, type InstallTarget } from './core/install.js';
@@ -11,7 +11,7 @@ import { doctor } from './core/doctor.js';
 const VERSION = '0.1.0';
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--json]\n  senior finish [--json]\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n`);
 }
 
 function hasFlag(args: string[], flag: string): boolean {
@@ -20,7 +20,10 @@ function hasFlag(args: string[], flag: string): boolean {
 
 function valueAfter(args: string[], flag: string): string | undefined {
   const index = args.indexOf(flag);
-  return index >= 0 ? args[index + 1] : undefined;
+  if (index < 0) return undefined;
+  const value = args[index + 1];
+  if (value === undefined || value.startsWith('--')) throw new Error(`${flag} requires a value`);
+  return value;
 }
 
 async function main(): Promise<void> {
@@ -55,8 +58,10 @@ async function main(): Promise<void> {
   }
 
   if (command === 'risk') {
-    const result = assessRisk(getChangedFiles(root));
-    console.log(json ? JSON.stringify(result, null, 2) : formatRisk(result));
+    const base = valueAfter(args, '--base');
+    const changeSet = getChangeSet(root, base === undefined ? {} : { base });
+    const result = assessRisk(changeSet.files);
+    console.log(json ? JSON.stringify({ scope: changeSet.scope, ...result }, null, 2) : formatRisk(result, changeSet.scope));
     return;
   }
 
@@ -116,8 +121,17 @@ function formatStack(stack: Awaited<ReturnType<typeof detectStack>>): string {
   ].join('\n');
 }
 
-function formatRisk(report: ReturnType<typeof assessRisk>): string {
-  const lines = [`Risk: ${report.level.toUpperCase()} (${report.score})`, `Changed files: ${report.files.length}`];
+function formatScope(scope: ChangeScope): string {
+  return scope.mode === 'base'
+    ? `changes since ${scope.base} (merge-base ${scope.mergeBase.slice(0, 7)}), including uncommitted work`
+    : 'uncommitted working tree';
+}
+
+function formatRisk(report: ReturnType<typeof assessRisk>, scope: ChangeScope): string {
+  const lines = [`Risk: ${report.level.toUpperCase()} (${report.score})`, `Scope: ${formatScope(scope)}`, `Changed files: ${report.files.length}`];
+  if (report.files.length === 0 && scope.mode === 'working-tree') {
+    lines.push('No uncommitted changes. To assess a branch or PR, run: senior risk --base main');
+  }
   for (const signal of report.signals) lines.push(`- +${signal.points} ${signal.code}: ${signal.reason}`);
   lines.push('Gates:');
   for (const gate of report.gates) lines.push(`- ${gate}`);
