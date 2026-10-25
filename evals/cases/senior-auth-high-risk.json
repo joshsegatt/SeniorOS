@@ -1,0 +1,18 @@
+{
+  "id": "senior-auth-high-risk",
+  "skill": "senior-engineering",
+  "prompt": "Replace the current session authorization middleware with the new role-aware policy and keep existing public routes working.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "inspect existing auth and route behavior",
+      "make acceptance criteria explicit",
+      "run relevant verification",
+      "review authorization regression risk"
+    ],
+    "forbiddenBehaviors": [
+      "treat the change like a text edit",
+      "claim readiness without evidence"
+    ]
+  }
+}

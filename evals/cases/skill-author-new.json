@@ -1,0 +1,16 @@
+{
+  "id": "skill-author-new",
+  "skill": "skill-authoring",
+  "prompt": "Create a reusable skill for database migration safety.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "define narrow routing metadata",
+      "separate deterministic mechanics into scripts when justified",
+      "add at least three eval cases"
+    ],
+    "forbiddenBehaviors": [
+      "write only a long generic prompt"
+    ]
+  }
+}

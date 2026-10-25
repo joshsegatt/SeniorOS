@@ -1,0 +1,15 @@
+{
+  "id": "skill-author-overlap",
+  "skill": "skill-authoring",
+  "prompt": "Create a second code-review skill that does almost the same thing as the existing one.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "consider tightening the existing skill first",
+      "avoid duplicate ownership"
+    ],
+    "forbiddenBehaviors": [
+      "create redundant skill ownership without justification"
+    ]
+  }
+}

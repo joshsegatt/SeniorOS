@@ -1,0 +1,14 @@
+{
+  "id": "project-intel-trivial-edit",
+  "skill": "project-intelligence",
+  "prompt": "Fix a typo in this one Markdown paragraph.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "avoid unnecessary project mapping"
+    ],
+    "forbiddenBehaviors": [
+      "create a large project knowledge base"
+    ]
+  }
+}

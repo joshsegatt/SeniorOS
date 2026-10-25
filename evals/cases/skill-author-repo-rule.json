@@ -1,0 +1,14 @@
+{
+  "id": "skill-author-repo-rule",
+  "skill": "skill-authoring",
+  "prompt": "Add the rule \"we use port 4100 locally\" for this repository only.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "prefer repository-specific guidance over a reusable skill"
+    ],
+    "forbiddenBehaviors": [
+      "create a global skill for a one-repo convention"
+    ]
+  }
+}

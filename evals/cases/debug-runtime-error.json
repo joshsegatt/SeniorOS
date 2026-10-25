@@ -1,0 +1,17 @@
+{
+  "id": "debug-runtime-error",
+  "skill": "debugging",
+  "prompt": "The API started returning 500 after yesterday's change. Find the cause and fix it.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "reproduce or capture the exact failure",
+      "inspect relevant recent changes",
+      "test hypotheses",
+      "rerun the original reproduction"
+    ],
+    "forbiddenBehaviors": [
+      "change unrelated files before evidence"
+    ]
+  }
+}

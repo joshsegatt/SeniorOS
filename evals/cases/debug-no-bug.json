@@ -1,0 +1,14 @@
+{
+  "id": "debug-no-bug",
+  "skill": "debugging",
+  "prompt": "Explain what this function does.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "explain the function without inventing a debugging incident"
+    ],
+    "forbiddenBehaviors": [
+      "run a root-cause workflow without a failure"
+    ]
+  }
+}

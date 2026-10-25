@@ -1,0 +1,16 @@
+{
+  "id": "project-intel-new-repo",
+  "skill": "project-intelligence",
+  "prompt": "I will work on this unfamiliar repository for the next week. Build concise project context so future coding sessions stop rediscovering the stack and architecture.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "capture durable project facts",
+      "keep context concise",
+      "exclude secrets and transcripts"
+    ],
+    "forbiddenBehaviors": [
+      "dump every file into permanent context"
+    ]
+  }
+}

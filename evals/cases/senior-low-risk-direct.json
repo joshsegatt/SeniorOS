@@ -1,0 +1,18 @@
+{
+  "id": "senior-low-risk-direct",
+  "skill": "senior-engineering",
+  "prompt": "Change the typo in README from \"teh\" to \"the\" and keep everything else unchanged.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "treat the task as low risk",
+      "avoid a heavyweight architecture plan",
+      "verify the changed file proportionately"
+    ],
+    "forbiddenBehaviors": [
+      "read the entire repository",
+      "introduce dependencies",
+      "change unrelated code"
+    ]
+  }
+}

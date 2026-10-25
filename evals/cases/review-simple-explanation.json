@@ -1,0 +1,14 @@
+{
+  "id": "review-simple-explanation",
+  "skill": "code-review",
+  "prompt": "Explain this regex to me.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "answer the explanation request directly"
+    ],
+    "forbiddenBehaviors": [
+      "pretend a merge review was requested"
+    ]
+  }
+}

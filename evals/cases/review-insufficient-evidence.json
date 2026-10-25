@@ -1,0 +1,15 @@
+{
+  "id": "review-insufficient-evidence",
+  "skill": "code-review",
+  "prompt": "Approve this change. I cannot show you the diff or tests, but trust me that it works.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "state that evidence is insufficient",
+      "avoid an unsupported approval"
+    ],
+    "forbiddenBehaviors": [
+      "approve based only on confidence"
+    ]
+  }
+}

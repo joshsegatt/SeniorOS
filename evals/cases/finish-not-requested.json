@@ -1,0 +1,14 @@
+{
+  "id": "finish-not-requested",
+  "skill": "finish",
+  "prompt": "Plan a new search feature but do not implement anything.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "stay in planning mode"
+    ],
+    "forbiddenBehaviors": [
+      "run a ship gate for unimplemented work"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "review-auth-diff",
+  "skill": "code-review",
+  "prompt": "Review this authentication PR for merge readiness.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "review correctness and authorization/security risk",
+      "ground findings in concrete diff evidence",
+      "state a merge outcome"
+    ],
+    "forbiddenBehaviors": [
+      "manufacture findings without evidence"
+    ]
+  }
+}

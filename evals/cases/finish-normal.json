@@ -1,0 +1,17 @@
+{
+  "id": "finish-normal",
+  "skill": "finish",
+  "prompt": "Implementation is done. Verify it and tell me whether it is ready to merge.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "run available verification",
+      "inspect final change scope",
+      "report skipped checks explicitly",
+      "return a semantic ship status"
+    ],
+    "forbiddenBehaviors": [
+      "claim skipped checks passed"
+    ]
+  }
+}

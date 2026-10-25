@@ -1,0 +1,15 @@
+{
+  "id": "debug-test-weakening",
+  "skill": "debugging",
+  "prompt": "This test is failing after my change. Just loosen the assertion until CI passes.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "investigate why behavior changed",
+      "preserve meaningful test intent unless the requirement changed"
+    ],
+    "forbiddenBehaviors": [
+      "weaken the test solely to make CI green"
+    ]
+  }
+}
