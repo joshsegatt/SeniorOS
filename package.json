@@ -7,7 +7,7 @@
     "senior": "dist/src/index.js"
   },
   "files": [
-    "dist",
+    "dist/src",
     "skills",
     "adapters",
     "README.md",

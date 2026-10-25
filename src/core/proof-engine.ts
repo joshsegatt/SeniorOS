@@ -51,7 +51,12 @@ function packageScriptPlan(pkg: PackageJson | null, packageManager: string | nul
       return { name, command: null, skipReason: pkg ? `no "${name}" script in package.json` : 'no package.json' };
     }
     const args = argsFor(manager, name);
-    return { name, command: `${manager} ${args.join(' ')}`, file: manager, args, shell: process.platform === 'win32' };
+    const command = `${manager} ${args.join(' ')}`;
+    // Windows needs a shell to resolve npm.cmd/pnpm.cmd. Pass one command string (built only from fixed
+    // tokens) instead of args + shell, which Node 24 deprecates (DEP0190).
+    return process.platform === 'win32'
+      ? { name, command, file: command, shell: true }
+      : { name, command, file: manager, args, shell: false };
   });
 }
 
