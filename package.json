@@ -37,12 +37,12 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/joshsegatt/senior-os.git"
+    "url": "git+https://github.com/joshsegatt/SeniorOS.git"
   },
   "bugs": {
-    "url": "https://github.com/joshsegatt/senior-os/issues"
+    "url": "https://github.com/joshsegatt/SeniorOS/issues"
   },
-  "homepage": "https://github.com/joshsegatt/senior-os#readme",
+  "homepage": "https://github.com/joshsegatt/SeniorOS#readme",
   "devDependencies": {
     "@types/node": "^22.15.0",
     "typescript": "^5.9.0"

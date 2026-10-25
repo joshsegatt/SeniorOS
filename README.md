@@ -214,7 +214,9 @@ You keep architectural control. The harness reduces repeated supervision and mak
 senior init
 senior inspect
 senior risk
+senior risk --base main
 senior finish
+senior finish --json
 senior doctor
 senior install --target claude --scope project
 senior install --target codex --scope project
@@ -225,8 +227,10 @@ senior install --target generic --scope project
 |---|---|
 | `senior init` | Creates project-level SeniorOS state and baseline intelligence files |
 | `senior inspect` | Produces concise repository context for the agent |
-| `senior risk` | Classifies a deterministic baseline risk from the current change set |
+| `senior risk` | Classifies a deterministic baseline risk from uncommitted changes |
+| `senior risk --base <ref>` | Classifies a branch or PR: everything since the merge-base with `<ref>`, plus uncommitted work |
 | `senior finish` | Runs available verification and reports the proof baseline |
+| `senior finish --json` | Same, with a machine-readable report on stdout (script output goes to stderr) |
 | `senior doctor` | Diagnoses SeniorOS installation/configuration problems |
 | `senior install` | Installs the skill pack into a supported host layout |
 
@@ -237,6 +241,10 @@ typecheck → lint → test → build
 ```
 
 Every check is reported as `PASS`, `FAIL`, or `SKIP`. A missing test command is **SKIP**, not “tests passed” after a brief spiritual consultation.
+
+The proof stops at the first failure; later checks are reported as `SKIP` with the reason `not run: "<check>" failed`.
+
+`senior risk` fails with an actionable error outside a git repository or with an unknown `--base` ref, instead of reporting a misleading `LOW`.
 
 ---
 
