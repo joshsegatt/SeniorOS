@@ -1,0 +1,18 @@
+{
+  "id": "debug-three-failed-fixes",
+  "skill": "senior-debugging",
+  "prompt": "The checkout total is still wrong. We already tried rounding in the cart, then in the tax step, then in the invoice renderer, and each time a different total broke. Try another fix.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "stop patching after the repeated failed fixes",
+      "summarize what each previous attempt showed",
+      "question the shared assumption or design (for example where money is represented and rounded)",
+      "propose discussing the structure before a fourth fix"
+    ],
+    "forbiddenBehaviors": [
+      "apply a fourth local rounding patch without investigation",
+      "claim the issue is fixed without re-running the original reproduction"
+    ]
+  }
+}

@@ -3,13 +3,14 @@
   "skill": "senior-engineering",
   "prompt": "Change the typo in README from \"teh\" to \"the\" and keep everything else unchanged.",
   "expected": {
-    "shouldTrigger": true,
+    "shouldTrigger": false,
     "requiredBehaviors": [
-      "treat the task as low risk",
-      "avoid a heavyweight architecture plan",
-      "verify the changed file proportionately"
+      "make the one-word edit directly",
+      "confirm the changed line"
     ],
     "forbiddenBehaviors": [
+      "write a plan or ask clarifying questions",
+      "spawn reviewers or run a heavyweight process",
       "read the entire repository",
       "introduce dependencies",
       "change unrelated code"

@@ -1,55 +1,45 @@
 ---
 name: senior-project-intelligence
-description: Build or refresh concise, durable project context for coding agents without dumping the repository into permanent prompts. Use when entering an unfamiliar project, when architecture changed materially, or when repeated sessions keep rediscovering the same facts.
+description: Use when starting substantive work in an unfamiliar repository, after a material architecture or stack change, or when sessions keep rediscovering the same project facts. Not for small local edits that can be done from the files at hand.
 ---
 
 # Project Intelligence
 
-Create durable context only for facts that are likely to matter again.
-
-## Use when
-
-- the project is unfamiliar and substantive work is beginning;
-- stack or architecture changed materially;
-- agents repeatedly rediscover the same constraints;
-- an explicit project handoff needs durable engineering facts.
-
-Do not run this process for a trivial edit that can be completed from local context.
+**Core rule:** store only facts that will save a future session from a mistake.
 
 ## Process
 
 1. Read repository-level instructions.
-2. If available, run `senior inspect` to collect deterministic stack facts.
-3. Inspect only the entry points needed to understand architecture boundaries.
-4. Identify durable facts, not transient implementation details.
-5. Initialize `.senior/` with `senior init` when appropriate.
-6. Record architecture decisions only when they constrain future work.
+2. If available, run `senior inspect` for deterministic stack facts.
+3. Read only the entry points needed to understand architecture boundaries.
+4. Separate durable facts from transient implementation details.
+5. Run `senior init` to create `.senior/` when it does not exist yet.
+6. Record a decision in `.senior/decisions.md` only when it constrains future work, dated and in one or two lines.
 
 ## Good durable facts
 
-- framework/language/package manager;
-- database/ORM/auth provider;
-- deployment target;
-- service boundaries;
-- canonical verification commands;
-- important repository conventions;
-- decisions such as “use Drizzle, do not introduce Prisma.”
+- language, framework, package manager;
+- database/ORM and auth provider;
+- deployment target and service boundaries;
+- the canonical verification commands;
+- conventions that are easy to violate;
+- decisions such as "use Drizzle; do not introduce Prisma".
 
 ## Do not store
 
-- secrets or credentials;
-- personal data;
+- secrets, credentials or personal data;
 - raw conversation transcripts;
 - temporary debugging hypotheses;
-- giant file inventories;
-- facts trivially discoverable in one local file unless they prevent repeated mistakes.
+- large file inventories;
+- facts that are obvious from one local file, unless they keep causing mistakes;
+- volatile data that `senior inspect` can re-detect.
+
+| If you notice yourself thinking… | Do this instead |
+|---|---|
+| "Let me map the whole repository first" for a local change | Read the files the task touches |
+| "This might be useful someday" | Store it only if a future mistake depends on it |
+| "I'll paste the env file so the next session has it" | Never; reference where configuration lives instead |
 
 ## Verification
 
-Before finishing, confirm the stored context is:
-
-- accurate against the current repository;
-- concise;
-- free of secrets;
-- useful across future sessions;
-- not duplicating volatile data that should be re-detected.
+Before finishing, confirm the stored context is accurate against the current repository, concise, free of secrets, and useful across sessions.

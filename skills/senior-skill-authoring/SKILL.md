@@ -1,42 +1,33 @@
 ---
 name: senior-skill-authoring
-description: Create or improve a SeniorOS-quality Agent Skill with precise trigger metadata, progressive disclosure, deterministic scripts where justified, explicit verification, and eval cases. Use when adding a reusable engineering workflow or tightening an existing skill.
+description: Use when creating a new agent skill, or changing an existing skill's trigger, process, boundaries or evals.
 ---
 
 # Skill Authoring
 
-Create skills to encode repeatable workflow, not generic advice.
+**Core rule:** a skill earns its place only when agents demonstrably behave worse without it.
 
 ## 1. Prove a skill is the right abstraction
 
-Before creating a new skill, answer:
+Answer before writing:
 
-- What recognizable user goal should trigger it?
-- Why is the behavior reusable across tasks/projects?
-- Could an existing skill own this behavior instead?
-- Is the content a workflow, a repository-specific rule, reference material, or deterministic mechanic?
+- What recognizable situation should trigger it?
+- What goes wrong today without it? Write down one concrete failure you observed or can reproduce.
+- Could an existing skill own this behavior?
+- Is this a reusable workflow (skill), a project-only rule (repository instructions), reference material, or a deterministic mechanic (script/CLI)?
 
-Use repository guidance for durable project-only rules. Use a script for repeated mechanics. Use a skill for a reusable model-guided workflow.
+## 2. Write the trigger first
 
-## 2. Define routing first
+The `description` says **when** to use the skill and, where useful, when not to. Start with "Use when…". Do not summarize the procedure there: an agent that reads a summary may follow the summary instead of the skill.
 
-Write `name` and `description` before the body.
-
-The description must say both:
-
-- what the skill does;
-- when it should be considered.
-
-Avoid broad descriptions that make the skill trigger on unrelated engineering work.
+Keep the name prefixed (`senior-…`) and specific enough not to collide with host or third-party skills.
 
 ## 3. Keep the hot path small
 
-`SKILL.md` should contain the minimum procedure needed when the skill triggers.
-
-Move deep material into one-level-deep resources such as:
+`SKILL.md` holds the minimum procedure needed every time the skill triggers. Put material needed only sometimes in one-level-deep files the skill points to at the step that needs them:
 
 ```text
-skill-name/
+senior-example/
 ├── SKILL.md
 ├── references/
 │   └── topic.md
@@ -44,50 +35,32 @@ skill-name/
     └── deterministic-check.mjs
 ```
 
-Do not create files that the workflow does not need.
+`npm run validate:skills` rejects a `SKILL.md` over 20,000 bytes: hosts may truncate longer skills after context compaction.
 
 ## 4. Separate judgment from mechanics
 
-Keep in the model:
+Keep interpretation, prioritization, trade-offs and explanations in the skill. Move behavior to scripts or the `senior` CLI when it is repeated, deterministic, fragile to reconstruct by hand, or easier to test as code.
 
-- interpretation;
-- prioritization;
-- tradeoffs;
-- contextual review;
-- explanations.
+## 5. Write for current models
 
-Move to scripts when behavior is:
+Current models follow instructions literally. Use normal volume and explicit conditions ("at medium risk and above…") instead of capital letters and absolute threats, which make them apply heavy process to trivial work. Put one short core rule at the top, and a table of the excuses the agent is likely to make, each paired with what to do instead.
 
-- repeated;
-- deterministic;
-- fragile when manually reconstructed;
-- easier to test as code.
+## 6. Define the exit and the boundaries
 
-Scripts should have clear usage, deterministic output where possible, explicit failures and safe path handling.
+Every skill needs an exit condition. Destructive or external actions need an explicit approval boundary. Do not impose heavyweight process on low-risk work.
 
-## 5. Define verification and boundaries
+## 7. Write evals before declaring success
 
-Every skill needs an exit condition. Safety-critical or destructive actions need explicit boundaries.
+At least three cases per skill:
 
-Do not require heavyweight approval/process for low-risk local work unless the workflow genuinely demands it.
+1. a request that should trigger it;
+2. a nearby request that should not trigger it, or should take the light path;
+3. an edge or pressure case that tests its most important boundary.
 
-## 6. Write evals before declaring success
+Each case lists observable required and forbidden behaviors. Then run `npm run validate:skills` and `npm run validate:evals`. Structural validation is not evidence that the skill improves behavior: when a runner is available, compare runs with and without the skill and judge the outcome, not only whether the steps were followed.
 
-Add at least three cases:
-
-1. a request that should trigger;
-2. a nearby request that should not trigger or should use a lighter path;
-3. an edge/failure case that tests the skill's most important boundary.
-
-Each eval should declare observable required and forbidden behaviors.
-
-## 7. Validate
-
-Run:
-
-```bash
-npm run validate:skills
-npm run validate:evals
-```
-
-Then test with real agent runs when a host runner exists. Structural validation is not evidence that the skill improves agent behavior.
+| If you notice yourself thinking… | Do this instead |
+|---|---|
+| "This is useful advice, it deserves a skill" | Show the failure it prevents first |
+| "I'll make it MANDATORY so it always fires" | State when it applies; loud rules over-trigger |
+| "The validator passes, so the skill works" | Validation checks shape, not behavior |

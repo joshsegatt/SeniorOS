@@ -1,77 +1,66 @@
 ---
 name: senior-code-review
-description: Review a code change against its goal, correctness, regressions, security, maintainability, and unnecessary complexity using concrete diff evidence. Use before merge/ship for substantive changes or when an independent review of agent-generated code is requested.
+description: Use when asked to review a diff, branch or pull request, or before merging a change of medium risk or higher, including agent-generated code. Not for explaining code or answering questions about how it works.
 ---
 
 # Code Review
 
-Review the change, not the author's confidence.
+**Core rule:** judge the change by evidence in the diff and its checks, not by the author's confidence — yours included.
 
 ## Inputs
 
-Establish:
+Establish before reading the code:
 
-- intended goal or acceptance criteria;
-- changed files/diff;
-- relevant tests and verification results;
-- risk level and affected contracts.
+- the goal or acceptance criteria;
+- the change set: `git diff <base>...HEAD` plus uncommitted work (`senior risk --base <base>` lists the files and the risk signals);
+- verification results that actually ran;
+- risk level and the contracts the change touches.
 
-If the goal is unknown, infer cautiously from available task/commit context and state the limitation.
+If the goal is unknown, infer it cautiously from the task or commit messages and say that you did.
+
+## Independence
+
+For medium risk and above, when the host can start a subagent, give a fresh reviewer only the goal, the diff and the verification results — not the session history. A reviewer who watched the change being written inherits its blind spots. Without a subagent, review the diff as if someone else wrote it, after re-reading the goal.
 
 ## Review axes
 
-### Correctness
+**Correctness** — Does the code do what was asked? Are error paths, boundaries, nullability, ordering and state transitions right?
 
-- Does the code implement the requested behavior?
-- Are error paths, boundaries and state transitions correct?
-- Are assumptions about types, nullability, ordering or concurrency valid?
+**Regression risk** — Which existing behavior changed implicitly? Are public and internal contracts preserved? Do tests cover the behavior rather than the implementation?
 
-### Regression risk
+**Security and data integrity** — when relevant: authentication/authorization, input validation and injection, secrets in code or logs, unsafe file/network operations, data loss, migrations, privilege boundaries.
 
-- Which existing behaviors changed implicitly?
-- Are public/internal contracts preserved where expected?
-- Do tests cover the changed behavior rather than only implementation details?
+**Complexity** — new dependencies, single-use abstractions, broad rewrites for local changes, mechanisms the project already has.
 
-### Security and data integrity
+**Operability** — for runtime changes: failure behavior, logs, rollback, observability.
 
-Check when relevant:
+## Findings
 
-- authentication/authorization;
-- input validation and injection;
-- secret exposure;
-- unsafe file/network operations;
-- data-loss or migration risk;
-- privilege boundaries.
+Order by impact. Each actionable finding has:
 
-### Complexity
+- severity (blocker, important, minor);
+- location (`file:line`) and the evidence;
+- why it matters — a concrete input or scenario that breaks;
+- the smallest credible fix, or a question.
 
-Flag complexity that is not paid for by the requirement:
+Do not manufacture findings to look thorough. A clean review is a valid outcome.
 
-- unnecessary dependencies;
-- new abstractions with one use;
-- broad rewrites for local changes;
-- duplicated mechanisms already present in the project.
+## Red flags
 
-### Operability
-
-For runtime/production changes, consider failure behavior, logs, rollback/recovery and observability.
-
-## Finding format
-
-Prioritize findings by impact. Each actionable finding should include:
-
-- severity;
-- concrete location/evidence;
-- why it matters;
-- smallest credible correction or question.
-
-Do not manufacture findings to appear thorough.
+| If you notice yourself thinking… | Do this instead |
+|---|---|
+| "The tests pass, so the logic is right" | Check what the tests actually assert |
+| "This looks like a style issue" about a behavior change | Classify by consequence, not by appearance |
+| "I wrote this, I know it's fine" | Review it as a stranger's diff, or hand it to a fresh reviewer |
+| "I'll list every nit to be thorough" | Keep minor findings brief and separate from blockers |
 
 ## Exit
 
-Finish with one of:
+Finish with exactly one verdict:
 
-- **approve** — evidence supports merge/ship;
-- **approve with notes** — no blocker, but non-blocking follow-up exists;
-- **changes required** — one or more concrete blockers remain;
-- **not enough evidence** — required verification/context is unavailable.
+- **approve** — evidence supports merging;
+- **approve with notes** — no blocker; non-blocking follow-ups listed;
+- **changes required** — at least one concrete blocker;
+- **not enough evidence** — required context or verification is unavailable; say what is missing.
+
+When receiving review feedback on your own work, verify each point against the code before changing anything; push back with evidence when a suggestion is wrong.

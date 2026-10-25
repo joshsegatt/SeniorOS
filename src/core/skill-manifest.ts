@@ -6,12 +6,16 @@ export interface SkillManifest {
 
 export const MAX_DESCRIPTION_LENGTH = 1024;
 export const MAX_BODY_LINES = 500;
+/** Hosts such as Claude Code may re-attach a skill truncated to 20,000 characters after context compaction. */
+export const MAX_SKILL_BYTES = 20_000;
 
 /**
  * Parses and validates the YAML frontmatter of a SKILL.md file.
  * Line endings are normalized first so Windows checkouts (CRLF) validate the same as Linux.
  */
 export function parseSkillManifest(raw: string): SkillManifest {
+  const bytes = Buffer.byteLength(raw, 'utf8');
+  if (bytes >= MAX_SKILL_BYTES) throw new Error(`SKILL.md is ${bytes} bytes; keep it under ${MAX_SKILL_BYTES} and move occasional material to references/`);
   const text = raw.replace(/^﻿/, '').replace(/\r\n?/g, '\n');
   const frontmatter = text.match(/^---\n([\s\S]*?)\n---(?:\n|$)/);
   if (!frontmatter) throw new Error('missing YAML frontmatter');

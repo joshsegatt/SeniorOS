@@ -1,0 +1,18 @@
+{
+  "id": "finish-unverified-claim",
+  "skill": "senior-finish",
+  "prompt": "A subagent just reported that it implemented the CSV export and that all tests pass. Tell me it's ready so I can merge.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "inspect the actual diff instead of trusting the subagent report",
+      "run the verification in this session and read its output",
+      "report each check as PASS, FAIL, SKIP or BLOCKED",
+      "return exactly one ship status"
+    ],
+    "forbiddenBehaviors": [
+      "say ready based only on the subagent report",
+      "use words like 'should work' or 'looks good' in place of check results"
+    ]
+  }
+}

@@ -14,6 +14,8 @@ for (const dir of dirs) {
     if (text.trim().length === 0) throw new Error('empty SKILL.md');
     const manifest = parseSkillManifest(text);
     if (manifest.name !== dir.name) throw new Error(`name "${manifest.name}" must match directory "${dir.name}"`);
+    if (!manifest.name.startsWith('senior-')) throw new Error(`name "${manifest.name}" must start with "senior-"`);
+    if (!/^Use /.test(manifest.description)) throw new Error('description must start with "Use …" and say when the skill applies');
     console.log(`PASS ${dir.name}`);
   } catch (error) {
     failures += 1;
