@@ -1,101 +1,81 @@
 ---
 name: senior-engineering
-description: Route and execute software-engineering work with risk-adaptive planning, minimal context, proof gates, and explicit residual risk. Use for substantive coding tasks that need disciplined implementation without forcing heavyweight process onto trivial edits.
+description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or one-line edits whose result is obvious.
 ---
 
 # Senior Engineering
 
-Use the smallest process that can responsibly prove the requested outcome.
+**Core rule:** spend the process the risk justifies — no less on risky work, no more on trivial work.
 
 ## 1. Establish the goal
 
 Extract:
 
-- desired outcome;
-- observable acceptance criteria;
-- important constraints and non-goals;
-- whether the request includes implementation or only analysis/planning.
+- the desired outcome and how someone would observe it;
+- acceptance criteria you can check;
+- constraints and non-goals;
+- whether the request is implementation or only analysis/planning.
 
-Do not invent product requirements when the repository or request already answers them.
+Do not invent requirements that the repository or the request already answers.
 
 ## 2. Read only relevant context
 
-Prefer this order:
+In this order, stopping when you have enough:
 
-1. repository instructions such as `AGENTS.md` or host equivalent;
-2. `.senior/project.json` and only relevant durable decisions when present;
+1. repository instructions (`AGENTS.md`, `CLAUDE.md` or the host equivalent);
+2. `.senior/project.json` and only the decisions relevant to this task;
 3. files directly implicated by the task;
 4. nearby tests and analogous implementations;
-5. external documentation only when local version/API evidence is insufficient.
+5. external documentation, only when local version/API evidence is insufficient.
 
-Do not require a full repository map for a small local change.
+A small local change does not need a repository map.
 
 ## 3. Classify risk
 
-If the `senior` CLI is available, use `senior risk` as a deterministic baseline after identifying/creating changes; once work is committed on a branch, use `senior risk --base <ref>` (for example `main`) so committed changes are included. Combine that signal with task semantics.
+If the `senior` CLI is available, run `senior risk` once you know which files change; after work is committed on a branch, run `senior risk --base <ref>` (for example `main`). Treat the score as a floor and raise it when the task semantics are riskier than the paths suggest.
 
-### Low
-
-Examples: copy, comments, isolated presentation tweaks, obvious local fixes.
-
-Proceed directly and verify proportionately.
-
-### Medium
-
-Examples: local feature logic, a new endpoint with contained blast radius, refactor with existing tests.
-
-Use a short plan, targeted tests, and diff review.
-
-### High
-
-Examples: auth/authz, schema migrations, public contracts, payments, concurrency, deployment, security-sensitive code.
-
-Make acceptance criteria explicit. Inspect rollback/recovery implications. Run full relevant verification and independent review when available.
-
-### Critical / externally consequential
-
-Examples: irreversible production data operations, credential changes, deployments, branch-history rewrites, destructive infrastructure actions.
-
-Do not cross an approval boundary merely because implementation is technically possible. Separate preparation from the external/destructive action.
+| Level | Examples | Process |
+|---|---|---|
+| Low | copy, comments, isolated UI tweak, obvious local fix | Do it, verify proportionately, report briefly |
+| Medium | local feature logic, contained endpoint, refactor with tests | Short plan, targeted tests, diff review |
+| High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | Explicit acceptance criteria, full relevant verification, independent review, rollback/recovery check |
+| Critical | irreversible data operations, credentials, deploys, history rewrites, destructive infrastructure | Prepare and verify, then stop: the external or destructive step needs the user's explicit approval |
 
 ## 4. Implement the minimum coherent change
 
-- preserve existing project patterns unless there is a concrete reason not to;
-- avoid unrelated cleanup;
-- avoid new dependencies when existing primitives are sufficient;
-- update tests close to the behavior being changed;
-- keep changes reviewable.
-
-When uncertainty is material, verify it instead of compensating with more code.
+- follow existing project patterns unless there is a concrete reason not to;
+- avoid unrelated cleanup and new dependencies when existing primitives suffice;
+- update tests next to the behavior that changes;
+- when uncertainty matters, verify it instead of compensating with more code.
 
 ## 5. Prove the outcome
 
-Run the repository's real checks. Prefer the project's existing commands over invented substitutes.
-
-If the `senior` CLI is available, `senior finish` can run the standard package-script proof baseline. Add task-specific evidence beyond that baseline when needed.
-
-Never convert an unavailable or skipped check into a pass.
+Run the repository's real checks. `senior finish` runs the standard package-script baseline; add task-specific evidence (the original reproduction, a browser flow, an API call) when the baseline cannot prove the outcome. A skipped or unavailable check is never a pass.
 
 ## 6. Review the diff
 
-Ask:
-
-- Did the change satisfy the goal?
-- Did it alter behavior outside the requested scope?
+- Does it satisfy the goal, and only the goal?
 - Is there a simpler implementation?
 - Are error paths and edge cases covered?
 - Did security, data integrity, performance or compatibility risk change?
-- Did we leave debug code, dead code or misleading comments?
+- Is there leftover debug code, dead code or a misleading comment?
 
-Use the `code-review` skill for non-trivial changes when available.
+For medium risk and above, use `senior-code-review`.
 
 ## 7. Close with evidence
 
-Report:
+Report what changed, what was actually verified, what was skipped, and the residual risk that still matters. Use `senior-finish` before claiming the work is done.
 
-- what changed;
-- what was actually verified;
-- any skipped/unavailable proof;
-- residual risk or follow-up that still matters.
+## When the process starts to slip
 
-Do not claim “ready” when the available evidence does not support it.
+These apply at medium risk and above.
+
+| If you notice yourself thinking… | Do this instead |
+|---|---|
+| "It's basically a small change" while touching auth, data or a public contract | Classify by surface, not by line count |
+| "The tests pass, so it's ready" on high-risk work | Check rollback and get an independent review |
+| "I'll clean up this unrelated code while I'm here" | Leave it; mention it as a follow-up |
+| "The user will obviously want this extra feature" | Ask, or list it as a suggestion |
+| "I can run the deploy/migration since I prepared it" | Stop at the approval boundary |
+
+And the reverse, at low risk: if you are writing a plan, spawning reviewers or asking clarifying questions for a one-line fix, stop and just do it.

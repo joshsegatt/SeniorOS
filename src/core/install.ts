@@ -1,8 +1,9 @@
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { readdir } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { copyDirSafe } from './fs-utils.js';
+import { parseSkillManifest } from './skill-manifest.js';
 
 export type InstallTarget = 'claude' | 'codex' | 'generic';
 export type InstallScope = 'project' | 'user';
@@ -39,4 +40,31 @@ export async function installSkills(root: string, target: InstallTarget, scope: 
   }
 
   return installed;
+}
+
+/**
+ * Skills shipped by SeniorOS 0.1.0 before the `senior-` prefix. Matched by name AND the
+ * original description prefix, so an unrelated skill that happens to share a name is never flagged.
+ */
+const LEGACY_SKILLS: Record<string, string> = {
+  'code-review': 'Review a code change against its goal, correctness, regressions',
+  debugging: 'Diagnose software failures by reproducing the problem',
+  finish: 'Prove a coding task is actually complete',
+  'project-intelligence': 'Build or refresh concise, durable project context',
+  'skill-authoring': 'Create or improve a SeniorOS-quality Agent Skill'
+};
+
+/** Returns paths of pre-0.2 SeniorOS skills left in a host skills directory (they would trigger twice). */
+export async function findLegacySkills(destination: string): Promise<string[]> {
+  const found: string[] = [];
+  for (const [name, descriptionPrefix] of Object.entries(LEGACY_SKILLS)) {
+    const dir = path.join(destination, name);
+    try {
+      const manifest = parseSkillManifest(await readFile(path.join(dir, 'SKILL.md'), 'utf8'));
+      if (manifest.name === name && manifest.description.startsWith(descriptionPrefix)) found.push(dir);
+    } catch {
+      // Missing or unrelated skill: not ours, leave it alone.
+    }
+  }
+  return found;
 }

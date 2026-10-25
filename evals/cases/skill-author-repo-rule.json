@@ -1,6 +1,6 @@
 {
   "id": "skill-author-repo-rule",
-  "skill": "skill-authoring",
+  "skill": "senior-skill-authoring",
   "prompt": "Add the rule \"we use port 4100 locally\" for this repository only.",
   "expected": {
     "shouldTrigger": false,

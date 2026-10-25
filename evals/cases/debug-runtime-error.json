@@ -1,6 +1,6 @@
 {
   "id": "debug-runtime-error",
-  "skill": "debugging",
+  "skill": "senior-debugging",
   "prompt": "The API started returning 500 after yesterday's change. Find the cause and fix it.",
   "expected": {
     "shouldTrigger": true,

@@ -150,6 +150,15 @@ senior install --target generic --scope project
 
 SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`.
 
+In Claude Code you can also install the skills as a plugin, without cloning:
+
+```text
+/plugin marketplace add joshsegatt/SeniorOS
+/plugin install senioros@senioros
+```
+
+**Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
+
 ---
 
 ## Choose your path
@@ -246,6 +255,34 @@ The proof stops at the first failure; later checks are reported as `SKIP` with t
 
 `senior risk` fails with an actionable error outside a git repository or with an unknown `--base` ref, instead of reporting a misleading `LOW`.
 
+### Project configuration
+
+Optional `.senior/config.json` adapts the proof and the risk rules to your project, in any language:
+
+```json
+{
+  "schemaVersion": 1,
+  "proof": {
+    "checks": [
+      { "name": "lint", "command": "ruff check ." },
+      { "name": "test", "command": "pytest -q" }
+    ]
+  },
+  "risk": {
+    "ignore": ["docs/**", "**/*.snap"],
+    "rules": [
+      { "code": "billing", "points": 4, "reason": "Billing logic changed.", "pattern": "^src/billing/" }
+    ]
+  }
+}
+```
+
+- `proof.checks` replaces the package-script baseline and runs in order; the proof stops at the first failure.
+- `risk.rules` adds project rules (regular expressions over repository-relative paths) to the built-in ones.
+- `risk.ignore` stops matching paths from counting toward risk. It never hides the built-in secrets rule.
+
+The file is validated strictly: an unknown key, a duplicate check name or an invalid pattern makes `senior risk` and `senior finish` fail with the exact location, so a typo cannot silently turn a gate off. `senior doctor` shows whether the config is valid.
+
 ---
 
 ## Core skills
@@ -257,19 +294,19 @@ The foundation ships with six focused Agent Skills.
 <td align="center" width="72"><img src="brand/skills/senior-engineering.svg" width="52" alt="Senior engineering icon"/></td>
 <td><strong><a href="skills/senior-engineering/SKILL.md">senior-engineering</a></strong><br/>Risk-adaptive routing and engineering discipline for non-trivial coding work.</td>
 <td align="center" width="72"><img src="brand/skills/project-intelligence.svg" width="52" alt="Project intelligence icon"/></td>
-<td><strong><a href="skills/project-intelligence/SKILL.md">project-intelligence</a></strong><br/>Builds and maintains concise, durable project context.</td>
+<td><strong><a href="skills/senior-project-intelligence/SKILL.md">senior-project-intelligence</a></strong><br/>Builds and maintains concise, durable project context.</td>
 </tr>
 <tr>
 <td align="center"><img src="brand/skills/debugging.svg" width="52" alt="Debugging icon"/></td>
-<td><strong><a href="skills/debugging/SKILL.md">debugging</a></strong><br/>Reproduce, trace, test hypotheses, identify root cause, then fix minimally.</td>
+<td><strong><a href="skills/senior-debugging/SKILL.md">senior-debugging</a></strong><br/>Reproduce, trace, test hypotheses, identify root cause, then fix minimally.</td>
 <td align="center"><img src="brand/skills/code-review.svg" width="52" alt="Code review icon"/></td>
-<td><strong><a href="skills/code-review/SKILL.md">code-review</a></strong><br/>Evidence-based review for regressions, scope, security, and change quality.</td>
+<td><strong><a href="skills/senior-code-review/SKILL.md">senior-code-review</a></strong><br/>Evidence-based review for regressions, scope, security, and change quality.</td>
 </tr>
 <tr>
 <td align="center"><img src="brand/skills/finish.svg" width="52" alt="Finish icon"/></td>
-<td><strong><a href="skills/finish/SKILL.md">finish</a></strong><br/>Final proof baseline and semantic completion gate.</td>
+<td><strong><a href="skills/senior-finish/SKILL.md">senior-finish</a></strong><br/>Final proof baseline and semantic completion gate.</td>
 <td align="center"><img src="brand/skills/skill-authoring.svg" width="52" alt="Skill authoring icon"/></td>
-<td><strong><a href="skills/skill-authoring/SKILL.md">skill-authoring</a></strong><br/>Creates focused SeniorOS-quality skills with eval contracts.</td>
+<td><strong><a href="skills/senior-skill-authoring/SKILL.md">senior-skill-authoring</a></strong><br/>Creates focused SeniorOS-quality skills with eval contracts.</td>
 </tr>
 </table>
 

@@ -1,6 +1,6 @@
 {
   "id": "review-simple-explanation",
-  "skill": "code-review",
+  "skill": "senior-code-review",
   "prompt": "Explain this regex to me.",
   "expected": {
     "shouldTrigger": false,

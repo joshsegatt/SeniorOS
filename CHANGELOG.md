@@ -2,9 +2,20 @@
 
 All notable changes to SeniorOS will be documented here.
 
-## [Unreleased]
+## [0.2.0] - Unreleased
+
+### Changed (breaking)
+
+- every skill is prefixed with `senior-` (`senior-code-review`, `senior-debugging`, `senior-finish`, `senior-project-intelligence`, `senior-skill-authoring`; `senior-engineering` is unchanged) to avoid collisions with host and third-party skills; `senior install` lists leftover 0.1 skills and never deletes them;
+- skills rewritten for current models: "Use when…" trigger descriptions that also say when not to use the skill, a one-line core rule, and calm "if you notice yourself thinking… / do this instead" tables;
+- the typo eval now expects `senior-engineering` not to trigger on trivial edits.
 
 ### Added
+
+- `.senior/config.json`: `proof.checks` (any language), `risk.rules` and `risk.ignore`, with strict validation; `senior doctor` reports its status;
+- Claude Code plugin and marketplace manifests (`.claude-plugin/`) and a Codex plugin manifest (`.codex-plugin/`);
+- validator: `SKILL.md` must stay under 20,000 bytes, names must start with `senior-`, descriptions with "Use ";
+- eval cases `debug-three-failed-fixes` and `finish-unverified-claim`;
 
 - `senior risk --base <ref>` assesses a branch or PR (merge-base diff plus uncommitted and untracked work);
 - risk output (text and JSON) states which change scope was assessed;

@@ -1,6 +1,6 @@
 {
   "id": "debug-test-weakening",
-  "skill": "debugging",
+  "skill": "senior-debugging",
   "prompt": "This test is failing after my change. Just loosen the assertion until CI passes.",
   "expected": {
     "shouldTrigger": true,

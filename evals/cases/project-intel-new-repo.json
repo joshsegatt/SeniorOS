@@ -1,6 +1,6 @@
 {
   "id": "project-intel-new-repo",
-  "skill": "project-intelligence",
+  "skill": "senior-project-intelligence",
   "prompt": "I will work on this unfamiliar repository for the next week. Build concise project context so future coding sessions stop rediscovering the stack and architecture.",
   "expected": {
     "shouldTrigger": true,

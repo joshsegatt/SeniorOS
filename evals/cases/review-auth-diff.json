@@ -1,6 +1,6 @@
 {
   "id": "review-auth-diff",
-  "skill": "code-review",
+  "skill": "senior-code-review",
   "prompt": "Review this authentication PR for merge readiness.",
   "expected": {
     "shouldTrigger": true,
