@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://github.com/joshsegatt/SeniorOS/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/joshsegatt/SeniorOS/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://www.npmjs.com/package/senioros"><img alt="npm" src="https://img.shields.io/npm/v/senioros.svg?color=2F80FF"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-2563eb.svg"></a>
   <a href="package.json"><img alt="Node" src="https://img.shields.io/badge/node-%3E%3D20-0f766e.svg"></a>
   <a href="ROADMAP.md"><img alt="Status" src="https://img.shields.io/badge/status-foundation-475569.svg"></a>
@@ -106,26 +107,54 @@ because optimism remains stubbornly absent from every serious test framework.
 
 ## Quick start
 
-### 1. Clone and build
+Requires Node.js 20 or newer. No clone needed: the CLI is published on npm as [`senioros`](https://www.npmjs.com/package/senioros), and its command is `senior`.
+
+### 1. Install the skills for your coding agent
+
+Run inside your project:
 
 ```bash
-git clone https://github.com/joshsegatt/SeniorOS.git
-cd SeniorOS
-npm install
-npm run check
-npm run build
-npm link
+# Claude Code — project-local
+npx senioros install --target claude --scope project
+
+# Codex — project-local
+npx senioros install --target codex --scope project
+
+# Portable / generic Agent Skills layout
+npx senioros install --target generic --scope project
 ```
 
-### 2. Initialize SeniorOS inside a project
+SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`.
+
+In Claude Code you can also install the skills as a plugin:
+
+```text
+/plugin marketplace add joshsegatt/SeniorOS
+/plugin install senioros@senioros
+```
+
+**Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
+
+### 2. Use the CLI
+
+Run it once with `npx`, or install the `senior` command globally:
 
 ```bash
-cd your-project
-senior init
-senior inspect
+npm install -g senioros
 ```
 
-This creates a small, versionable project intelligence layer:
+Then, inside your project:
+
+```bash
+senior init                # create the .senior/ project state
+senior inspect             # detected stack facts
+senior risk --base main    # risk of the current branch
+senior finish              # run the proof baseline
+```
+
+Every command also works without the global install, for example `npx senioros risk --base main`.
+
+`senior init` creates a small, versionable project intelligence layer:
 
 ```text
 .senior/
@@ -135,29 +164,15 @@ This creates a small, versionable project intelligence layer:
 └── work-ledger.jsonl
 ```
 
-### 3. Install the skills for your coding agent
+### 3. Develop SeniorOS itself
 
 ```bash
-# Claude Code — project-local
-senior install --target claude --scope project
-
-# Codex — project-local
-senior install --target codex --scope project
-
-# Portable / generic Agent Skills layout
-senior install --target generic --scope project
+git clone https://github.com/joshsegatt/SeniorOS.git
+cd SeniorOS
+npm install
+npm run check
+npm link    # puts your local build on PATH as `senior`
 ```
-
-SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`.
-
-In Claude Code you can also install the skills as a plugin, without cloning:
-
-```text
-/plugin marketplace add joshsegatt/SeniorOS
-/plugin install senioros@senioros
-```
-
-**Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
 
 ---
 
