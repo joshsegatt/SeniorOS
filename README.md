@@ -154,7 +154,7 @@ In Claude Code you can also install the skills as a plugin, without cloning:
 
 ```text
 /plugin marketplace add joshsegatt/SeniorOS
-/plugin install senior-os@senior-os
+/plugin install senioros@senioros
 ```
 
 **Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
