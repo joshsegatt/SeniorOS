@@ -1,6 +1,6 @@
 {
   "name": "senior-os-cli",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Engineering discipline for coding agents: risk-adaptive workflows, proof gates, project memory, and portable Agent Skills.",
   "type": "module",
   "bin": {

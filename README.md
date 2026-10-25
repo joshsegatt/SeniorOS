@@ -150,6 +150,15 @@ senior install --target generic --scope project
 
 SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`.
 
+In Claude Code you can also install the skills as a plugin, without cloning:
+
+```text
+/plugin marketplace add joshsegatt/SeniorOS
+/plugin install senior-os@senior-os
+```
+
+**Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
+
 ---
 
 ## Choose your path
@@ -245,6 +254,34 @@ Every check is reported as `PASS`, `FAIL`, or `SKIP`. A missing test command is 
 The proof stops at the first failure; later checks are reported as `SKIP` with the reason `not run: "<check>" failed`.
 
 `senior risk` fails with an actionable error outside a git repository or with an unknown `--base` ref, instead of reporting a misleading `LOW`.
+
+### Project configuration
+
+Optional `.senior/config.json` adapts the proof and the risk rules to your project, in any language:
+
+```json
+{
+  "schemaVersion": 1,
+  "proof": {
+    "checks": [
+      { "name": "lint", "command": "ruff check ." },
+      { "name": "test", "command": "pytest -q" }
+    ]
+  },
+  "risk": {
+    "ignore": ["docs/**", "**/*.snap"],
+    "rules": [
+      { "code": "billing", "points": 4, "reason": "Billing logic changed.", "pattern": "^src/billing/" }
+    ]
+  }
+}
+```
+
+- `proof.checks` replaces the package-script baseline and runs in order; the proof stops at the first failure.
+- `risk.rules` adds project rules (regular expressions over repository-relative paths) to the built-in ones.
+- `risk.ignore` stops matching paths from counting toward risk. It never hides the built-in secrets rule.
+
+The file is validated strictly: an unknown key, a duplicate check name or an invalid pattern makes `senior risk` and `senior finish` fail with the exact location, so a typo cannot silently turn a gate off. `senior doctor` shows whether the config is valid.
 
 ---
 

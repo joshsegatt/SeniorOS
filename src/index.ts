@@ -9,7 +9,7 @@ import { destinationFor, findLegacySkills, installSkills, type InstallScope, typ
 import { doctor } from './core/doctor.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
 
-const VERSION = '0.1.0';
+const VERSION = '0.2.0';
 
 function usage(): void {
   console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n`);
