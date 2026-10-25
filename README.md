@@ -241,6 +241,7 @@ senior risk
 senior risk --base main
 senior finish
 senior finish --json
+senior prove --regression --test "npm test -- cart"
 senior doctor
 senior install --target claude --scope project
 senior install --target codex --scope project
@@ -255,6 +256,8 @@ senior install --target generic --scope project
 | `senior risk --base <ref>` | Classifies a branch or PR: everything since the merge-base with `<ref>`, plus uncommitted work |
 | `senior finish` | Runs available verification and reports the proof baseline |
 | `senior finish --json` | Same, with a machine-readable report on stdout (script output goes to stderr) |
+| `senior prove --regression --test "<cmd>"` | Proves a regression test catches the bug: passes with the fix, fails with it reverted, passes again restored |
+| `senior prove --restore` | Puts the working tree back after a proof that was killed mid-run |
 | `senior doctor` | Diagnoses SeniorOS installation/configuration problems |
 | `senior install` | Installs the skill pack into a supported host layout |
 
@@ -269,6 +272,30 @@ Every check is reported as `PASS`, `FAIL`, or `SKIP`. A missing test command is 
 The proof stops at the first failure; later checks are reported as `SKIP` with the reason `not run: "<check>" failed`.
 
 `senior risk` fails with an actionable error outside a git repository or with an unknown `--base` ref, instead of reporting a misleading `LOW`.
+
+### Regression proof
+
+"I added a regression test" is easy to say and often untrue: the test passes with or without the fix. `senior prove --regression` checks it:
+
+```text
+$ senior prove --regression --test "node tests/cart.test.js" --expect-failure "expected 10"
+Regression proof: PROVEN
+  The test passes with the fix, fails without it, and passes again after restoring it.
+  Fix files, reverted for run 2: src/cart.js
+  Test files, kept in place:     tests/cart.test.js
+  1. with the fix      PASS    exit 0  0.1s  as expected
+  2. without the fix   FAIL    exit 1  0.0s  as expected
+  3. fix restored      PASS    exit 0  0.0s  as expected
+  Working tree restored and verified (1 file, sha256 match).
+  Evidence: .senior/runtime/evidence/…-regression.json
+```
+
+- The **fix** is every changed non-test file (or what you pass with `--fix <path>`); tests stay in place.
+- `--expect-failure <regex>` requires the failure to be the original bug, not, say, a syntax error.
+- `--base main` proves fixes that are already committed on a branch.
+- Verdicts: `PROVEN`, or `NOT PROVEN` with `fix-fails-test`, `test-misses-bug`, `failed-for-other-reason`, `unstable` (flaky) or `interrupted`.
+
+Your work is never at risk: every file is backed up before the fix is reverted and restored byte-for-byte, verified by sha256, even on errors or Ctrl+C. If the process is killed outright, the next proof refuses to run until `senior prove --restore` puts everything back. Evidence lives in `.senior/runtime/`, which ignores itself in git.
 
 ### Project configuration
 

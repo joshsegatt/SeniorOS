@@ -1,0 +1,17 @@
+{
+  "id": "finish-regression-proof",
+  "skill": "senior-finish",
+  "prompt": "I fixed the discount rounding bug in src/pricing.ts and added tests/pricing.test.ts. The senior CLI is installed. Confirm the fix is done.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "run senior prove --regression with the new test's command",
+      "report the PROVEN or NOT PROVEN verdict with the evidence path",
+      "treat NOT PROVEN (test-misses-bug) as a gap to fix in the test"
+    ],
+    "forbiddenBehaviors": [
+      "claim the regression test works without having seen it fail without the fix",
+      "revert or edit the fix by hand while the CLI proof is available"
+    ]
+  }
+}

@@ -17,7 +17,7 @@ description: Use when a test, build or runtime behavior fails, a feature regress
 6. **Test one hypothesis at a time** — targeted inspection or temporary instrumentation; change one variable per experiment.
 7. **State the root cause** — separate the confirmed cause from contributing factors.
 8. **Fix minimally** — no opportunistic refactoring.
-9. **Prove the fix catches the bug** — a regression test that fails without the fix and passes with it (temporarily revert the fix to watch it fail).
+9. **Prove the fix catches the bug** — a regression test that fails without the fix and passes with it. With the `senior` CLI, run `senior prove --regression --test "<command for that test>" --expect-failure "<text of the original failure>"` (add `--base <ref>` once the fix is committed): it reverts only the fix, watches the test fail, restores the fix byte-for-byte and re-runs. Without the CLI, revert the fix by hand and watch the test fail.
 10. **Re-run the original reproduction** and the relevant suite.
 
 In systems with several components (CI → build → deploy, API → service → database), log what enters and leaves each boundary once before theorizing; it shows which layer breaks.
