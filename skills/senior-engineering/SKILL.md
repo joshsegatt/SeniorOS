@@ -32,7 +32,7 @@ Do not require a full repository map for a small local change.
 
 ## 3. Classify risk
 
-If the `senior` CLI is available, use `senior risk` as a deterministic baseline after identifying/creating changes. Combine that signal with task semantics.
+If the `senior` CLI is available, use `senior risk` as a deterministic baseline after identifying/creating changes; once work is committed on a branch, use `senior risk --base <ref>` (for example `main`) so committed changes are included. Combine that signal with task semantics.
 
 ### Low
 

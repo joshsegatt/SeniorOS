@@ -1,0 +1,3 @@
+# Keep LF in the repository and in every checkout (matches .editorconfig).
+# Without this, Windows checkouts with core.autocrlf=true get CRLF files.
+* text=auto eol=lf
