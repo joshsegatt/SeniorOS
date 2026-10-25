@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1120" viewBox="0 0 1600 1120" role="img" aria-labelledby="title desc">
+  <title id="title">What SeniorOS actually does</title>
+  <desc id="desc">A clean infographic explaining the SeniorOS engineering process and capabilities.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#09111d"/>
+      <stop offset="1" stop-color="#0c1a2d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1600" height="1120" rx="32" fill="url(#bg)"/>
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <text x="800" y="78" text-anchor="middle" font-size="56" font-weight="760" fill="#f8fafc">What <tspan fill="#60a5fa">SeniorOS</tspan> Actually Does</text>
+    <text x="800" y="124" text-anchor="middle" font-size="25" font-weight="560" fill="#c8d6e8">Senior engineering discipline for coding agents</text>
+    <text x="800" y="162" text-anchor="middle" font-size="16" fill="#8498b5">Understand the task · Load the right context · Scale rigor to risk · Prove the result</text>
+
+    <rect x="56" y="214" width="880" height="810" rx="26" fill="#0a1626" stroke="#24405f"/>
+    <text x="98" y="270" font-size="31" font-weight="720" fill="#f8fafc">The <tspan fill="#60a5fa">SeniorOS</tspan> process</text>
+    <text x="98" y="301" font-size="14" fill="#7890ad">FROM GOAL TO EVIDENCE-BACKED COMPLETION</text>
+
+    <line x1="127" y1="354" x2="127" y2="932" stroke="#2a4d73" stroke-width="3"/>
+
+    <g font-size="17" fill="#dbe7f5">
+      <g transform="translate(0 0)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">1</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Understand the goal</text><text x="178" y="397" fill="#93a7c1">Parse intent, success criteria, constraints, and boundaries.</text>
+      </g>
+      <g transform="translate(0 92)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">2</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Load only relevant context</text><text x="178" y="397" fill="#93a7c1">Use the smallest useful slice of project state, docs, and memory.</text>
+      </g>
+      <g transform="translate(0 184)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">3</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Assess risk</text><text x="178" y="397" fill="#93a7c1">Evaluate uncertainty, blast radius, security, data, and deploy impact.</text>
+      </g>
+      <g transform="translate(0 276)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">4</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Choose the right execution mode</text><text x="178" y="397" fill="#93a7c1">Move fast on safe work. Plan deeply when the risk justifies it.</text>
+      </g>
+      <g transform="translate(0 368)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">5</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Verify with real checks</text><text x="178" y="397" fill="#93a7c1">Run typecheck, lint, tests, build, and project-specific proof.</text>
+      </g>
+      <g transform="translate(0 460)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">6</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Review regressions and scope</text><text x="178" y="397" fill="#93a7c1">Inspect the diff, edge cases, unnecessary changes, and hidden risk.</text>
+      </g>
+      <g transform="translate(0 552)">
+        <circle cx="127" cy="372" r="26" fill="#102742" stroke="#5ba6ff" stroke-width="3"/><text x="127" y="379" text-anchor="middle" font-size="18" font-weight="700" fill="#f8fafc">7</text>
+        <text x="178" y="368" font-size="21" font-weight="680" fill="#f8fafc">Decide: Ship / Not Proven / Blocked</text><text x="178" y="397" fill="#93a7c1">Finish with a clear evidence-backed status, not vague confidence.</text>
+      </g>
+    </g>
+
+    <rect x="970" y="214" width="574" height="810" rx="26" fill="#0a1626" stroke="#24405f"/>
+    <text x="1012" y="270" font-size="31" font-weight="720" fill="#f8fafc">Key <tspan fill="#60a5fa">capabilities</tspan></text>
+    <text x="1012" y="301" font-size="14" fill="#7890ad">WHAT MAKES THE HARNESS DIFFERENT</text>
+
+    <g transform="translate(1012 342)" font-family="Inter, ui-sans-serif, system-ui, sans-serif">
+      <g>
+        <rect width="238" height="180" rx="20" fill="#0d1c30" stroke="#294866"/>
+        <path d="M34 33l17 6v14c0 12-7 20-17 26-10-6-17-14-17-26V39l17-6z" fill="none" stroke="#60a5fa" stroke-width="3"/>
+        <text x="22" y="112" font-size="19" font-weight="680" fill="#f8fafc">Risk-Adaptive Process</text>
+        <text x="22" y="142" font-size="14" fill="#93a7c1">Rigor scales with task risk,</text><text x="22" y="163" font-size="14" fill="#93a7c1">not with ritual.</text>
+      </g>
+      <g transform="translate(262 0)">
+        <rect width="238" height="180" rx="20" fill="#0d1c30" stroke="#294866"/>
+        <circle cx="34" cy="52" r="18" fill="none" stroke="#60a5fa" stroke-width="3"/><path d="M25 52l7 7 12-15" fill="none" stroke="#60a5fa" stroke-width="3"/>
+        <text x="22" y="112" font-size="19" font-weight="680" fill="#f8fafc">Proof Engine</text>
+        <text x="22" y="142" font-size="14" fill="#93a7c1">Real checks replace optimistic</text><text x="22" y="163" font-size="14" fill="#93a7c1">“looks good” completion.</text>
+      </g>
+      <g transform="translate(0 204)">
+        <rect width="238" height="180" rx="20" fill="#0d1c30" stroke="#294866"/>
+        <path d="M18 39c0-8 32-8 32 0v28c0 8-32 8-32 0V39zm0 10c0 8 32 8 32 0m-32 10c0 8 32 8 32 0" fill="none" stroke="#60a5fa" stroke-width="3"/>
+        <text x="22" y="112" font-size="19" font-weight="680" fill="#f8fafc">Project Memory</text>
+        <text x="22" y="142" font-size="14" fill="#93a7c1">Durable decisions and context</text><text x="22" y="163" font-size="14" fill="#93a7c1">survive across sessions.</text>
+      </g>
+      <g transform="translate(262 204)">
+        <rect width="238" height="180" rx="20" fill="#0d1c30" stroke="#294866"/>
+        <path d="M18 36h32v34H18z" fill="none" stroke="#60a5fa" stroke-width="3"/><path d="M18 47h32" stroke="#60a5fa" stroke-width="3"/>
+        <text x="22" y="112" font-size="19" font-weight="680" fill="#f8fafc">Portable Skills</text>
+        <text x="22" y="142" font-size="14" fill="#93a7c1">Host adapters keep the core</text><text x="22" y="163" font-size="14" fill="#93a7c1">vendor-portable.</text>
+      </g>
+      <g transform="translate(0 408)">
+        <rect width="238" height="180" rx="20" fill="#0d1c30" stroke="#294866"/>
+        <path d="M18 69V52h7v17m8 0V42h7v27m8 0V31h7v38" fill="none" stroke="#60a5fa" stroke-width="3"/>
+        <text x="22" y="112" font-size="19" font-weight="680" fill="#f8fafc">Eval-Driven Improvement</text>
+        <text x="22" y="142" font-size="14" fill="#93a7c1">Changes are measured against</text><text x="22" y="163" font-size="14" fill="#93a7c1">repeatable scenarios.</text>
+      </g>
+      <g transform="translate(262 408)">
+        <rect width="238" height="180" rx="20" fill="#0d1c30" stroke="#294866"/>
+        <circle cx="29" cy="43" r="9" fill="none" stroke="#60a5fa" stroke-width="3"/><circle cx="50" cy="43" r="9" fill="none" stroke="#60a5fa" stroke-width="3"/><path d="M14 69c3-12 13-17 24-17s21 5 24 17" fill="none" stroke="#60a5fa" stroke-width="3"/>
+        <text x="22" y="112" font-size="19" font-weight="680" fill="#f8fafc">Multi-Agent Readiness</text>
+        <text x="22" y="142" font-size="14" fill="#93a7c1">Shared context and explicit</text><text x="22" y="163" font-size="14" fill="#93a7c1">ownership reduce collisions.</text>
+      </g>
+    </g>
+
+    <line x1="410" y1="1064" x2="650" y2="1064" stroke="#294866"/>
+    <line x1="950" y1="1064" x2="1190" y2="1064" stroke="#294866"/>
+    <text x="800" y="1056" text-anchor="middle" font-size="13" letter-spacing="3" fill="#7186a1">DESIGNED BY</text>
+    <text x="800" y="1091" text-anchor="middle" font-size="28" font-weight="740" fill="#f8fafc">Josh <tspan fill="#60a5fa">Segatt</tspan></text>
+  </g>
+</svg>
