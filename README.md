@@ -1,71 +1,181 @@
-# SeniorOS
+<p align="center">
+  <img src="assets/senioros-hero.svg" alt="SeniorOS — Engineering discipline for coding agents" width="100%" />
+</p>
 
-> **Engineering discipline for coding agents.**
+<p align="center">
+  <a href="https://github.com/joshsegatt/SeniorOS/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/joshsegatt/SeniorOS/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-2563eb.svg"></a>
+  <a href="package.json"><img alt="Node" src="https://img.shields.io/badge/node-%3E%3D20-0f766e.svg"></a>
+  <a href="ROADMAP.md"><img alt="Status" src="https://img.shields.io/badge/status-foundation-475569.svg"></a>
+</p>
 
-SeniorOS is an open, vendor-portable engineering harness for coding agents. It adds the part raw model capability does not guarantee on its own: **right-sized planning, risk-aware execution, deterministic verification, durable project context, and evidence-backed completion**.
+<p align="center">
+  <strong>SeniorOS is an engineering harness for coding agents.</strong><br/>
+  It adds risk-aware execution, selective context, deterministic verification, durable project memory, and evidence-backed completion to agentic development workflows.
+</p>
 
-It is designed for Claude Code, Codex, and other Agent Skills-compatible CLIs without turning the repository into a wall of permanent prompt text.
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#for-vibe-coders">Vibe coders</a> ·
+  <a href="#for-senior-developers">Senior developers</a> ·
+  <a href="#core-skills">Skills</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#evals">Evals</a>
+</p>
 
-[![CI](https://github.com/joshsegatt/senior-os/actions/workflows/ci.yml/badge.svg)](https://github.com/joshsegatt/senior-os/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen.svg)](package.json)
-[![Status](https://img.shields.io/badge/status-foundation-orange.svg)](ROADMAP.md)
+---
 
-## The problem
+## Why SeniorOS exists
 
-Coding agents are already good at producing code. The expensive failures happen around the code:
+Coding agents are already good at generating code.
 
-- reading too much context for tiny changes and too little for dangerous ones;
-- changing unrelated files;
-- treating “implemented” as equivalent to “verified”;
-- hiding uncertainty behind confident prose;
-- repeating shell mechanics instead of using deterministic tools;
-- forgetting architectural decisions across sessions;
-- applying the same process to a copy edit and a production migration.
+The expensive failures happen around the code:
 
-SeniorOS treats those as **engineering-system problems**, not prompt-writing problems.
+- reading half the repository for a one-line change;
+- reading too little before touching authentication or a migration;
+- changing unrelated files because the model found them “interesting”;
+- declaring success without running the real checks;
+- weakening tests instead of understanding the regression;
+- forgetting architectural decisions between sessions;
+- applying the same heavyweight process to both a typo and a production database change.
 
-## The loop
+SeniorOS treats these as **engineering-system problems**, not prompt-writing problems.
+
+> **The goal is not to make the model sound senior. The goal is to make the workflow behave like disciplined engineering.**
+
+---
+
+## How it works
+
+<p align="center">
+  <img src="assets/senioros-flow.svg" alt="Animated SeniorOS execution loop" width="100%" />
+</p>
+
+SeniorOS routes work through a risk-adaptive loop:
 
 ```text
-user goal
-   │
-   ▼
-Goal Contract ──► Context Router ──► Risk Engine
-                                      │
-                   ┌──────────────────┴──────────────────┐
-                   ▼                                     ▼
-             direct execution                     planned execution
-                   │                                     │
-                   └──────────────► Builder ◄────────────┘
-                                      │
-                                      ▼
-                                  Proof Engine
-                                      │
-                                      ▼
-                                 Review Engine
-                                      │
-                                      ▼
-                                    Ship Gate
+Goal Contract
+    ↓
+Relevant Context
+    ↓
+Risk Assessment
+    ↓
+Right-Sized Execution
+    ↓
+Proof
+    ↓
+Independent Review
+    ↓
+Ship / Not Proven / Blocked
 ```
 
-The model decides what requires judgment. Scripts handle repeatable mechanics. The task closes only when the available evidence supports the claim that it is done.
+The important part is that **not every task gets the same process**.
 
-## Design principles
+| Task | SeniorOS behavior |
+|---|---|
+| Rename a button | Direct edit + proportionate verification |
+| Add an API route | Light plan + relevant tests |
+| Change authentication | Full context + security/risk review + proof |
+| Production migration | Strict plan + rollback thinking + explicit boundaries |
+| “Just make CI green” | Investigate root cause before weakening meaningful checks |
 
-1. **Proof over confidence.** A green build is evidence. “Looks good” is not.
-2. **Risk-adaptive process.** A typo does not need an architecture review. An auth migration does.
-3. **Progressive disclosure.** Skills stay focused and load references only when relevant.
-4. **Deterministic mechanics belong in code.** Repeated checks become scripts, not ritual prompt text.
-5. **Context is a budget.** Read what the task needs, not the repository out of habit.
-6. **Project memory is explicit.** Decisions and conventions are durable, inspectable artifacts.
-7. **No surprise destructive actions.** Production, credentials, irreversible data changes, deployment and branch history rewrites require explicit boundaries.
-8. **Portable by default.** Core workflows follow the open Agent Skills shape and host-specific behavior lives in adapters.
-9. **Evals before mythology.** Improvements should be measurable instead of merely feeling more “senior.”
+<p align="center">
+  <img src="assets/how-senioros-works.svg" alt="What SeniorOS actually does" width="100%" />
+</p>
 
-## What ships in v0.1
+---
 
-### Runtime CLI
+## What changes in practice
+
+Without a harness, the common agent loop is roughly:
+
+```text
+request → generate → edit → “done”
+```
+
+SeniorOS pushes the workflow toward:
+
+```text
+request
+  → understand
+  → inspect only relevant context
+  → assess risk
+  → execute proportionately
+  → prove behavior
+  → review the diff
+  → state what is actually known
+```
+
+That final distinction matters.
+
+SeniorOS prefers:
+
+```text
+PROOF BASELINE: PASS
+Residual risk: LOW
+Skipped checks: none
+```
+
+instead of:
+
+```text
+Everything looks good! 🚀
+```
+
+because optimism is not a test framework.
+
+---
+
+## Quick start
+
+### 1. Clone and build
+
+```bash
+git clone https://github.com/joshsegatt/SeniorOS.git
+cd SeniorOS
+npm install
+npm run check
+npm run build
+npm link
+```
+
+### 2. Initialize SeniorOS inside a project
+
+```bash
+cd your-project
+senior init
+senior inspect
+```
+
+This creates a small, versionable project intelligence layer:
+
+```text
+.senior/
+├── README.md
+├── project.json
+├── decisions.md
+└── work-ledger.jsonl
+```
+
+### 3. Install the skills for your coding agent
+
+```bash
+# Claude Code — project-local
+senior install --target claude --scope project
+
+# Codex — project-local
+senior install --target codex --scope project
+
+# Portable / generic Agent Skills layout
+senior install --target generic --scope project
+```
+
+SeniorOS will not overwrite an existing skill unless you explicitly pass `--force`.
+
+---
+
+## The CLI
 
 ```bash
 senior init
@@ -78,92 +188,19 @@ senior install --target codex --scope project
 senior install --target generic --scope project
 ```
 
-### Core skills
+### `senior init`
 
-| Skill | Purpose |
-|---|---|
-| `senior-engineering` | Risk-adaptive routing and engineering loop |
-| `project-intelligence` | Build/update concise durable project context |
-| `debugging` | Root-cause debugging before patching |
-| `code-review` | Evidence-based review of changed code |
-| `finish` | End-of-task proof and ship gate |
-| `skill-authoring` | Create SeniorOS-quality skills with eval contracts |
+Creates the project-level SeniorOS state and baseline project intelligence files.
 
-### Project state
+### `senior inspect`
 
-`senior init` creates a small, versionable project memory:
+Inspects the repository and produces concise information an agent can use without rereading everything from scratch.
 
-```text
-.senior/
-├── README.md
-├── project.json
-├── decisions.md
-└── work-ledger.jsonl
-```
+### `senior risk`
 
-Runtime-only data belongs under `.senior/runtime/` and is ignored by Git.
+Produces a deterministic baseline risk classification from the current change set.
 
-## Quick start from source
-
-```bash
-git clone https://github.com/joshsegatt/SeniorOS.git
-cd SeniorOS
-npm install
-npm run check
-npm run build
-npm link
-```
-
-Inside a project you want SeniorOS to understand:
-
-```bash
-senior init
-senior inspect
-```
-
-Install the skills for the coding agent you use:
-
-```bash
-# Claude Code, project-local
-senior install --target claude --scope project
-
-# Codex, project-local
-senior install --target codex --scope project
-
-# Portable/generic Agent Skills layout
-senior install --target generic --scope project
-```
-
-The installer refuses to overwrite an existing skill unless you pass `--force`.
-
-## Practical example
-
-You ask your agent:
-
-```text
-Add Google authentication to this application.
-```
-
-With SeniorOS available, the intended behavior is:
-
-```text
-1. classify the goal and inspect only relevant context;
-2. detect that authentication is high-risk code;
-3. inspect existing auth/session/user patterns;
-4. create a right-sized plan and acceptance criteria;
-5. implement the smallest coherent change;
-6. run the repository's real verification commands;
-7. review the diff for regressions/security/complexity;
-8. report evidence, residual risk and any blocker.
-```
-
-For a text-only README correction, the same system should **not** demand that workflow. It should make the edit and run proportionate verification. Senior process that cannot scale down is just bureaucracy wearing a hoodie.
-
-## Risk engine
-
-`senior risk` inspects changed files and emits a deterministic baseline risk score.
-
-Examples of signals:
+Signals include:
 
 - authentication / authorization;
 - database schema and migrations;
@@ -171,139 +208,426 @@ Examples of signals:
 - secrets and environment configuration;
 - dependency manifests;
 - CI/CD;
-- deletions and broad change sets.
+- deletions;
+- unusually broad change sets.
 
-The score does **not** replace model judgment. It gives the agent and the human a shared, inspectable floor for deciding which gates are appropriate.
+### `senior finish`
 
-## Proof engine
+Runs the proof baseline using verification commands already defined by the project.
 
-`senior finish` discovers verification scripts already defined by the project and runs what exists, in a stable order:
+Current stable order:
 
 ```text
 typecheck → lint → test → build
 ```
 
-It reports `PASS`, `FAIL`, or `SKIP` per check and never claims a missing check passed. The CLI reports a **proof baseline**, not universal ship readiness; task-specific acceptance criteria and risk still belong to the agent/human gate.
+Every check is reported as:
 
-Future releases will add repository-specific proof contracts, runtime assertions, browser evidence, security scanners, and regression baselines.
+```text
+PASS
+FAIL
+SKIP
+```
 
-## Skill quality contract
+A missing test command is **SKIP**, never magically transformed into “tests passed”. Humanity has suffered enough from creative accounting.
+
+### `senior doctor`
+
+Checks the SeniorOS installation and surfaces environment/configuration problems.
+
+---
+
+## For vibe coders
+
+You should not need to become a framework archaeologist before asking an agent to build something.
+
+SeniorOS is designed to let you keep prompts simple:
+
+```text
+Add Google login.
+```
+
+while the harness encourages the agent to do the boring but important work underneath:
+
+```text
+inspect existing auth
+→ find affected routes and user/session models
+→ assess risk
+→ implement minimally
+→ run real checks
+→ inspect regressions
+→ report evidence
+```
+
+For low-risk UI work, SeniorOS should stay out of the way.
+
+For dangerous work, it should become stricter automatically.
+
+### What you gain
+
+- less random code churn;
+- fewer “fixed one thing, broke three things” sessions;
+- clearer end-of-task status;
+- persistent project context;
+- safer handling of auth, data, infrastructure, and dependencies;
+- a workflow that scales as your project becomes less forgiving.
+
+---
+
+## For senior developers
+
+SeniorOS is intentionally **not** a “please act like a 10x senior engineer” persona prompt.
+
+The system is built around explicit engineering primitives:
+
+### Context as a budget
+
+The agent should load the context required to make a good decision, not the context available because tokens happen to exist.
+
+### Risk-adaptive rigor
+
+Process should scale with blast radius, reversibility, uncertainty, and affected system boundaries.
+
+### Deterministic mechanics
+
+Repeatable repository checks belong in code/scripts rather than being reinterpreted by the model every session.
+
+### Proof contracts
+
+Completion should be backed by observable evidence wherever possible.
+
+### Durable decisions
+
+Architectural decisions and conventions should remain inspectable instead of being trapped inside transient conversation history.
+
+### Eval-driven evolution
+
+A skill change should demonstrate better behavior on repeatable scenarios, not merely contain more instructions.
+
+---
+
+## Core skills
+
+The v0.1 foundation ships with six core Agent Skills.
+
+| Skill | Responsibility |
+|---|---|
+| [`senior-engineering`](skills/senior-engineering/SKILL.md) | Risk-adaptive engineering router and execution discipline |
+| [`project-intelligence`](skills/project-intelligence/SKILL.md) | Build and maintain concise durable project context |
+| [`debugging`](skills/debugging/SKILL.md) | Root-cause debugging before patching symptoms |
+| [`code-review`](skills/code-review/SKILL.md) | Evidence-based review of changed code and scope |
+| [`finish`](skills/finish/SKILL.md) | Proof baseline and semantic completion gate |
+| [`skill-authoring`](skills/skill-authoring/SKILL.md) | Create SeniorOS-quality skills with eval contracts |
+
+### Skill quality contract
 
 A SeniorOS skill should:
 
 - solve one recognizable engineering goal;
-- use precise routing metadata;
-- keep `SKILL.md` concise;
-- move deep reference material out of the hot path;
-- use scripts only for deterministic or fragile mechanics;
+- route precisely;
+- keep its root `SKILL.md` concise;
+- use progressive disclosure for deep references;
+- move deterministic mechanics into scripts;
 - define verification and exit conditions;
-- avoid forcing heavyweight process onto low-risk tasks;
-- ship with at least three eval cases covering trigger, non-trigger, and failure/edge behavior.
+- avoid forcing heavyweight process onto trivial tasks;
+- include eval coverage for trigger, non-trigger, and failure/edge behavior.
 
-Run:
+Validate the skill set with:
 
 ```bash
 npm run validate:skills
 npm run validate:evals
 ```
 
+---
+
+## Proof Engine
+
+The Proof Engine exists because “the model believes it worked” is not a useful production signal.
+
+Current foundation behavior:
+
+```text
+available checks
+      ↓
+typecheck / lint / tests / build
+      ↓
+PASS / FAIL / SKIP per check
+      ↓
+proof baseline
+      ↓
+agent/human evaluates task-specific acceptance criteria
+```
+
+SeniorOS deliberately separates:
+
+**repository checks** from **task truth**.
+
+A green build is evidence, but it does not prove that a business workflow, production integration, browser interaction, or migration behavior is correct unless those things were actually tested.
+
+Future releases will expand proof contracts toward:
+
+- runtime assertions;
+- browser evidence;
+- security checks;
+- regression baselines;
+- task-specific acceptance contracts;
+- trace evidence.
+
+---
+
+## Project Memory
+
+`senior init` creates explicit project memory rather than asking the model to “remember the architecture”.
+
+Example decision:
+
+```markdown
+## 2026-10-25 — Database ORM
+
+Decision: Keep Drizzle.
+Reason: Existing repository uses Drizzle consistently.
+Do not: Introduce Prisma for unrelated features.
+```
+
+That makes architectural context:
+
+- versionable;
+- inspectable;
+- reviewable;
+- portable across sessions and agents.
+
+Runtime-only data belongs under `.senior/runtime/` and should stay out of Git.
+
+---
+
 ## Evals
 
-SeniorOS treats evals as part of product development, not documentation theater.
+SeniorOS treats evals as product engineering.
 
 Each eval case describes:
 
-```text
-prompt
-expected routing
-required behaviors
-forbidden behaviors
-observable checks
+```json
+{
+  "prompt": "task shown to the agent",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": ["observable behavior"],
+    "forbiddenBehaviors": ["unwanted behavior"]
+  }
+}
 ```
 
-The v0.1 repository includes the eval contract and deterministic fixture validation. Host-specific runner adapters and trace grading are on the roadmap.
+The v0.1 foundation includes **18 initial cases** covering the core skills.
+
+Evaluation is designed in layers:
+
+1. **Structural** — manifests, fixtures, repository invariants.
+2. **Trajectory** — routing, files read, tools called, approvals, verification.
+3. **Outcome** — builds, tests, runtime behavior, forbidden side effects.
+4. **Rubric** — model grading only where human-like judgment is actually necessary.
 
 See [`evals/README.md`](evals/README.md).
 
-## Host support
-
-### Claude Code
-
-Project skills are installed under `.claude/skills/`. User-scoped skills use `~/.claude/skills/`.
-
-See [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
-
-### Codex
-
-SeniorOS supports project-local `.codex/skills/` and user-scoped `${CODEX_HOME:-~/.codex}/skills/`. The core repository also keeps `AGENTS.md` concise so Codex can work on SeniorOS itself without loading every workflow into permanent context.
-
-See [`adapters/codex/README.md`](adapters/codex/README.md).
-
-### Generic / portable
-
-`--target generic` installs to `.agents/skills/`, a neutral project-local layout useful for portable packaging and adapters.
+---
 
 ## Architecture
 
 ```text
 SeniorOS
-├── CLI runtime
+│
+├── Runtime CLI
 │   ├── project intelligence
 │   ├── risk engine
 │   ├── proof engine
 │   ├── work ledger
 │   └── host installer
+│
 ├── Agent Skills
-│   ├── router
+│   ├── senior engineering router
 │   ├── debugging
 │   ├── review
 │   ├── finish
 │   └── authoring
+│
 ├── Evals
+│
 ├── Host adapters
-└── Repository governance
+│   ├── Claude Code
+│   ├── Codex
+│   └── generic Agent Skills
+│
+└── Project state
+    └── .senior/
 ```
 
-Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for boundaries and future runtime layers.
+The long-term direction is broader than a skill pack:
 
-## Non-goals
+```text
+Goal Engine
+Context Router
+Risk Engine
+Skill Router
+Execution Engine
+Proof Engine
+Review Engine
+Outer Loop
+Work Ledger
+Project Memory
+Eval Lab
+Observability
+Host Adapters
+```
+
+Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for the system boundaries.
+
+---
+
+## Host support
+
+### Claude Code
+
+Project-local installation:
+
+```bash
+senior install --target claude --scope project
+```
+
+Skills are installed under `.claude/skills/`.
+
+See [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
+
+### Codex
+
+Project-local installation:
+
+```bash
+senior install --target codex --scope project
+```
+
+SeniorOS uses project-level skills plus a concise `AGENTS.md` so the repository can provide durable instructions without permanently stuffing every workflow into model context.
+
+See [`adapters/codex/README.md`](adapters/codex/README.md).
+
+### Generic / portable
+
+```bash
+senior install --target generic --scope project
+```
+
+Installs into `.agents/skills/`, a neutral layout suitable for host adapters and portable packaging.
+
+---
+
+## Design principles
+
+1. **Proof over confidence**  
+   Observable evidence beats confident prose.
+
+2. **Risk-adaptive process**  
+   A typo and a production migration do not deserve the same ritual.
+
+3. **Progressive disclosure**  
+   Load deep guidance only when it is relevant.
+
+4. **Deterministic mechanics belong in code**  
+   Repeated checks should not depend on the model remembering the ceremony.
+
+5. **Context is a budget**  
+   Read what is needed, not everything available.
+
+6. **Durable project intelligence**  
+   Important decisions should survive the current chat.
+
+7. **No surprise destructive actions**  
+   Credentials, production, irreversible data changes, deployments, and history rewrites require explicit boundaries.
+
+8. **Portable by default**  
+   The engineering model should not belong to a single vendor.
+
+9. **Evals before mythology**  
+   Better should be measured whenever it can be measured.
+
+---
+
+## What SeniorOS is not
 
 SeniorOS is not:
 
-- another general-purpose coding agent;
-- a giant persona prompt telling a model to “act senior”;
-- a replacement for your test suite, CI, security program or code review;
-- an excuse to let agents perform destructive production actions without explicit control;
-- tied to a single model vendor.
+- another general-purpose coding model;
+- a 5,000-line persona prompt;
+- a substitute for your test suite or security program;
+- permission for agents to perform destructive production work autonomously;
+- tied to one model vendor;
+- finished.
+
+That last point matters. The project is intentionally shipping as a tested foundation rather than pretending the first release solved agentic engineering forever. Humans already do enough of that in software marketing.
+
+---
 
 ## Roadmap
 
-The direction is intentionally more ambitious than a skill pack:
+The current foundation proves the packaging, routing, validation, project-state, risk, and proof-baseline concepts.
 
-- host-neutral Goal Engine;
-- context routing and project graph;
-- risk-aware outer loop;
-- proof contracts and regression baselines;
-- work ledger and multi-agent file ownership;
-- tool contracts and controlled MCP integration;
-- trace-based eval runners;
-- skill packs for database, security, frontend and deployment;
-- observability and trust scoring derived from evidence.
+Next major layers:
+
+- richer Goal Contracts;
+- project graph and selective Context Engine;
+- risk-aware Outer Loop;
+- task-specific Proof Contracts;
+- multi-agent Work Ledger and file ownership;
+- controlled tool/MCP contracts;
+- host-specific eval runners;
+- trace grading and regression comparison;
+- database, security, frontend, and deployment packs;
+- evidence-derived trust scoring;
+- observability for agent trajectories.
 
 See [`ROADMAP.md`](ROADMAP.md).
 
+---
+
 ## Security
 
-Skills are executable influence over an agent. Treat third-party skills as code. SeniorOS never assumes a skill is trusted merely because it is Markdown.
+Agent Skills can influence tool use and repository changes. Treat third-party skills as executable engineering policy, not harmless Markdown.
 
-See [`SECURITY.md`](SECURITY.md).
+SeniorOS does not assume a skill is safe because it looks readable.
+
+Read [`SECURITY.md`](SECURITY.md).
+
+---
 
 ## Contributing
 
-SeniorOS should become stricter through evidence, not longer through accumulated folklore. Contributions that add process must explain the failure mode they prevent and how that behavior will be evaluated.
+SeniorOS should become stronger through **evidence**, not longer through accumulated folklore.
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md).
+If a contribution adds process, it should answer:
+
+1. What failure mode does this prevent?
+2. When should it trigger?
+3. When should it stay out of the way?
+4. How will we know it improved behavior?
+
+Read [`CONTRIBUTING.md`](CONTRIBUTING.md).
+
+---
+
+## Creator
+
+<p align="center">
+  <strong>SeniorOS was created by Josh Segatt.</strong>
+</p>
+
+<p align="center">
+  Building a portable engineering layer for coding agents that values discipline, verification, and measurable progress over prompt theater.
+</p>
+
+---
 
 ## License
 
 Apache-2.0. See [`LICENSE`](LICENSE).
+
+<p align="center">
+  <sub>SeniorOS · Josh Segatt · Better agents. Higher standards. Real progress.</sub>
+</p>
