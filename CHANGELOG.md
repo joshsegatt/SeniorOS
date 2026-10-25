@@ -2,7 +2,9 @@
 
 All notable changes to SeniorOS will be documented here.
 
-## [0.2.0] - Unreleased
+## [0.2.0] - 2026-10-25
+
+First release on npm: `npx senioros` or `npm install -g senioros` (the CLI command is `senior`).
 
 ### Changed (breaking)
 
@@ -16,7 +18,7 @@ All notable changes to SeniorOS will be documented here.
 - Claude Code plugin and marketplace manifests (`.claude-plugin/`) and a Codex plugin manifest (`.codex-plugin/`);
 - validator: `SKILL.md` must stay under 20,000 bytes, names must start with `senior-`, descriptions with "Use ";
 - eval cases `debug-three-failed-fixes` and `finish-unverified-claim`;
-
+- npm package `senioros` and Claude Code plugin `senioros` (`/plugin install senioros@senioros`);
 - `senior risk --base <ref>` assesses a branch or PR (merge-base diff plus uncommitted and untracked work);
 - risk output (text and JSON) states which change scope was assessed;
 - proof checks carry a `reason` when skipped or when the runner cannot start;
@@ -24,6 +26,8 @@ All notable changes to SeniorOS will be documented here.
 
 ### Fixed
 
+- the npm package ships only the CLI build, skills and adapters (no compiled tests);
+- `senior finish` on Windows no longer triggers Node 24's DEP0190 deprecation warning;
 - `npm run check` failed on Windows: the skill validator now accepts CRLF and BOM manifests (`.gitattributes` also pins LF);
 - `senior risk` reported `LOW` with 0 files for committed changes, and `LOW` outside a git repository; it now uses `--base` for branches and fails loudly on git errors;
 - `senior risk` mangled non-ASCII paths (C-quoted escapes); git output is now parsed with `-z`;
