@@ -1,9 +1,13 @@
 import { execFileSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 
 export interface ChangedFile {
   status: string;
   /** Path relative to the repository root, always with forward slashes. */
   path: string;
+  /** Original path for renames and copies. */
+  from?: string;
 }
 
 export type ChangeScope =
@@ -41,15 +45,47 @@ function runGit(cwd: string, args: string[]): string {
   }
 }
 
-function repositoryRoot(cwd: string): string {
+/** Absolute path of the repository root that contains `cwd`. */
+export function getRepositoryRoot(cwd: string): string {
   try {
     return runGit(cwd, ['rev-parse', '--show-toplevel']).trim();
   } catch (error) {
     if (error instanceof GitError && /not a git repository/i.test(error.message)) {
-      throw new GitError('Not a git repository. Run `senior risk` inside a git working tree.');
+      throw new GitError('Not a git repository. Run SeniorOS inside a git working tree.');
     }
     throw error;
   }
+}
+
+const repositoryRoot = getRepositoryRoot;
+
+/** Full commit hash for `ref`; throws a GitError when it does not resolve (for example, a repository with no commits). */
+export function resolveCommit(top: string, ref: string): string {
+  try {
+    return runGit(top, ['rev-parse', '--verify', '--quiet', `${ref}^{commit}`]).trim();
+  } catch {
+    throw new GitError(`"${ref}" does not resolve to a commit.`);
+  }
+}
+
+/** File content at a revision, byte-exact; `null` when the path does not exist there. */
+export function readFileAtRevision(top: string, revision: string, file: string): Buffer | null {
+  try {
+    execFileSync('git', ['cat-file', '-e', `${revision}:${file}`], { cwd: top, stdio: 'ignore' });
+  } catch {
+    return null;
+  }
+  return execFileSync('git', ['cat-file', 'blob', `${revision}:${file}`], { cwd: top, stdio: ['ignore', 'pipe', 'pipe'], maxBuffer: 256 * 1024 * 1024 });
+}
+
+/** Name of a merge, rebase, cherry-pick or revert in progress, or of unresolved conflicts; null when the tree is in a normal state. */
+export function operationInProgress(top: string): string | null {
+  for (const [marker, name] of [['MERGE_HEAD', 'merge'], ['rebase-merge', 'rebase'], ['rebase-apply', 'rebase'], ['CHERRY_PICK_HEAD', 'cherry-pick'], ['REVERT_HEAD', 'revert']] as const) {
+    const gitPath = runGit(top, ['rev-parse', '--git-path', marker]).trim();
+    if (existsSync(path.isAbsolute(gitPath) ? gitPath : path.join(top, gitPath))) return name;
+  }
+  const conflicted = parseStatusZ(runGit(top, ['status', '--porcelain=v1', '-z'])).some((file) => /U|AA|DD/.test(file.status));
+  return conflicted ? 'unresolved conflicts' : null;
 }
 
 /** Parses `git status --porcelain=v1 -z`. Renames/copies are `XY new\0old\0`. */
@@ -60,8 +96,13 @@ export function parseStatusZ(output: string): ChangedFile[] {
     const entry = tokens[i];
     if (!entry || entry.length < 4) continue;
     const xy = entry.slice(0, 2);
-    files.push({ status: xy.trim() || 'M', path: entry.slice(3) });
-    if (xy.includes('R') || xy.includes('C')) i += 1;
+    const file: ChangedFile = { status: xy.trim() || 'M', path: entry.slice(3) };
+    if (xy.includes('R') || xy.includes('C')) {
+      const from = tokens[i + 1];
+      if (from) file.from = from;
+      i += 1;
+    }
+    files.push(file);
   }
   return files;
 }
@@ -76,8 +117,9 @@ export function parseNameStatusZ(output: string): ChangedFile[] {
     if (!status) break;
     const letter = status.charAt(0);
     if (letter === 'R' || letter === 'C') {
+      const from = tokens[i + 1];
       const target = tokens[i + 2];
-      if (target) files.push({ status: letter, path: target });
+      if (target) files.push(from ? { status: letter, path: target, from } : { status: letter, path: target });
       i += 3;
     } else {
       const target = tokens[i + 1];
