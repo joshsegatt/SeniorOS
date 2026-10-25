@@ -67,11 +67,13 @@ async function main(): Promise<void> {
 
   if (command === 'finish') {
     const stack = await detectStack(root);
-    const result = await runProof(root, stack.packageManager);
+    // In JSON mode, script output goes to stderr so stdout stays parseable.
+    const result = await runProof(root, stack.packageManager, { childOutput: json ? 'stderr' : 'inherit' });
     if (json) console.log(JSON.stringify(result, null, 2));
     else {
       for (const check of result.checks) {
-        console.log(`${check.status.toUpperCase().padEnd(4)} ${check.name}${check.command ? `  (${check.command})` : ''}`);
+        const detail = [check.command, check.reason].filter(Boolean).join(' — ');
+        console.log(`${check.status.toUpperCase().padEnd(4)} ${check.name}${detail ? `  (${detail})` : ''}`);
       }
       const coverage = `${result.availableChecks}/${result.totalChecks}`;
       console.log(`\nPROOF BASELINE: ${result.baselinePassed ? 'PASS' : 'NOT PROVEN'} (${coverage} standard checks available)`);

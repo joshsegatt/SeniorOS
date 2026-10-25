@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync, type StdioOptions } from 'node:child_process';
 import { readJson } from './fs-utils.js';
 import type { ProofCheck, ProofReport } from '../types.js';
 
@@ -22,32 +22,58 @@ function argsFor(manager: string, script: string): string[] {
   return ['run', script];
 }
 
-export async function runProof(root: string, packageManager: string | null): Promise<ProofReport> {
+export interface ProofOptions {
+  /**
+   * Where child script output goes. `stderr` keeps stdout clean for machine-readable output (`--json`).
+   * Defaults to `inherit`.
+   */
+  childOutput?: 'inherit' | 'stderr';
+}
+
+export async function runProof(root: string, packageManager: string | null, options: ProofOptions = {}): Promise<ProofReport> {
   const pkg = await readJson<PackageJson>(path.join(root, 'package.json'));
   const scripts = pkg?.scripts ?? {};
   const manager = packageRunner(packageManager);
   const checks: ProofCheck[] = [];
+  const stdio: StdioOptions = options.childOutput === 'stderr' ? ['inherit', 2, 2] : 'inherit';
+  let blockedBy: string | null = null;
+  let availableChecks = 0;
 
   for (const name of ORDER) {
     if (!scripts[name]) {
-      checks.push({ name, command: null, status: 'skip', exitCode: null, durationMs: 0 });
+      const reason = pkg ? `no "${name}" script in package.json` : 'no package.json';
+      checks.push({ name, command: null, status: 'skip', exitCode: null, durationMs: 0, reason });
       continue;
     }
 
+    availableChecks += 1;
     const command = `${manager} ${argsFor(manager, name).join(' ')}`;
+    if (blockedBy) {
+      checks.push({ name, command, status: 'skip', exitCode: null, durationMs: 0, reason: `not run: "${blockedBy}" failed` });
+      continue;
+    }
+
     const started = Date.now();
     const result = spawnSync(manager, argsFor(manager, name), {
       cwd: root,
-      stdio: 'inherit',
+      stdio,
       shell: process.platform === 'win32'
     });
     const durationMs = Date.now() - started;
-    const exitCode = result.status ?? 1;
-    checks.push({ name, command, status: exitCode === 0 ? 'pass' : 'fail', exitCode, durationMs });
-    if (exitCode !== 0) break;
+
+    if (result.error || result.status === null) {
+      const reason = result.error
+        ? `could not run ${manager}: ${result.error.message}`
+        : `terminated by signal ${result.signal ?? 'unknown'}`;
+      checks.push({ name, command, status: 'fail', exitCode: null, durationMs, reason });
+      blockedBy = name;
+      continue;
+    }
+
+    checks.push({ name, command, status: result.status === 0 ? 'pass' : 'fail', exitCode: result.status, durationMs });
+    if (result.status !== 0) blockedBy = name;
   }
 
-  const ran = checks.filter((check) => check.status !== 'skip');
-  const baselinePassed = ran.length > 0 && ran.every((check) => check.status === 'pass');
-  return { checks, baselinePassed, availableChecks: ran.length, totalChecks: ORDER.length };
+  const baselinePassed = availableChecks > 0 && checks.every((check) => check.status === 'pass' || check.command === null);
+  return { checks, baselinePassed, availableChecks, totalChecks: ORDER.length };
 }

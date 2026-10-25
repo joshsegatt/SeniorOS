@@ -32,6 +32,8 @@ export interface ProofCheck {
   status: 'pass' | 'fail' | 'skip';
   exitCode: number | null;
   durationMs: number;
+  /** Why a check was skipped or failed without a normal exit code. */
+  reason?: string;
 }
 
 export interface ProofReport {
