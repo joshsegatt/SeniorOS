@@ -5,7 +5,7 @@ import { initProject } from './core/project-state.js';
 import { getChangeSet, type ChangeScope } from './core/git.js';
 import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
-import { installSkills, type InstallScope, type InstallTarget } from './core/install.js';
+import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
 import { doctor } from './core/doctor.js';
 
 const VERSION = '0.1.0';
@@ -104,6 +104,12 @@ async function main(): Promise<void> {
     const installed = await installSkills(root, target, scope, force);
     console.log(`Installed ${installed.length} skills for ${target} (${scope}).`);
     for (const item of installed) console.log(`- ${item}`);
+    const legacy = await findLegacySkills(destinationFor(root, target, scope));
+    if (legacy.length) {
+      console.warn('\nWarning: SeniorOS 0.1 skills without the `senior-` prefix are still installed and would trigger twice.');
+      console.warn('They were not removed. Delete them when ready:');
+      for (const item of legacy) console.warn(`- ${item}`);
+    }
     return;
   }
 

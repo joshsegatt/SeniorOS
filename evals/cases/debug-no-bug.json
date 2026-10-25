@@ -1,6 +1,6 @@
 {
   "id": "debug-no-bug",
-  "skill": "debugging",
+  "skill": "senior-debugging",
   "prompt": "Explain what this function does.",
   "expected": {
     "shouldTrigger": false,

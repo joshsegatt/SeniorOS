@@ -1,6 +1,6 @@
 {
   "id": "skill-author-new",
-  "skill": "skill-authoring",
+  "skill": "senior-skill-authoring",
   "prompt": "Create a reusable skill for database migration safety.",
   "expected": {
     "shouldTrigger": true,

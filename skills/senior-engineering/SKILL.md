@@ -87,7 +87,7 @@ Ask:
 - Did security, data integrity, performance or compatibility risk change?
 - Did we leave debug code, dead code or misleading comments?
 
-Use the `code-review` skill for non-trivial changes when available.
+Use the `senior-code-review` skill for non-trivial changes when available.
 
 ## 7. Close with evidence
 

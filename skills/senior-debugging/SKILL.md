@@ -1,5 +1,5 @@
 ---
-name: debugging
+name: senior-debugging
 description: Diagnose software failures by reproducing the problem, tracing evidence, testing hypotheses, and fixing the root cause with a minimal regression-safe change. Use for bugs, failing tests/builds, runtime errors, regressions, flaky behavior, or a project that recently stopped working.
 ---
 

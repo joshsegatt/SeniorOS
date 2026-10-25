@@ -8,7 +8,7 @@ SeniorOS is a vendor-portable engineering harness for coding agents. Keep the co
 
 - Architecture boundaries: `ARCHITECTURE.md`
 - Roadmap: `ROADMAP.md`
-- Skill authoring contract: `skills/skill-authoring/SKILL.md`
+- Skill authoring contract: `skills/senior-skill-authoring/SKILL.md`
 - Eval contract: `evals/README.md`
 - CLI/runtime: `src/`
 

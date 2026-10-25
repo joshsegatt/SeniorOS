@@ -1,5 +1,5 @@
 ---
-name: project-intelligence
+name: senior-project-intelligence
 description: Build or refresh concise, durable project context for coding agents without dumping the repository into permanent prompts. Use when entering an unfamiliar project, when architecture changed materially, or when repeated sessions keep rediscovering the same facts.
 ---
 

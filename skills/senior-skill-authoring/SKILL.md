@@ -1,5 +1,5 @@
 ---
-name: skill-authoring
+name: senior-skill-authoring
 description: Create or improve a SeniorOS-quality Agent Skill with precise trigger metadata, progressive disclosure, deterministic scripts where justified, explicit verification, and eval cases. Use when adding a reusable engineering workflow or tightening an existing skill.
 ---
 

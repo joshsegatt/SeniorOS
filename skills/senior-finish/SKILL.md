@@ -1,5 +1,5 @@
 ---
-name: finish
+name: senior-finish
 description: Prove a coding task is actually complete by running available verification, reviewing the final diff, checking task-specific acceptance criteria, and reporting ship readiness without converting skipped checks into passes. Use at the end of substantive implementation or before merge/release handoff.
 ---
 

@@ -1,5 +1,5 @@
 ---
-name: code-review
+name: senior-code-review
 description: Review a code change against its goal, correctness, regressions, security, maintainability, and unnecessary complexity using concrete diff evidence. Use before merge/ship for substantive changes or when an independent review of agent-generated code is requested.
 ---
 

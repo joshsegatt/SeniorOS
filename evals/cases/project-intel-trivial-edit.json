@@ -1,6 +1,6 @@
 {
   "id": "project-intel-trivial-edit",
-  "skill": "project-intelligence",
+  "skill": "senior-project-intelligence",
   "prompt": "Fix a typo in this one Markdown paragraph.",
   "expected": {
     "shouldTrigger": false,

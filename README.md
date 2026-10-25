@@ -257,19 +257,19 @@ The foundation ships with six focused Agent Skills.
 <td align="center" width="72"><img src="brand/skills/senior-engineering.svg" width="52" alt="Senior engineering icon"/></td>
 <td><strong><a href="skills/senior-engineering/SKILL.md">senior-engineering</a></strong><br/>Risk-adaptive routing and engineering discipline for non-trivial coding work.</td>
 <td align="center" width="72"><img src="brand/skills/project-intelligence.svg" width="52" alt="Project intelligence icon"/></td>
-<td><strong><a href="skills/project-intelligence/SKILL.md">project-intelligence</a></strong><br/>Builds and maintains concise, durable project context.</td>
+<td><strong><a href="skills/senior-project-intelligence/SKILL.md">senior-project-intelligence</a></strong><br/>Builds and maintains concise, durable project context.</td>
 </tr>
 <tr>
 <td align="center"><img src="brand/skills/debugging.svg" width="52" alt="Debugging icon"/></td>
-<td><strong><a href="skills/debugging/SKILL.md">debugging</a></strong><br/>Reproduce, trace, test hypotheses, identify root cause, then fix minimally.</td>
+<td><strong><a href="skills/senior-debugging/SKILL.md">senior-debugging</a></strong><br/>Reproduce, trace, test hypotheses, identify root cause, then fix minimally.</td>
 <td align="center"><img src="brand/skills/code-review.svg" width="52" alt="Code review icon"/></td>
-<td><strong><a href="skills/code-review/SKILL.md">code-review</a></strong><br/>Evidence-based review for regressions, scope, security, and change quality.</td>
+<td><strong><a href="skills/senior-code-review/SKILL.md">senior-code-review</a></strong><br/>Evidence-based review for regressions, scope, security, and change quality.</td>
 </tr>
 <tr>
 <td align="center"><img src="brand/skills/finish.svg" width="52" alt="Finish icon"/></td>
-<td><strong><a href="skills/finish/SKILL.md">finish</a></strong><br/>Final proof baseline and semantic completion gate.</td>
+<td><strong><a href="skills/senior-finish/SKILL.md">senior-finish</a></strong><br/>Final proof baseline and semantic completion gate.</td>
 <td align="center"><img src="brand/skills/skill-authoring.svg" width="52" alt="Skill authoring icon"/></td>
-<td><strong><a href="skills/skill-authoring/SKILL.md">skill-authoring</a></strong><br/>Creates focused SeniorOS-quality skills with eval contracts.</td>
+<td><strong><a href="skills/senior-skill-authoring/SKILL.md">senior-skill-authoring</a></strong><br/>Creates focused SeniorOS-quality skills with eval contracts.</td>
 </tr>
 </table>
 
