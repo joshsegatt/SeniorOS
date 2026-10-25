@@ -8,11 +8,12 @@ import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
 import { doctor } from './core/doctor.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
+import { proveRegression, restoreInterruptedProof, type ProofPhase, type RegressionReport } from './core/regression.js';
 
 const VERSION = '0.2.0';
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n`);
 }
 
 function hasFlag(args: string[], flag: string): boolean {
@@ -25,6 +26,43 @@ function valueAfter(args: string[], flag: string): string | undefined {
   const value = args[index + 1];
   if (value === undefined || value.startsWith('--')) throw new Error(`${flag} requires a value`);
   return value;
+}
+
+function valuesAfter(args: string[], flag: string): string[] {
+  const values: string[] = [];
+  args.forEach((arg, index) => {
+    if (arg !== flag) return;
+    const value = args[index + 1];
+    if (value === undefined || value.startsWith('--')) throw new Error(`${flag} requires a value`);
+    values.push(value);
+  });
+  return values;
+}
+
+const PHASE_LABEL: Record<ProofPhase, string> = {
+  'with-fix': '1. with the fix      ',
+  'without-fix': '2. without the fix   ',
+  restored: '3. fix restored      '
+};
+
+function formatRegression(report: RegressionReport): string {
+  const lines = [
+    `Regression proof: ${report.verdict === 'proven' ? 'PROVEN' : 'NOT PROVEN'}${report.verdict === 'proven' ? '' : ` (${report.reason})`}`,
+    `  ${report.message}`,
+    `  Compared with: ${report.scope === 'base' ? `${report.base} (merge-base ${report.revision.slice(0, 7)})` : `HEAD ${report.revision.slice(0, 7)}`}`,
+    `  Fix files, reverted for run 2: ${report.fixFiles.join(', ')}`,
+    `  Test files, kept in place:     ${report.testFiles.join(', ') || '(none changed)'}`
+  ];
+  for (const run of report.runs) {
+    const expected = run.phase === 'without-fix' ? !run.passed : run.passed;
+    const result = run.timedOut ? 'TIMEOUT' : run.passed ? 'PASS' : 'FAIL';
+    lines.push(`  ${PHASE_LABEL[run.phase]}${result.padEnd(7)} exit ${run.exitCode ?? '-'}  ${(run.durationMs / 1000).toFixed(1)}s  ${expected ? 'as expected' : 'UNEXPECTED'}`);
+  }
+  if (report.restored.files > 0) lines.push(`  Working tree restored and verified (${report.restored.files} file${report.restored.files === 1 ? '' : 's'}, sha256 match).`);
+  const surprising = report.runs.find((run) => (run.phase === 'without-fix' ? run.passed : !run.passed) || (run.phase === 'without-fix' && report.reason === 'failed-for-other-reason'));
+  if (surprising && report.verdict !== 'proven') lines.push(`\n  Output of run "${surprising.phase}" (last lines):\n${surprising.outputTail.split('\n').map((line) => `    ${line}`).join('\n')}`);
+  if (report.evidencePath) lines.push(`  Evidence: ${report.evidencePath}`);
+  return lines.join('\n');
 }
 
 async function main(): Promise<void> {
@@ -87,6 +125,35 @@ async function main(): Promise<void> {
       console.log('Final ship readiness still depends on task-specific acceptance criteria and risk.');
     }
     if (!result.baselinePassed) process.exitCode = 1;
+    return;
+  }
+
+  if (command === 'prove') {
+    if (hasFlag(args, '--restore')) {
+      const restored = restoreInterruptedProof(root);
+      console.log(json ? JSON.stringify({ restored }, null, 2) : `Restored and verified ${restored.length} file(s):\n${restored.map((file) => `- ${file}`).join('\n')}`);
+      return;
+    }
+    if (!hasFlag(args, '--regression')) throw new Error('prove requires --regression (or --restore). See `senior --help`.');
+    const test = valueAfter(args, '--test');
+    if (!test) throw new Error('prove --regression requires --test "<command that runs the regression test>"');
+    const timeout = valueAfter(args, '--timeout');
+    const timeoutSeconds = timeout === undefined ? undefined : Number(timeout);
+    if (timeoutSeconds !== undefined && (!Number.isFinite(timeoutSeconds) || timeoutSeconds <= 0)) throw new Error('--timeout must be a positive number of seconds');
+    const base = valueAfter(args, '--base');
+    const expectFailure = valueAfter(args, '--expect-failure');
+    const fix = valuesAfter(args, '--fix');
+
+    const report = proveRegression(root, {
+      test,
+      ...(base === undefined ? {} : { base }),
+      ...(expectFailure === undefined ? {} : { expectFailure }),
+      ...(fix.length ? { fix } : {}),
+      ...(timeoutSeconds === undefined ? {} : { timeoutMs: timeoutSeconds * 1000 }),
+      ...(json ? {} : { onPhase: (phase: ProofPhase) => console.error(`running ${PHASE_LABEL[phase].trim()}…`) })
+    });
+    console.log(json ? JSON.stringify(report, null, 2) : formatRegression(report));
+    process.exitCode = report.verdict === 'proven' ? 0 : report.reason === 'interrupted' ? 130 : 1;
     return;
   }
 

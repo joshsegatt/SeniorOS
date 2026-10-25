@@ -2,6 +2,14 @@
 
 All notable changes to SeniorOS will be documented here.
 
+## [Unreleased]
+
+### Added
+
+- `senior prove --regression --test "<cmd>"`: proves a regression test catches the bug (passes with the fix, fails with it reverted, passes again restored), with `--expect-failure`, `--base`, `--fix`, `--timeout` and `--json`; evidence written to `.senior/runtime/evidence/`;
+- `senior prove --restore`: restores the working tree after a proof that was killed mid-run;
+- `senior-debugging` and `senior-finish` use `senior prove --regression` when the CLI is available; new eval `finish-regression-proof`.
+
 ## [0.2.0] - 2026-10-25
 
 First release on npm: `npx senioros` or `npm install -g senioros` (the CLI command is `senior`).

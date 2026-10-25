@@ -19,12 +19,15 @@ SeniorOS is being built in layers so the project can earn complexity instead of 
 
 ## v0.2 — Proof contracts
 
-- [ ] Repository-configurable verification contract
+- [x] Repository-configurable verification contract (`.senior/config.json` `proof.checks`, 0.2.0)
+- [x] Structured `finish --json` (0.2.0)
+- [x] Regression proof: `senior prove --regression` (fails without the fix, passes with it)
+- [ ] Acceptance contracts in `.senior/acceptance/` run by `senior prove`
+- [ ] `senior review-pack` for fresh-context reviewers
 - [ ] Browser/runtime proof adapters
 - [ ] Secret-safe evidence bundle
-- [ ] Structured `finish --json`
-- [ ] Regression baseline support
 - [ ] Complexity budget
+- [ ] Live eval runner and public benchmark (no skill vs other packs vs SeniorOS)
 
 ## v0.3 — Context engine
 

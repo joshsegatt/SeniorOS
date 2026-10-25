@@ -33,7 +33,7 @@ test('parseStatusZ keeps the new path for renames and raw UTF-8 paths', () => {
   const output = ' M ação.ts\0R  new.txt\0old.txt\0?? d/e/u.sql\0';
   assert.deepEqual(parseStatusZ(output), [
     { status: 'M', path: 'ação.ts' },
-    { status: 'R', path: 'new.txt' },
+    { status: 'R', path: 'new.txt', from: 'old.txt' },
     { status: '??', path: 'd/e/u.sql' }
   ]);
 });
@@ -43,7 +43,7 @@ test('parseNameStatusZ keeps the new path for renames', () => {
   assert.deepEqual(parseNameStatusZ(output), [
     { status: 'M', path: 'ação.ts' },
     { status: 'A', path: 'd/e/u.sql' },
-    { status: 'R', path: 'new.txt' }
+    { status: 'R', path: 'new.txt', from: 'old.txt' }
   ]);
 });
 

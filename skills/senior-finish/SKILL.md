@@ -19,7 +19,7 @@ Check for unrelated edits, accidental generated files, debug statements, new TOD
 
 - `senior finish` (or `senior finish --json`) runs the standard package-script baseline: typecheck, lint, test, build.
 - Add task-specific evidence the baseline cannot give: the original bug reproduction, a browser flow, an API call, a migration dry run, a security check, a benchmark.
-- For a bug fix, the regression test must have been seen failing without the fix.
+- For a bug fix, the regression test must have been seen failing without the fix: `senior prove --regression --test "<command>"` gives a `PROVEN` / `NOT PROVEN` verdict with evidence. Report `NOT PROVEN (test-misses-bug)` as a gap, not as a pass.
 - Read the output itself: exit code, number of failures, warnings. A summary from a subagent or an earlier run is not proof.
 
 ## 4. Apply the risk gate
