@@ -1,0 +1,50 @@
+{
+  "name": "senior-os-cli",
+  "version": "0.1.0",
+  "description": "Engineering discipline for coding agents: risk-adaptive workflows, proof gates, project memory, and portable Agent Skills.",
+  "type": "module",
+  "bin": {
+    "senior": "dist/src/index.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "adapters",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build --silent && node --test dist/tests/*.test.js",
+    "validate:skills": "npm run build --silent && node dist/scripts/validate-skills.js",
+    "validate:evals": "npm run build --silent && node dist/scripts/validate-evals.js",
+    "check": "npm run typecheck && npm run validate:skills && npm run validate:evals && npm test",
+    "prepack": "npm run build"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "agent-skills",
+    "coding-agents",
+    "claude-code",
+    "codex",
+    "developer-tools",
+    "ai-engineering",
+    "agentic-coding"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joshsegatt/senior-os.git"
+  },
+  "bugs": {
+    "url": "https://github.com/joshsegatt/senior-os/issues"
+  },
+  "homepage": "https://github.com/joshsegatt/senior-os#readme",
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.9.0"
+  }
+}
