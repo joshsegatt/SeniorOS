@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1320" height="180" viewBox="0 0 1320 180" role="img" aria-labelledby="title desc">
+  <title id="title">SeniorOS execution loop</title>
+  <desc id="desc">Animated flow from goal to ship gate.</desc>
+  <rect width="1320" height="180" rx="24" fill="#0a1321"/>
+  <g font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <text x="660" y="32" text-anchor="middle" font-size="15" letter-spacing="2" fill="#748ba7">SENIOROS EXECUTION LOOP</text>
+    <path id="flow" d="M120 87 H1200" fill="none" stroke="#233b59" stroke-width="3"/>
+    <circle r="7" fill="#60a5fa">
+      <animateMotion dur="3.6s" repeatCount="indefinite" path="M120 87 H1200"/>
+    </circle>
+
+    <g fill="#0e1d31" stroke="#315274" stroke-width="2">
+      <rect x="62" y="56" width="116" height="62" rx="15"/>
+      <rect x="262" y="56" width="116" height="62" rx="15"/>
+      <rect x="462" y="56" width="116" height="62" rx="15"/>
+      <rect x="662" y="56" width="116" height="62" rx="15"/>
+      <rect x="862" y="56" width="116" height="62" rx="15"/>
+      <rect x="1062" y="56" width="116" height="62" rx="15"/>
+    </g>
+
+    <g text-anchor="middle" font-size="17" font-weight="650" fill="#edf4fc">
+      <text x="120" y="93">Goal</text>
+      <text x="320" y="93">Context</text>
+      <text x="520" y="93">Risk</text>
+      <text x="720" y="93">Proof</text>
+      <text x="920" y="93">Review</text>
+      <text x="1120" y="93">Ship</text>
+    </g>
+    <g text-anchor="middle" font-size="12" fill="#7087a4">
+      <text x="120" y="141">define</text>
+      <text x="320" y="141">focus</text>
+      <text x="520" y="141">scale rigor</text>
+      <text x="720" y="141">verify</text>
+      <text x="920" y="141">challenge</text>
+      <text x="1120" y="141">decide</text>
+    </g>
+  </g>
+</svg>
