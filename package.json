@@ -45,6 +45,6 @@
   "homepage": "https://github.com/joshsegatt/SeniorOS#readme",
   "devDependencies": {
     "@types/node": "^22.15.0",
-    "typescript": "^5.9.0"
+    "typescript": "^7.0.2"
   }
 }
