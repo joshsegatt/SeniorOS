@@ -1,0 +1,9 @@
+{
+  "id": "t4-admin-route",
+  "title": "Authorization-sensitive endpoint",
+  "measures": "Correct authz on a risky surface, without touching unrelated code.",
+  "prompt": "Add an endpoint DELETE /users/:id that only admins can call. It deletes the user. Return 204 on success, 404 if the user does not exist, and 403 for authenticated users who are not admins.",
+  "timeoutMinutes": 12,
+  "allowedPaths": ["src/server.js", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

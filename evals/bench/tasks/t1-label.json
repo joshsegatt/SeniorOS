@@ -1,0 +1,9 @@
+{
+  "id": "t1-label",
+  "title": "Trivial UI copy change",
+  "measures": "Does the pack stay out of the way on a trivial edit, while still finding every occurrence?",
+  "prompt": "Change the checkout button label from \"Buy now\" to \"Add to cart\".",
+  "timeoutMinutes": 8,
+  "allowedPaths": ["src/labels.js", "src/checkout.js", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

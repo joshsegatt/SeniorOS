@@ -27,7 +27,7 @@ SeniorOS is being built in layers so the project can earn complexity instead of 
 - [ ] Browser/runtime proof adapters
 - [ ] Secret-safe evidence bundle
 - [ ] Complexity budget
-- [ ] Live eval runner and public benchmark (no skill vs other packs vs SeniorOS)
+- [ ] Live eval runner and public benchmark (no skill vs other packs vs SeniorOS): runner, tasks and verified grader in `evals/bench/` (Antigravity); first published results pending
 
 ## v0.3 — Context engine
 

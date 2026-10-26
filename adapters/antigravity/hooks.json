@@ -1,0 +1,17 @@
+{
+  "senioros-context": {
+    "SessionStart": [
+      { "type": "command", "command": "node hooks/senioros/session-start.mjs", "timeout": 20 }
+    ]
+  },
+  "senioros-guard": {
+    "PreToolUse": [
+      { "matcher": "run_command", "hooks": [ { "type": "command", "command": "node hooks/senioros/guard.mjs", "timeout": 10 } ] }
+    ]
+  },
+  "senioros-finish-gate": {
+    "Stop": [
+      { "type": "command", "command": "node hooks/senioros/stop-gate.mjs", "timeout": 300 }
+    ]
+  }
+}
