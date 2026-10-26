@@ -10,6 +10,7 @@ All notable changes to SeniorOS will be documented here.
 - `senior prove --restore`: restores the working tree after a proof that was killed mid-run;
 - `senior-debugging` and `senior-finish` use `senior prove --regression` when the CLI is available; new eval `finish-regression-proof`;
 - Google Antigravity adapter (`adapters/antigravity/`): skills registration, routing rules, and three fail-open hooks: project context at session start, a guard that forces confirmation for destructive commands, and a stop gate that runs `senior finish` before the agent may finish with changed code;
+- Antigravity guard always answers with a decision (`--passthrough=ask|allow`, also on errors): Antigravity denies a call whose hook gives none, which had blocked every terminal command; hook commands are written without quotes, since Antigravity runs them without a shell; new `track.mjs` hook lets the stop gate prove repositories edited in conversations that have no workspace; `SENIOROS_CLI` overrides how hooks call the CLI;
 - live bench (`evals/bench/`): six trap tasks on a fixture project, arms `none` / `superpowers` / `senioros` / `senioros-skills`, a deterministic grader (hidden tests, regression proof, scope, test weakening, destructive boundary) verified by reference solutions in `npm run check`, and an Antigravity runner (`agentapi`, `agy` or manual).
 
 ## [0.2.0] - 2026-10-25

@@ -6,7 +6,12 @@
   },
   "senioros-guard": {
     "PreToolUse": [
-      { "matcher": "run_command", "hooks": [ { "type": "command", "command": "node hooks/senioros/guard.mjs", "timeout": 10 } ] }
+      { "matcher": "run_command", "hooks": [ { "type": "command", "command": "node hooks/senioros/guard.mjs --passthrough=ask", "timeout": 10 } ] }
+    ]
+  },
+  "senioros-track": {
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "node hooks/senioros/track.mjs", "timeout": 10 } ] }
     ]
   },
   "senioros-finish-gate": {

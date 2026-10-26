@@ -15,23 +15,31 @@ const SKILLS_DIR = join(CONFIG, 'skills');
 const PARKED_SKILLS = join(CONFIG, 'skills.bench-parked');
 
 const fwd = (p) => p.replace(/\\/g, '/');
-const node = (script, ...args) => `node "${fwd(script)}"${args.map((a) => ` ${a}`).join('')}`;
+/** Antigravity splits hook commands on whitespace without a shell: no quotes, and no spaces in paths. */
+function node(script, ...args) {
+  const path = fwd(script);
+  if (/\s/.test(path)) throw new Error(`Hook path contains a space, which Antigravity cannot run: ${path}. Move the repository to a path without spaces.`);
+  return ['node', path, ...args].join(' ');
+}
 const ADAPTER_HOOKS = join(REPO_ROOT, 'adapters', 'antigravity', 'hooks');
 const MARKER = join(BENCH_SRC, 'hooks', 'marker.mjs');
 
 /** Lets the runner see when a conversation starts and stops, in every arm. */
-const markerHooks = {
+const markerHooks = () => ({
   'bench-marker': {
     SessionStart: [{ type: 'command', command: node(MARKER, 'SessionStart'), timeout: 10 }],
     Stop: [{ type: 'command', command: node(MARKER, 'Stop'), timeout: 10 }],
   },
-};
+});
 
-const senioros = {
+// Built lazily so a bad path fails when an arm is applied, not when the module loads.
+// The guard passes unflagged commands with `allow`, like the hookless arms under Turbo auto-execution.
+const senioros = () => ({
   'senioros-context': { SessionStart: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'session-start.mjs')), timeout: 20 }] },
-  'senioros-guard': { PreToolUse: [{ matcher: 'run_command', hooks: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'guard.mjs')), timeout: 10 }] }] },
+  'senioros-guard': { PreToolUse: [{ matcher: 'run_command', hooks: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'guard.mjs'), '--passthrough=allow'), timeout: 10 }] }] },
+  'senioros-track': { PostToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'track.mjs')), timeout: 10 }] }] },
   'senioros-finish-gate': { Stop: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'stop-gate.mjs')), timeout: 300 }] },
-};
+});
 
 const NO_RULES = '<!-- SeniorOS bench: no global rules for this arm -->\n';
 
@@ -53,7 +61,7 @@ export const ARMS = {
     description: 'SeniorOS Antigravity adapter: senior-* skills, routing rules and the three hooks.',
     rules: () => readFileSync(join(REPO_ROOT, 'adapters', 'antigravity', 'rules.md'), 'utf8'),
     skills: () => [fwd(join(REPO_ROOT, 'skills'))],
-    hooks: () => senioros,
+    hooks: senioros,
   },
   'senioros-skills': {
     description: 'SeniorOS skills and rules without hooks (isolates the effect of the hooks).',
@@ -108,7 +116,7 @@ export function applyArm(name) {
   writeFileSync(join(GEMINI_HOME, 'GEMINI.md'), arm.rules());
   writeFileSync(join(GEMINI_HOME, 'AGENTS.md'), NO_RULES);
   writeFileSync(join(CONFIG, 'skills.json'), JSON.stringify({ entries: arm.skills().map((path) => ({ path })) }, null, 2) + '\n');
-  writeFileSync(join(CONFIG, 'hooks.json'), JSON.stringify({ ...markerHooks, ...arm.hooks() }, null, 2) + '\n');
+  writeFileSync(join(CONFIG, 'hooks.json'), JSON.stringify({ ...markerHooks(), ...arm.hooks() }, null, 2) + '\n');
   saveState({ ...state, arm: name });
 }
 

@@ -73,12 +73,24 @@ function commandOf(toolCall) {
   return args.CommandLine ?? args.commandLine ?? args.command ?? args.Command ?? '';
 }
 
+/**
+ * Decision for commands the guard does not flag. Antigravity denies a call whose hook gives no decision,
+ * so the guard always answers. `ask` keeps Antigravity's own permission flow (and its Always Allow list);
+ * `allow` runs unflagged commands without a prompt, matching Turbo auto-execution.
+ * @param {string[]} argv
+ */
+export function passthroughFrom(argv) {
+  const value = argv.find((a) => a.startsWith('--passthrough='))?.split('=')[1];
+  return value === 'allow' ? 'allow' : 'ask';
+}
+
 if (process.argv[1]?.endsWith('guard.mjs')) {
+  const passthrough = { decision: passthroughFrom(process.argv) };
   await runHook('PreToolUse', async (input) => {
     const command = commandOf(input.toolCall);
     const reason = classify(command);
-    if (!reason) return {};
+    if (!reason) return passthrough;
     log('PreToolUse', { decision: 'force_ask', reason, command: String(command).slice(0, 300) });
     return { decision: 'force_ask', reason: `SeniorOS guard: ${reason}. Confirm before running.` };
-  });
+  }, passthrough);
 }

@@ -66,6 +66,11 @@ It starts one Flash conversation through Antigravity's `agentapi` and reports wh
 conversation id format, whether `hooks.json`, `GEMINI.md` and skills are reloaded for new conversations without a
 restart, and which workspace a new conversation gets. Read `~/senioros-bench/probe/probe-report.md`.
 
+First probe (Antigravity 44.4.3): `agentapi` returns `{"response":{"newConversation":{"conversationId":…}}}`; rules,
+skills and hooks reload per conversation; `agentapi` conversations have **no workspace**, so the SeniorOS arm learns
+the repository from the files the agent edits (`track.mjs`). It also showed that quoted hook paths break and that a
+guard answer without a decision blocks every command; both are fixed and covered by tests.
+
 **3. Run the bench**, again from an Antigravity conversation:
 
 ```bash

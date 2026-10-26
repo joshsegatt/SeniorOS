@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
+import { SENIOR, log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -60,7 +60,7 @@ await runHook('Stop', async (input) => {
     if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) continue;
 
     const started = Date.now();
-    const run = sh('senior finish --json', root, FINISH_TIMEOUT_MS);
+    const run = sh(`${SENIOR} finish --json`, root, FINISH_TIMEOUT_MS);
     const ms = Date.now() - started;
     let report = null;
     try { report = JSON.parse(run.out); } catch {}
