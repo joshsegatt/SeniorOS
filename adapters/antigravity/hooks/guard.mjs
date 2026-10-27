@@ -90,7 +90,8 @@ export function passthroughFrom(argv) {
   return value === 'allow' ? 'allow' : 'ask';
 }
 
-if (process.argv[1]?.endsWith('guard.mjs')) {
+// Run only as the hook itself, not when another script (such as the Claude Code guard) imports classify().
+if (/[\\/]guard\.mjs$/.test(process.argv[1] ?? '')) {
   const passthrough = { decision: passthroughFrom(process.argv) };
   await runHook('PreToolUse', async (input) => {
     const command = commandOf(input.toolCall);
