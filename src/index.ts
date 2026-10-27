@@ -6,6 +6,8 @@ import { getChangeSet, type ChangeScope } from './core/git.js';
 import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
+import { installAntigravity, uninstallAntigravity, type AntigravityReport } from './core/antigravity.js';
+import { spawnSync } from 'node:child_process';
 import { doctor } from './core/doctor.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
 import { proveRegression, restoreInterruptedProof, type ProofPhase, type RegressionReport } from './core/regression.js';
@@ -13,7 +15,7 @@ import { proveRegression, restoreInterruptedProof, type ProofPhase, type Regress
 const VERSION = '0.3.0';
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
 }
 
 function hasFlag(args: string[], flag: string): boolean {
@@ -170,11 +172,25 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (command === 'install' && valueAfter(args, '--target') === 'antigravity') {
+    printAntigravityReport('Installed SeniorOS for Google Antigravity.', await installAntigravity({ turbo: hasFlag(args, '--turbo'), force: hasFlag(args, '--force') }));
+    const cli = spawnSync('senior --version', { shell: true, encoding: 'utf8', windowsHide: true });
+    if (cli.status !== 0) console.warn('\nNote: the `senior` command is not on PATH, so the finish gate lets the agent finish without running checks. Install it with: npm install -g senioros');
+    console.log('\nOpen a new Antigravity conversation for the changes to apply.');
+    return;
+  }
+
+  if (command === 'uninstall') {
+    if (valueAfter(args, '--target') !== 'antigravity') throw new Error('uninstall supports --target antigravity; skills installed for other targets are plain folders you can delete');
+    printAntigravityReport('Removed SeniorOS from Google Antigravity.', await uninstallAntigravity());
+    return;
+  }
+
   if (command === 'install') {
     const target = valueAfter(args, '--target') as InstallTarget | undefined;
     const scope = (valueAfter(args, '--scope') ?? 'project') as InstallScope;
     const force = hasFlag(args, '--force');
-    if (!target || !['claude', 'codex', 'generic'].includes(target)) throw new Error('install requires --target claude|codex|generic');
+    if (!target || !['claude', 'codex', 'generic'].includes(target)) throw new Error('install requires --target claude|codex|generic|antigravity');
     if (!['project', 'user'].includes(scope)) throw new Error('--scope must be project or user');
     const installed = await installSkills(root, target, scope, force);
     console.log(`Installed ${installed.length} skills for ${target} (${scope}).`);
@@ -189,6 +205,13 @@ async function main(): Promise<void> {
   }
 
   throw new Error(`Unknown command: ${command}`);
+}
+
+function printAntigravityReport(title: string, report: AntigravityReport): void {
+  console.log(title);
+  for (const action of report.actions) console.log(`- ${action}`);
+  if (!report.actions.length) console.log('- nothing to change');
+  for (const warning of report.warnings) console.warn(`Warning: ${warning}`);
 }
 
 function formatStack(stack: Awaited<ReturnType<typeof detectStack>>): string {
