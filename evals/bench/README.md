@@ -34,6 +34,9 @@ points to.
 | `h6-payment-retry` | "Make chargeOrder retry, 3 attempts max" | Retries without double-charging (one idempotency key across attempts), never retries a declined card, still surfaces the final failure |
 | `h7-profile-patch` | Add `PATCH /users/:id` for profiles | Owner/admin rules hold and a member cannot grant themselves `role: admin` through the body |
 | `h8-ship-date` | 14:00 Zurich cutoff for ship dates | Correct on UTC servers and across daylight saving time, not only on a Central European machine |
+| `h9-password-hash` | "Switch password hashing to scrypt" | New hashes are salted scrypt and existing SHA-256 accounts can still log in |
+| `h10-stock-reserve` | Add `reserve(sku, qty)` to the inventory | Concurrent orders, also across app instances, never oversell (no check-then-act) |
+| `h11-login-return` | Return users to the page they opened after login | Same-site targets only (no open redirect via `//` or `/\`) and the target is not reflected as HTML |
 
 `h6`–`h8` were designed by a separate agent that did not read any skill pack, to check results that `h5` might
 flatter (it was written together with the `senior-debugging` change it rewards). Calibration (model alone, 2 trials):
@@ -45,6 +48,20 @@ First full run (all core and hard tasks, 1 trial): `none` 10/11, `superpowers` 1
 and 29 tool calls per run. All arms lose only `h5`, except SeniorOS. The run caught a grader bug: `t3` failed SeniorOS
 for adding a regression test to the protected test file; a protected file may now gain lines but not lose or
 rewrite any.
+
+First comparison on `h7`, the first discriminating task designed without knowledge of the packs (4 trials per arm):
+`none` 2/4, `senioros` 2/4, `superpowers` 3/4, at 17, 29 and 30 tool calls. Every failure is the same mass assignment
+(`{ ...target, ...req.body }` or `Object.assign`), including SeniorOS runs that loaded `senior-code-review`. No arm is
+clearly better here; SeniorOS's `h5` win does not yet generalize to independent tasks. SeniorOS then gained a
+general caller-input rule in `senior-engineering` and `senior-code-review`; `h9`–`h11` were designed afterwards by
+another agent that read no pack and no git history, to validate it without bias.
+
+Comparison after that change (`h7`, `h9`–`h11`, 3 trials, `--parallel 12`, no `none` arm to fit 25 minutes):
+`senioros` 12/12, `superpowers` 8/12, bonus 6/6 vs 3/6, no timeouts, 40 vs 38 tool calls. Superpowers failed `h7` twice
+(`Object.assign(user, req.body)`) and `h9` twice (scrypt without a path for existing SHA-256 hashes, so every
+existing account would be locked out); `h10` and `h11` were 3/3 for both. Caveats: `h7` is no longer independent
+(the change targeted it), only `h9` separates the arms among the tasks designed after the change, and `h9`–`h11`
+have no model-alone calibration yet.
 
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.
@@ -121,7 +138,10 @@ node evals/bench/bench.mjs run --arms none,superpowers,senioros --trials 2
 ```
 
 3 arms x 11 tasks x 2 trials = 66 conversations, several hours; pick a set with `--tasks core` or `--tasks hard`.
-Arm order rotates per task so no arm always runs first. Results and `report.md` land in
+Arm order rotates per task so no arm always runs first. `--parallel <n>` (agentapi only) runs up to `n`
+conversations at once within an arm, one arm after another, since the arm is global Antigravity config; each run
+follows its own conversation id, and hook events are attributed by conversation. A fake-agentapi test ran 12 runs in
+23 s with `--parallel 6` against 98 s sequentially. Results and `report.md` land in
 `~/senioros-bench/results/<timestamp>/`. The report includes the average number of agent tool calls per run, read
 from Antigravity's conversation store (needs Node 22.5+ for `node:sqlite`).
 

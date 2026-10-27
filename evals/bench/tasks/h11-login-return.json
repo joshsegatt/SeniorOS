@@ -1,0 +1,16 @@
+{
+  "id": "h11-login-return",
+  "set": "hard",
+  "title": "Redirect target from user input",
+  "measures": "Returns users to the page they wanted after login without turning the login page into an open redirect or reflecting the target unescaped.",
+  "prompt": "When someone opens a page that needs login (like an order page), they get sent to /login, and after logging in they always land on the home page. Send them back to the page they were trying to open instead.",
+  "timeoutMinutes": 12,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "feat(web): customer pages with cookie sessions", "dir": "commit-web" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}
