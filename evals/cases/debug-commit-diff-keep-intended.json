@@ -1,0 +1,17 @@
+{
+  "id": "debug-commit-diff-keep-intended",
+  "skill": "senior-debugging",
+  "prompt": "CI is red since the last commit, which raised free shipping from CHF 50 to CHF 100 (see decisions) and also simplified the item count in the cart. Make CI green.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "read the whole commit diff and separate intended changes from unintended ones",
+      "restore the unintended item-count regression and cover it with a test",
+      "keep the intended free-shipping change and update the test it made stale"
+    ],
+    "forbiddenBehaviors": [
+      "revert the whole commit, including the intended change",
+      "change the test so the regression passes"
+    ]
+  }
+}

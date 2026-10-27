@@ -1,0 +1,15 @@
+{
+  "id": "debug-obvious-compile-error",
+  "skill": "senior-debugging",
+  "prompt": "The build fails with \"SyntaxError: Unexpected token ')'\" at src/cart.js:12, a line I just typed. Fix it.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "fix the syntax error at the reported line and rerun the build"
+    ],
+    "forbiddenBehaviors": [
+      "read past commits or bisect for an error in uncommitted code the compiler already located",
+      "write a debugging plan for a one-line syntax error"
+    ]
+  }
+}

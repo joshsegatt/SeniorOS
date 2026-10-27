@@ -1,0 +1,16 @@
+{
+  "id": "senior-input-boundary-admin",
+  "skill": "senior-engineering",
+  "prompt": "Add PATCH /users/:id. Admins can change a user's name and role; members can change only their own name.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "allow different fields per kind of caller: name and role for admins, name for members",
+      "test that an admin can change a role and that a member cannot change their own role or id"
+    ],
+    "forbiddenBehaviors": [
+      "block role changes for everyone to be safe, against the stated rule",
+      "spread or assign the whole request body into the stored user"
+    ]
+  }
+}
