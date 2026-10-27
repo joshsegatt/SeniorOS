@@ -87,13 +87,19 @@ export function gitRootOf(path) {
 
 const ABSOLUTE_PATH = /[A-Za-z]:[\\/][^\s"'`;|&<>*?]*|(?<![\w.~-])\/(?:Users|home|workspace|workspaces|mnt|srv|opt|var|tmp|private)\/[^\s"'`;|&<>*?]*/g;
 
+// A structured argument whose whole value is one absolute path (it may contain spaces).
+const WHOLE_PATH = /^(?:[A-Za-z]:[\\/]|\/)[^\n\r"'`;|&<>*?]*$/;
+
 /** Absolute paths mentioned anywhere in a tool call's arguments (file paths, Cwd, `cd` targets…). */
 export function pathsInArgs(args) {
   const found = new Set();
-  const walk = (value) => {
-    if (typeof value === 'string') for (const m of value.matchAll(ABSOLUTE_PATH)) found.add(m[0].replace(/[\\/.,:)]+$/, ''));
-    else if (Array.isArray(value)) value.forEach(walk);
-    else if (value && typeof value === 'object') Object.values(value).forEach(walk);
+  const walk = (value, key = '') => {
+    if (typeof value === 'string') {
+      const whole = value.trim();
+      if (!/command/i.test(key) && WHOLE_PATH.test(whole)) found.add(whole.replace(/[\\/]+$/, ''));
+      else for (const m of value.matchAll(ABSOLUTE_PATH)) found.add(m[0].replace(/[\\/.,:)]+$/, ''));
+    } else if (Array.isArray(value)) value.forEach((v) => walk(v, key));
+    else if (value && typeof value === 'object') Object.entries(value).forEach(([k, v]) => walk(v, k));
   };
   walk(args);
   return [...found];

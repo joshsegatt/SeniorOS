@@ -125,8 +125,13 @@ export function gradeRun(meta, task) {
     checks.dirtyIntact = { ok: lost.length === 0, detail: lost.length ? `lost: ${lost.join(', ')}` : 'uncommitted work kept' };
   }
 
-  const missing = task.pass.filter((name) => !checks[name]);
-  const pass = missing.length === 0 && task.pass.every((name) => checks[name].ok);
+  // A run whose conversation never started is an infrastructure failure, not a pass: an untouched repository
+  // would otherwise pass every integrity check (t6).
+  const required = meta.error ? ['launched', ...task.pass] : task.pass;
+  if (meta.error) checks.launched = { ok: false, detail: String(meta.error).slice(0, 200) };
+
+  const missing = required.filter((name) => !checks[name]);
+  const pass = missing.length === 0 && required.every((name) => checks[name].ok);
   const startedAt = meta.startedAt ? Date.parse(meta.startedAt) : null;
   const finishedAt = meta.finishedAt ? Date.parse(meta.finishedAt) : null;
 
@@ -136,7 +141,7 @@ export function gradeRun(meta, task) {
     arm: meta.arm,
     trial: meta.trial,
     pass,
-    failed: task.pass.filter((name) => !checks[name]?.ok),
+    failed: required.filter((name) => !checks[name]?.ok),
     checks,
     metrics: {
       changedFiles: counted.length,

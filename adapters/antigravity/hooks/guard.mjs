@@ -45,12 +45,18 @@ export const RULES = [
 // Regenerable build/dependency folders: deleting only these is routine, not destructive.
 const REGENERABLE = /^(\.\/|\.\\)?(node_modules|dist|build|out|\.next|\.nuxt|\.turbo|\.cache|\.parcel-cache|\.vite|coverage|target|__pycache__|\.pytest_cache)[\\/]?$/i;
 const DELETE_CMD = /^\s*(rm|Remove-Item|ri|rd|rmdir|del)\b/i;
+const CMD_STYLE = /^\s*(rd|rmdir|del)\b/i;
 
-/** @param {string} command */
+/**
+ * True only when every deletion target is a regenerable folder. Options start with `-`; a `/x` switch counts as
+ * an option only for cmd-style commands, so a POSIX absolute path such as `/home/user/project` stays a target.
+ * @param {string} command
+ */
 function onlyRegenerableTargets(command) {
   if (!DELETE_CMD.test(command) || /[|;&\n]/.test(command)) return false;
+  const cmdStyle = CMD_STYLE.test(command);
   const targets = command.trim().split(/[\s,]+/).slice(1)
-    .filter((t) => t && !/^-|^\//.test(t))
+    .filter((t) => t && !t.startsWith('-') && !(cmdStyle && /^\/[a-z]$/i.test(t)))
     .map((t) => t.replace(/^["']|["']$/g, ''));
   return targets.length > 0 && targets.every((t) => REGENERABLE.test(t));
 }

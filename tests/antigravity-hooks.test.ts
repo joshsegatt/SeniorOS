@@ -59,6 +59,11 @@ test('pathsInArgs finds absolute paths in file arguments and command lines', () 
   assert.deepEqual(found.sort(), ['/Users/dev/site/index.html', 'C:/work/app/src/a.js', 'C:\\work\\api'].sort());
 });
 
+test('pathsInArgs keeps spaces in a structured path argument', () => {
+  const found = lib.pathsInArgs({ Path: '/tmp/senior project/src/index.js', TargetFile: 'C:\\Users\\Jane Doe\\app\\a.js' });
+  assert.deepEqual(found.sort(), ['/tmp/senior project/src/index.js', 'C:\\Users\\Jane Doe\\app\\a.js'].sort());
+});
+
 test('a repository first touched mid-conversation gets its project context once', () => {
   const repo = mkdtempSync(path.join(os.tmpdir(), 'soc-'));
   const env = {
