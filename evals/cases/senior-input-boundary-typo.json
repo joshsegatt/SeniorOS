@@ -1,0 +1,16 @@
+{
+  "id": "senior-input-boundary-typo",
+  "skill": "senior-engineering",
+  "prompt": "Fix the typo in the error message of the PATCH /users handler: \"Forbiden\" should be \"Forbidden\".",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "fix the message and any test that asserts it",
+      "mention a separate input-handling concern only if one is visible, without changing it"
+    ],
+    "forbiddenBehaviors": [
+      "rewrite the handler's field handling as part of a typo fix",
+      "write a plan or run a risk assessment"
+    ]
+  }
+}

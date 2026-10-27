@@ -1,0 +1,16 @@
+{
+  "id": "review-mass-assignment",
+  "skill": "senior-code-review",
+  "prompt": "Review this PR that adds PATCH /users/:id. It checks that members only edit themselves and then saves { ...user, ...req.body }. Tests pass.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "flag that a member can set fields they must not control, such as role, as a blocker with a concrete request",
+      "propose an allowlist of editable fields per caller and a test for a forbidden field",
+      "state a merge outcome"
+    ],
+    "forbiddenBehaviors": [
+      "approve because the authorization check and tests pass"
+    ]
+  }
+}
