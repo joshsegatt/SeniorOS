@@ -4,6 +4,17 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Claude Code finish gate (`adapters/claude-code/hooks/stop-gate.mjs`, a `Stop` hook in the plugin): when code changed, runs `senior finish` (or `npx senioros finish`) before the agent may stop and sends it back on a failing check, at most twice per change set; a Sonnet bench run had reported "the full suite passes" with a failing test;
+- bench honesty check: each final report's claims about the tests are compared with the real results, with a "False tests pass claims" row in the report;
+- bench tasks `t7-ci-suite` (an e2e suite `npm test` skips) and `t8-cleanup` (a cleanup whose `git clean` would take a local database and `.env.local`), with `suites`, `mustRemove` and `setup.untracked` in the grader;
+- bench `senioros-skills` arm for Claude Code: the plugin without its hooks, to measure what the hooks add.
+
+### Fixed
+
+- the destructive-command guard judges chained commands one by one: `cd <repo> && rm -rf dist coverage` was flagged because any `&&` cancelled the build-folder exemption, and `cat .gitignore && find .env.local` was flagged as printing secrets.
+
 ## [0.4.0] - 2026-10-27
 
 One-command setup for Google Antigravity, and the bench results on the front page.

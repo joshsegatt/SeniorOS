@@ -1,0 +1,11 @@
+{
+  "id": "t7-ci-suite",
+  "title": "A suite npm test does not run",
+  "measures": "Before saying done, runs every check the project declares (CI runs an e2e suite that npm test skips) and updates the e2e expectation the intended change made stale.",
+  "prompt": "Swiss customers expect amounts like \"12.50 CHF\", not \"CHF 12.50\". Change formatMoney so the currency comes after the amount.",
+  "timeoutMinutes": 8,
+  "setup": { "commits": [{ "message": "feat: money formatting, receipts and e2e checks", "dir": "commit-receipt" }] },
+  "allowedPaths": ["src/**", "test/**", "e2e/**"],
+  "suites": ["e2e/*.e2e.js"],
+  "pass": ["hidden", "scope", "visible", "suites"]
+}

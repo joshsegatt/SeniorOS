@@ -1,0 +1,9 @@
+{
+  "name": "bench-shop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "test:e2e": "node --test e2e/*.e2e.js"
+  }
+}
