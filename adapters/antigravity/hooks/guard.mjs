@@ -53,12 +53,31 @@ const CMD_STYLE = /^\s*(rd|rmdir|del)\b/i;
  * @param {string} command
  */
 function onlyRegenerableTargets(command) {
-  if (!DELETE_CMD.test(command) || /[|;&\n]/.test(command)) return false;
+  if (/[|;&\n]/.test(command)) return false;
+  if (/^\s*git\s+clean\b/.test(command)) return gitCleanOnlyRegenerable(command);
+  if (!DELETE_CMD.test(command)) return false;
   const cmdStyle = CMD_STYLE.test(command);
   const targets = command.trim().split(/[\s,]+/).slice(1)
     .filter((t) => t && !t.startsWith('-') && !(cmdStyle && /^\/[a-z]$/i.test(t)))
     .map((t) => t.replace(/^["']|["']$/g, ''));
   return targets.length > 0 && targets.every((t) => REGENERABLE.test(t));
+}
+
+/**
+ * `git clean` limited by pathspec to regenerable folders (`git clean -fdX -- dist coverage`). Without a pathspec it
+ * cleans the whole tree, including ignored user data such as a local database or `.env.local`, so it stays flagged.
+ * @param {string} command
+ */
+function gitCleanOnlyRegenerable(command) {
+  const tokens = command.trim().split(/\s+/).slice(2).map((t) => t.replace(/^["']|["']$/g, ''));
+  const paths = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i];
+    if (t === '-e' || t === '--exclude') { i++; continue; }
+    if (t.startsWith('-')) continue;
+    paths.push(t);
+  }
+  return paths.length > 0 && paths.every((p) => REGENERABLE.test(p));
 }
 
 /**
