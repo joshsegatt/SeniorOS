@@ -135,6 +135,9 @@ async function probe() {
   }
 }
 
+/** The model provider refused further work (usage limit or rate limit). */
+class UsageLimit extends Error {}
+
 /** Runs `worker` over `items`, at most `limit` at a time; the first error stops new work and is rethrown. */
 async function pool(items, limit, worker) {
   let next = 0;
@@ -190,6 +193,8 @@ async function runBench(args) {
     done += 1;
     console.log(`[${done}/${total}] ${meta.runId.padEnd(36)} ${result.pass ? 'PASS' : 'FAIL'}${result.pass ? '' : `  (${result.failed.join(', ')})`}${outcome.error ? `  error: ${outcome.error}` : ''}`);
     if (outcome.error && backend === 'agentapi' && /ANTIGRAVITY_LS_ADDRESS|not found/.test(outcome.error)) throw new Error(outcome.error);
+    // Every later run would hit the same limit and grade an untouched repository: stop and report what ran.
+    if (outcome.error && /usage_limit|rate_limit|\(429\)/.test(outcome.error)) throw new UsageLimit(outcome.error);
   }
 
   try {
@@ -223,6 +228,9 @@ async function runBench(args) {
         }
       }
     }
+  } catch (err) {
+    if (!(err instanceof UsageLimit)) throw err;
+    console.log(`\nStopped after ${done} of ${total} runs: ${err.message}. Runs already started may also show this error; rerun once the limit resets.`);
   } finally {
     if (!perProcessArms) {
       restoreArms();
