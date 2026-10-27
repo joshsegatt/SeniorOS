@@ -4,11 +4,21 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-27
+
+One-command setup for Google Antigravity, and the bench results on the front page.
+
 ### Added
 
-- `senior install --target antigravity [--turbo] [--force]` sets up Google Antigravity in one command: copies the skills to `~/.gemini/config/senioros/skills` and registers them, adds the routing rules to `GEMINI.md` in a marked block, and merges the hooks into `config/hooks.json` next to the user's own; each changed file is backed up once, reinstalling never duplicates, and an existing hand-made SeniorOS setup is kept unless `--force`;
-- `senior uninstall --target antigravity` removes only what the installer added;
-- README: bench results up front with a replay of a real run (`brand/social/demo-approval-boundary.svg`), the Claude Code plugin as the recommended install, and `DESIGN.md` for visual assets.
+- `senior install --target antigravity [--turbo] [--force]` sets up Google Antigravity in one command: copies the skills to `~/.gemini/config/senioros/skills` and registers them, adds the routing rules to `GEMINI.md` in a marked block, and merges the hooks into `config/hooks.json` next to the user's own; each changed file is backed up once and reinstalling never duplicates;
+- the installer records what it wrote (`~/.gemini/config/senioros/install.json`): without `--force` it keeps skills you edited, hook blocks and scripts it did not write, and SeniorOS rules outside its block, and a hook turned off with `"enabled": false` stays off;
+- `senior uninstall --target antigravity` removes only what the installer added and restores what it replaced with `--force`;
+- README: bench results up front with a replay of a real run (`brand/social/demo-approval-boundary.svg`), the Claude Code plugin as the recommended install, and `DESIGN.md` for visual assets;
+- bench: Claude Sonnet results on the hard set (`none` 22/22, `senioros` 22/22, `superpowers` 19/22).
+
+### Fixed
+
+- bench: a Claude Code run that ends on a usage limit or API error now fails as `launched` instead of being graded as an untouched repository, and the bench stops starting new runs.
 
 ## [0.3.0] - 2026-10-27
 
