@@ -2,10 +2,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { copyFile, cp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { exists } from './fs-utils.js';
 
-/** Hook blocks this installer owns in `hooks.json`; every other key is left alone. */
-const HOOK_KEYS = ['senioros-context', 'senioros-guard', 'senioros-late-context', 'senioros-track', 'senioros-finish-gate'];
 const RULES_START = '<!-- senioros:start -->';
 const RULES_END = '<!-- senioros:end -->';
 
@@ -92,43 +91,102 @@ function stripRulesBlock(text: string): string {
 }
 
 /**
+ * What the installer added or replaced, so a reinstall never clobbers user changes and an uninstall removes only its
+ * own additions. Stored as `install.json` in the installer's own folder.
+ */
+interface InstallManifest {
+  version: 1;
+  /** sha256 of every skill file as copied, keyed by path relative to the skills folder. */
+  skillFiles: Record<string, string>;
+  /** The installer added the skills.json entry. */
+  skillsEntry: boolean;
+  /** The installer created (or, with --force, replaced) the hook scripts folder. */
+  hooksDir: boolean;
+  /** Path of the user's hook scripts folder saved before a --force replacement, restored on uninstall. */
+  hooksDirBackup?: string;
+  /** Hook blocks the installer wrote, as written (without `enabled`), keyed by block name. */
+  hookBlocks: Record<string, unknown>;
+  /** Pre-existing hook blocks replaced with --force, restored on uninstall. */
+  replacedHooks: Record<string, unknown>;
+}
+
+const manifestFile = (paths: AntigravityPaths) => path.join(paths.home, 'install.json');
+
+async function readManifest(paths: AntigravityPaths): Promise<InstallManifest | null> {
+  const file = manifestFile(paths);
+  return (await exists(file)) ? readJsonFile<InstallManifest | null>(file, null) : null;
+}
+
+async function hashTree(root: string, rel = ''): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  if (!(await exists(path.join(root, rel)))) return out;
+  for (const entry of await readdir(path.join(root, rel), { withFileTypes: true })) {
+    const child = path.posix.join(rel.replace(/\\/g, '/'), entry.name);
+    if (entry.isDirectory()) Object.assign(out, await hashTree(root, child));
+    else if (entry.isFile()) out[child] = createHash('sha256').update(await readFile(path.join(root, child))).digest('hex');
+  }
+  return out;
+}
+
+const sameTree = (a: Record<string, string>, b: Record<string, string>) =>
+  Object.keys(a).length === Object.keys(b).length && Object.entries(a).every(([k, v]) => b[k] === v);
+
+/** A hook block without its user switch, for comparing with what the installer wrote. */
+function withoutEnabled(block: unknown): unknown {
+  if (!block || typeof block !== 'object' || Array.isArray(block)) return block;
+  const { enabled: _enabled, ...rest } = block as Record<string, unknown>;
+  return rest;
+}
+
+/**
  * Installs SeniorOS for Google Antigravity: skills, routing rules in GEMINI.md and the lifecycle hooks.
- * Idempotent; files it changes are backed up once; keys and text it does not own are kept.
+ * Idempotent. Files it changes are backed up once. Without `force` it never overwrites something it did not write or
+ * that the user changed since: customized skills, hand-made hook blocks and scripts, or SeniorOS rules outside its block.
  * @param options.turbo answer `allow` (not `ask`) for commands the guard does not flag, matching Turbo auto-execution
  */
 export async function installAntigravity(options: { turbo?: boolean; force?: boolean } = {}, paths = antigravityPaths()): Promise<AntigravityReport> {
   const report: AntigravityReport = { actions: [], warnings: [] };
   const source = packageRoot();
+  const force = Boolean(options.force);
+  const previous = await readManifest(paths);
+  const manifest: InstallManifest = previous ?? { version: 1, skillFiles: {}, skillsEntry: false, hooksDir: false, hookBlocks: {}, replacedHooks: {} };
 
   // 1. Skills: a stable copy, so an npx cache cleanup cannot break the registration.
-  await rm(paths.skills, { recursive: true, force: true });
-  await mkdir(paths.skills, { recursive: true });
-  for (const entry of await readdir(path.join(source, 'skills'), { withFileTypes: true })) {
-    if (entry.isDirectory()) await cp(path.join(source, 'skills', entry.name), path.join(paths.skills, entry.name), { recursive: true });
+  const installed = await hashTree(paths.skills);
+  const untouched = Object.keys(installed).length === 0 || (previous !== null && sameTree(installed, previous.skillFiles));
+  if (!untouched && !force) {
+    report.warnings.push(`${paths.skills} has changes the installer did not make; kept them and did not update the skills (run with --force to replace them)`);
+  } else {
+    await rm(paths.skills, { recursive: true, force: true });
+    await mkdir(paths.skills, { recursive: true });
+    for (const entry of await readdir(path.join(source, 'skills'), { withFileTypes: true })) {
+      if (entry.isDirectory()) await cp(path.join(source, 'skills', entry.name), path.join(paths.skills, entry.name), { recursive: true });
+    }
+    manifest.skillFiles = await hashTree(paths.skills);
+    report.actions.push(`copied skills to ${paths.skills}`);
   }
-  report.actions.push(`copied skills to ${paths.skills}`);
 
   const skillsJson = await readJsonFile<SkillsJson>(paths.skillsJson, {});
   const entries = Array.isArray(skillsJson.entries) ? skillsJson.entries : [];
   const others = await otherSeniorEntries(entries, paths.skills);
-  if (others.length && !options.force) {
+  const ourEntry = entries.some((e) => path.resolve(expandHome(e.path ?? '')) === path.resolve(paths.skills));
+  if (others.length && !force) {
     report.warnings.push(`skills.json already registers SeniorOS skills from ${others.join(', ')}; kept that entry and did not add a second one (run with --force to switch to the installed copy)`);
-  } else {
-    const kept = entries.filter((e) => !others.includes(e.path ?? '') && path.resolve(expandHome(e.path ?? '')) !== path.resolve(paths.skills));
-    const next = { ...skillsJson, entries: [...kept, { path: paths.skills.replace(/\\/g, '/') }] };
-    if (JSON.stringify(next) !== JSON.stringify(skillsJson)) {
-      await backupOnce(paths.skillsJson, report);
-      await mkdir(paths.config, { recursive: true });
-      await writeFile(paths.skillsJson, JSON.stringify(next, null, 2) + '\n');
-      report.actions.push(`registered the skills in ${paths.skillsJson}`);
-    }
+  } else if (!ourEntry || others.length) {
+    const kept = entries.filter((e) => !others.includes(e.path ?? ''));
+    const next = { ...skillsJson, entries: ourEntry ? kept : [...kept, { path: paths.skills.replace(/\\/g, '/') }] };
+    await backupOnce(paths.skillsJson, report);
+    await mkdir(paths.config, { recursive: true });
+    await writeFile(paths.skillsJson, JSON.stringify(next, null, 2) + '\n');
+    if (!ourEntry) manifest.skillsEntry = true;
+    report.actions.push(`registered the skills in ${paths.skillsJson}`);
   }
 
   // 2. Rules: one marked block in GEMINI.md, replaced on reinstall.
   const rules = (await readFile(path.join(source, 'adapters', 'antigravity', 'rules.md'), 'utf8')).trim();
   const current = (await exists(paths.rules)) ? await readFile(paths.rules, 'utf8') : '';
   const unmarked = current.includes('SeniorOS') && !current.includes(RULES_START);
-  if (unmarked && !options.force) {
+  if (unmarked && !force) {
     report.warnings.push(`${paths.rules} already mentions SeniorOS outside an installer block; left it unchanged (run with --force to add the installer's rules as well)`);
   } else {
     const base = stripRulesBlock(current).trimEnd();
@@ -141,41 +199,66 @@ export async function installAntigravity(options: { turbo?: boolean; force?: boo
     }
   }
 
-  // 3. Hooks: scripts next to hooks.json (Antigravity resolves relative commands from there), then our named blocks.
-  await rm(paths.hooks, { recursive: true, force: true });
-  await mkdir(paths.hooks, { recursive: true });
-  for (const entry of await readdir(path.join(source, 'adapters', 'antigravity', 'hooks'), { withFileTypes: true })) {
-    if (entry.isFile() && entry.name.endsWith('.mjs')) await copyFile(path.join(source, 'adapters', 'antigravity', 'hooks', entry.name), path.join(paths.hooks, entry.name));
+  // 3. Hook scripts, next to hooks.json (Antigravity resolves relative commands from there).
+  const scriptsSource = path.join(source, 'adapters', 'antigravity', 'hooks');
+  const foreignScripts = (await exists(paths.hooks)) && !manifest.hooksDir;
+  if (foreignScripts && !force) {
+    report.warnings.push(`${paths.hooks} was not created by the installer; kept those scripts (run with --force to replace them)`);
+  } else {
+    if (foreignScripts) {
+      const backup = `${paths.hooks}.bak-senioros`;
+      await rm(backup, { recursive: true, force: true });
+      await cp(paths.hooks, backup, { recursive: true });
+      manifest.hooksDirBackup = backup;
+      report.actions.push(`backed up ${paths.hooks} to ${backup}`);
+    }
+    await rm(paths.hooks, { recursive: true, force: true });
+    await mkdir(paths.hooks, { recursive: true });
+    for (const entry of await readdir(scriptsSource, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.endsWith('.mjs')) await copyFile(path.join(scriptsSource, entry.name), path.join(paths.hooks, entry.name));
+    }
+    manifest.hooksDir = true;
+    report.actions.push(`copied the hooks to ${paths.hooks}`);
   }
-  report.actions.push(`copied the hooks to ${paths.hooks}`);
 
+  // 4. Hook blocks: add missing ones, update the installer's own (keeping `enabled`), leave the user's alone.
   let template = await readFile(path.join(source, 'adapters', 'antigravity', 'hooks.json'), 'utf8');
   if (options.turbo) template = template.replace('--passthrough=ask', '--passthrough=allow');
   const ours = JSON.parse(template) as HooksJson;
   const hooksJson = await readJsonFile<HooksJson>(paths.hooksJson, {});
-  const nextHooks: HooksJson = { ...Object.fromEntries(Object.entries(hooksJson).filter(([k]) => !HOOK_KEYS.includes(k))), ...ours };
+  const nextHooks: HooksJson = { ...hooksJson };
+  const kept: string[] = [];
+  for (const [key, block] of Object.entries(ours)) {
+    const existing = hooksJson[key];
+    const ownedAsWritten = key in manifest.hookBlocks && JSON.stringify(withoutEnabled(existing)) === JSON.stringify(manifest.hookBlocks[key]);
+    if (existing !== undefined && !ownedAsWritten && !force) {
+      kept.push(key);
+      continue;
+    }
+    if (existing !== undefined && !(key in manifest.hookBlocks)) manifest.replacedHooks[key] = existing;
+    const enabled = existing && typeof existing === 'object' ? (existing as Record<string, unknown>).enabled : undefined;
+    nextHooks[key] = enabled === undefined ? block : { ...(block as Record<string, unknown>), enabled };
+    manifest.hookBlocks[key] = block;
+  }
+  if (kept.length) report.warnings.push(`kept hook blocks the installer did not write or that were changed since: ${kept.join(', ')} (run with --force to replace them)`);
   if (JSON.stringify(nextHooks) !== JSON.stringify(hooksJson)) {
     await backupOnce(paths.hooksJson, report);
     await writeFile(paths.hooksJson, JSON.stringify(nextHooks, null, 2) + '\n');
     report.actions.push(`added the SeniorOS hooks to ${paths.hooksJson}${options.turbo ? ' (guard passthrough: allow)' : ''}`);
   }
 
+  await mkdir(paths.home, { recursive: true });
+  await writeFile(manifestFile(paths), JSON.stringify(manifest, null, 2) + '\n');
   return report;
 }
 
-/** Removes everything `installAntigravity` added, leaving the rest of the Antigravity config as it was. */
+/**
+ * Removes what `installAntigravity` added and restores what it replaced with --force, using its manifest. Anything the
+ * installer did not write stays, including a SeniorOS setup made by hand.
+ */
 export async function uninstallAntigravity(paths = antigravityPaths()): Promise<AntigravityReport> {
   const report: AntigravityReport = { actions: [], warnings: [] };
-
-  if (await exists(paths.skillsJson)) {
-    const skillsJson = await readJsonFile<SkillsJson>(paths.skillsJson, {});
-    const entries = Array.isArray(skillsJson.entries) ? skillsJson.entries : [];
-    const kept = entries.filter((e) => path.resolve(expandHome(e.path ?? '')) !== path.resolve(paths.skills));
-    if (kept.length !== entries.length) {
-      await writeFile(paths.skillsJson, JSON.stringify({ ...skillsJson, entries: kept }, null, 2) + '\n');
-      report.actions.push(`removed the skills entry from ${paths.skillsJson}`);
-    }
-  }
+  const manifest = await readManifest(paths);
 
   if (await exists(paths.rules)) {
     const current = await readFile(paths.rules, 'utf8');
@@ -186,20 +269,46 @@ export async function uninstallAntigravity(paths = antigravityPaths()): Promise<
     }
   }
 
-  if (await exists(paths.hooksJson)) {
-    const hooksJson = await readJsonFile<HooksJson>(paths.hooksJson, {});
-    const kept = Object.fromEntries(Object.entries(hooksJson).filter(([k]) => !HOOK_KEYS.includes(k)));
-    if (Object.keys(kept).length !== Object.keys(hooksJson).length) {
-      await writeFile(paths.hooksJson, JSON.stringify(kept, null, 2) + '\n');
-      report.actions.push(`removed the SeniorOS hooks from ${paths.hooksJson}`);
+  if (!manifest) {
+    report.warnings.push(`no installer manifest in ${paths.home}; left skills.json, hooks.json and the hook scripts unchanged`);
+    return report;
+  }
+
+  if (manifest.skillsEntry && (await exists(paths.skillsJson))) {
+    const skillsJson = await readJsonFile<SkillsJson>(paths.skillsJson, {});
+    const entries = Array.isArray(skillsJson.entries) ? skillsJson.entries : [];
+    const remaining = entries.filter((e) => path.resolve(expandHome(e.path ?? '')) !== path.resolve(paths.skills));
+    if (remaining.length !== entries.length) {
+      await writeFile(paths.skillsJson, JSON.stringify({ ...skillsJson, entries: remaining }, null, 2) + '\n');
+      report.actions.push(`removed the skills entry from ${paths.skillsJson}`);
     }
   }
 
-  for (const dir of [paths.hooks, paths.home]) {
-    if (await exists(dir)) {
-      await rm(dir, { recursive: true, force: true });
-      report.actions.push(`deleted ${dir}`);
+  if (await exists(paths.hooksJson)) {
+    const hooksJson = await readJsonFile<HooksJson>(paths.hooksJson, {});
+    const next: HooksJson = { ...hooksJson };
+    for (const key of Object.keys(manifest.hookBlocks)) {
+      if (!(key in next)) continue;
+      if (key in manifest.replacedHooks) next[key] = manifest.replacedHooks[key];
+      else delete next[key];
+    }
+    if (JSON.stringify(next) !== JSON.stringify(hooksJson)) {
+      await writeFile(paths.hooksJson, JSON.stringify(next, null, 2) + '\n');
+      report.actions.push(`removed the SeniorOS hooks from ${paths.hooksJson}${Object.keys(manifest.replacedHooks).length ? ' and restored the blocks they replaced' : ''}`);
     }
   }
+
+  if (manifest.hooksDir && (await exists(paths.hooks))) {
+    await rm(paths.hooks, { recursive: true, force: true });
+    report.actions.push(`deleted ${paths.hooks}`);
+    if (manifest.hooksDirBackup && (await exists(manifest.hooksDirBackup))) {
+      await cp(manifest.hooksDirBackup, paths.hooks, { recursive: true });
+      await rm(manifest.hooksDirBackup, { recursive: true, force: true });
+      report.actions.push(`restored the previous scripts in ${paths.hooks}`);
+    }
+  }
+
+  await rm(paths.home, { recursive: true, force: true });
+  report.actions.push(`deleted ${paths.home}`);
   return report;
 }

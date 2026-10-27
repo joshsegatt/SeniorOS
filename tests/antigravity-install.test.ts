@@ -65,3 +65,55 @@ test('install does not duplicate a SeniorOS setup made by hand', async () => {
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('reinstall keeps a customized skill and preserves a disabled hook, unless --force', async () => {
+  const dir = await geminiHome({});
+  const paths = antigravityPaths(dir);
+  try {
+    await installAntigravity({}, paths);
+    const skill = path.join(paths.skills, 'senior-engineering', 'SKILL.md');
+    await writeFile(skill, 'my customized skill');
+    const hooks = await json(paths.hooksJson);
+    hooks['senioros-finish-gate'].enabled = false;
+    await writeFile(paths.hooksJson, JSON.stringify(hooks));
+
+    const report = await installAntigravity({}, paths);
+    assert.equal(await readFile(skill, 'utf8'), 'my customized skill');
+    assert.ok(report.warnings.some((w) => w.includes(paths.skills)));
+    assert.equal((await json(paths.hooksJson))['senioros-finish-gate'].enabled, false, 'the user switch survives a reinstall');
+
+    await installAntigravity({ force: true }, paths);
+    assert.notEqual(await readFile(skill, 'utf8'), 'my customized skill');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('hand-made hooks are kept, and a --force install is undone by uninstall', async () => {
+  const manualGuard = { PreToolUse: [{ matcher: 'run_command', hooks: [{ type: 'command', command: 'node hooks/senioros/guard.mjs --passthrough=allow', timeout: 30 }] }] };
+  const dir = await geminiHome({
+    'config/hooks.json': JSON.stringify({ 'senioros-guard': manualGuard }),
+    'config/hooks/senioros/guard.mjs': '// my own guard\n'
+  });
+  const paths = antigravityPaths(dir);
+  try {
+    const report = await installAntigravity({}, paths);
+    const hooks = await json(paths.hooksJson);
+    assert.deepEqual(hooks['senioros-guard'], manualGuard, 'a block the installer did not write is kept');
+    assert.ok(hooks['senioros-context'], 'missing blocks are added');
+    assert.equal(await readFile(path.join(paths.hooks, 'guard.mjs'), 'utf8'), '// my own guard\n');
+    assert.equal(report.warnings.length, 2);
+
+    await uninstallAntigravity(paths);
+    assert.deepEqual(await json(paths.hooksJson), { 'senioros-guard': manualGuard }, 'uninstall removes only what it added');
+    assert.equal(await readFile(path.join(paths.hooks, 'guard.mjs'), 'utf8'), '// my own guard\n');
+
+    await installAntigravity({ force: true }, paths);
+    assert.notDeepEqual((await json(paths.hooksJson))['senioros-guard'], manualGuard);
+    await uninstallAntigravity(paths);
+    assert.deepEqual(await json(paths.hooksJson), { 'senioros-guard': manualGuard }, 'the replaced block is restored');
+    assert.equal(await readFile(path.join(paths.hooks, 'guard.mjs'), 'utf8'), '// my own guard\n', 'the replaced scripts are restored');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

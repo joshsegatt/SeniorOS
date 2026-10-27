@@ -14,10 +14,12 @@ to `~/.gemini/GEMINI.md` inside a marked block, and adds the hooks to `config/ho
 changes is backed up once as `<file>.bak-senioros`, and running it again does not duplicate anything. Use `--turbo` if
 terminal auto-execution is on Turbo (see below). For the finish gate, also put the CLI on PATH: `npm install -g senioros`.
 
-Remove it with `npx senioros uninstall --target antigravity`, which takes out only what the installer added.
+The installer records what it added in `~/.gemini/config/senioros/install.json`. Without `--force` it never overwrites
+what it did not write or what you changed since: edited skills, hook blocks and scripts made by hand, or SeniorOS rules
+outside its block. It keeps them and says so. A hook you turned off with `"enabled": false` stays off after a reinstall.
 
-If SeniorOS is already set up by hand (a `skills.json` entry pointing to a clone, or SeniorOS rules in `GEMINI.md`), the
-installer keeps that setup and says so; `--force` switches to the installed copy.
+Remove it with `npx senioros uninstall --target antigravity`: it takes out only what the installer added and restores
+anything it replaced with `--force`.
 
 ### Manual install
 
