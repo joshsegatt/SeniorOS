@@ -5,6 +5,24 @@ routing rule and three lifecycle hooks that enforce what a skill can only ask fo
 
 ## Install
 
+```bash
+npx senioros install --target antigravity
+```
+
+This copies the skills to `~/.gemini/config/senioros/skills` and registers them in `skills.json`, adds the routing rules
+to `~/.gemini/GEMINI.md` inside a marked block, and adds the hooks to `config/hooks.json` next to your own. Each file it
+changes is backed up once as `<file>.bak-senioros`, and running it again does not duplicate anything. Use `--turbo` if
+terminal auto-execution is on Turbo (see below). For the finish gate, also put the CLI on PATH: `npm install -g senioros`.
+
+The installer records what it added in `~/.gemini/config/senioros/install.json`. Without `--force` it never overwrites
+what it did not write or what you changed since: edited skills, hook blocks and scripts made by hand, or SeniorOS rules
+outside its block. It keeps them and says so. A hook you turned off with `"enabled": false` stays off after a reinstall.
+
+Remove it with `npx senioros uninstall --target antigravity`: it takes out only what the installer added and restores
+anything it replaced with `--force`.
+
+### Manual install
+
 1. Register the skills without copying them. Create `~/.gemini/config/skills.json`:
 
    ```json

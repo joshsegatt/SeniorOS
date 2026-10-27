@@ -4,6 +4,12 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- `senior install --target antigravity [--turbo] [--force]` sets up Google Antigravity in one command: copies the skills to `~/.gemini/config/senioros/skills` and registers them, adds the routing rules to `GEMINI.md` in a marked block, and merges the hooks into `config/hooks.json` next to the user's own; each changed file is backed up once, reinstalling never duplicates, and an existing hand-made SeniorOS setup is kept unless `--force`;
+- `senior uninstall --target antigravity` removes only what the installer added;
+- README: bench results up front with a replay of a real run (`brand/social/demo-approval-boundary.svg`), the Claude Code plugin as the recommended install, and `DESIGN.md` for visual assets.
+
 ## [0.3.0] - 2026-10-27
 
 Google Antigravity support, plugin hooks for Claude Code, and skill changes measured with a live bench against no pack

@@ -50,6 +50,8 @@ export function summarizeStream(text) {
     turns: result?.num_turns ?? null,
     resultSubtype: result?.subtype ?? null,
     conversationId: result?.session_id ?? null,
+    // A usage limit or API error ends the run before the agent works; it must not be graded as the agent's result.
+    apiError: result?.is_error ? `${result.api_error ?? result.terminal_reason ?? 'error'}${result.api_error_status ? ` (${result.api_error_status})` : ''}` : null,
   };
 }
 
@@ -84,7 +86,9 @@ export function runClaude({ prompt, repo, runDir, arm, model, timeoutMs }) {
       const summary = summarizeStream(out);
       const error = spawnError
         ? `could not run claude: ${spawnError.message}`
-        : !timedOut && !summary.resultSubtype ? `claude exited ${exitCode} without a result: ${err.trim().slice(0, 300)}` : undefined;
+        : summary.apiError
+          ? `claude API error: ${summary.apiError}`
+          : !timedOut && !summary.resultSubtype ? `claude exited ${exitCode} without a result: ${err.trim().slice(0, 300)}` : undefined;
       resolve({ timedOut, exitCode, ...summary, ...(error ? { error } : {}) });
     };
     child.on('error', (e) => finish(null, e));
