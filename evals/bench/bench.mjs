@@ -16,6 +16,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
   probe                         One live harness check inside Antigravity (run this first)
   run [options]                 Run the bench and write a report
       --arms none,superpowers,senioros   (also: senioros-skills)
+      --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
       --backend agentapi|agy|manual      (default: agentapi)
@@ -133,6 +134,24 @@ async function probe() {
   }
 }
 
+/** Runs `worker` over `items`, at most `limit` at a time; the first error stops new work and is rethrown. */
+async function pool(items, limit, worker) {
+  let next = 0;
+  let failure;
+  const lane = async () => {
+    while (next < items.length && !failure) {
+      const item = items[next++];
+      try {
+        await worker(item);
+      } catch (err) {
+        failure ??= err;
+      }
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, lane));
+  if (failure) throw failure;
+}
+
 async function runBench(args) {
   const arms = option(args, 'arms', 'none,superpowers,senioros').split(',');
   for (const a of arms) if (!ARMS[a]) throw new Error(`Unknown arm "${a}"`);
@@ -140,36 +159,53 @@ async function runBench(args) {
   const trials = Number(option(args, 'trials', '2'));
   const backend = /** @type {any} */ (option(args, 'backend', 'agentapi'));
   const model = option(args, 'model', 'flash');
+  const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
+  if (parallel > 1 && backend !== 'agentapi') throw new Error('--parallel needs the agentapi backend.');
   const resultsDir = join(BENCH_HOME, 'results', new Date().toISOString().replace(/[:.]/g, '-'));
   mkdirSync(resultsDir, { recursive: true });
   const total = trials * tasks.length * arms.length;
   console.log(`Bench: ${tasks.length} task(s) x ${arms.length} arm(s) x ${trials} trial(s) = ${total} runs, backend ${backend}, model ${model}.`);
+  if (parallel > 1) console.log(`Parallel: up to ${parallel} conversations at once, one arm at a time.`);
   console.log(`Results: ${resultsDir}`);
 
   let done = 0;
+  async function runOne(task, arm, trial) {
+    const meta = prepareRun(task, arm, trial);
+    meta.startedAt = new Date().toISOString();
+    let outcome;
+    try {
+      outcome = await runConversation(backend, { task, meta, model, parallel: parallel > 1 });
+    } catch (err) {
+      outcome = { error: String(err.message ?? err), timedOut: false };
+    }
+    meta.finishedAt = new Date().toISOString();
+    Object.assign(meta, outcome);
+    writeFileSync(join(meta.runDir, 'meta.json'), JSON.stringify(meta, null, 2));
+    const result = { ...gradeRun(meta, task), outcome };
+    writeFileSync(join(resultsDir, `${meta.runId}.json`), JSON.stringify(result, null, 2));
+    done += 1;
+    console.log(`[${done}/${total}] ${meta.runId.padEnd(36)} ${result.pass ? 'PASS' : 'FAIL'}${result.pass ? '' : `  (${result.failed.join(', ')})`}${outcome.error ? `  error: ${outcome.error}` : ''}`);
+    if (outcome.error && backend === 'agentapi' && /ANTIGRAVITY_LS_ADDRESS|not found/.test(outcome.error)) throw new Error(outcome.error);
+  }
+
   try {
-    for (let trial = 1; trial <= trials; trial++) {
-      for (const [ti, task] of tasks.entries()) {
-        // Rotate arm order per task and trial so no arm always runs first.
-        const shift = (ti + trial) % arms.length;
-        for (const arm of [...arms.slice(shift), ...arms.slice(0, shift)]) {
-          applyArm(arm);
-          const meta = prepareRun(task, arm, trial);
-          meta.startedAt = new Date().toISOString();
-          let outcome;
-          try {
-            outcome = await runConversation(backend, { task, meta, model });
-          } catch (err) {
-            outcome = { error: String(err.message ?? err), timedOut: false };
+    if (parallel > 1) {
+      // The arm is global Antigravity config, so arms run one after another; runs within an arm overlap.
+      for (const arm of arms) {
+        applyArm(arm);
+        const jobs = [];
+        for (let trial = 1; trial <= trials; trial++) for (const task of tasks) jobs.push([task, arm, trial]);
+        await pool(jobs, parallel, (job) => runOne(...job));
+      }
+    } else {
+      for (let trial = 1; trial <= trials; trial++) {
+        for (const [ti, task] of tasks.entries()) {
+          // Rotate arm order per task and trial so no arm always runs first.
+          const shift = (ti + trial) % arms.length;
+          for (const arm of [...arms.slice(shift), ...arms.slice(0, shift)]) {
+            applyArm(arm);
+            await runOne(task, arm, trial);
           }
-          meta.finishedAt = new Date().toISOString();
-          Object.assign(meta, outcome);
-          writeFileSync(join(meta.runDir, 'meta.json'), JSON.stringify(meta, null, 2));
-          const result = { ...gradeRun(meta, task), outcome };
-          writeFileSync(join(resultsDir, `${meta.runId}.json`), JSON.stringify(result, null, 2));
-          done += 1;
-          console.log(`[${done}/${total}] ${meta.runId.padEnd(36)} ${result.pass ? 'PASS' : 'FAIL'}${result.pass ? '' : `  (${result.failed.join(', ')})`}${outcome.error ? `  error: ${outcome.error}` : ''}`);
-          if (outcome.error && backend === 'agentapi' && /ANTIGRAVITY_LS_ADDRESS|not found/.test(outcome.error)) throw new Error(outcome.error);
         }
       }
     }

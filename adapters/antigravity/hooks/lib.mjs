@@ -19,10 +19,14 @@ export const SENIOR = process.env.SENIOROS_CLI || 'senior';
 const STATE_DIR = join(tmpdir(), 'senioros-agy');
 const MAX_ROOTS = 5;
 
+/** Conversation of the running hook, stamped on every log line so parallel conversations can be told apart. */
+let currentConversation;
+
 export function log(event, data) {
   try {
     if (existsSync(LOG) && statSync(LOG).size > 1_000_000) renameSync(LOG, LOG + '.old');
-    appendFileSync(LOG, JSON.stringify({ at: new Date().toISOString(), event, ...data }) + '\n');
+    const entry = { at: new Date().toISOString(), event, ...(currentConversation ? { conversationId: currentConversation } : {}), ...data };
+    appendFileSync(LOG, JSON.stringify(entry) + '\n');
   } catch {}
 }
 
@@ -45,7 +49,9 @@ export function respond(obj) {
  */
 export async function runHook(event, body, fallback = {}) {
   try {
-    respond(await body(readInput()));
+    const input = readInput();
+    if (typeof input.conversationId === 'string') currentConversation = input.conversationId;
+    respond(await body(input));
   } catch (err) {
     log(event, { error: String(err?.stack ?? err) });
     respond(fallback);

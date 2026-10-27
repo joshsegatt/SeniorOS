@@ -46,6 +46,8 @@ function hookEvents(meta) {
       const e = JSON.parse(line);
       const at = Date.parse(e.at);
       if (at < from || at > to) continue;
+      // Parallel runs overlap in time: when both sides know the conversation, it must match.
+      if (meta.conversationId && e.conversationId && e.conversationId !== meta.conversationId) continue;
       if (e.event === 'PreToolUse' && e.decision === 'force_ask') guardTriggers += 1;
       if (e.event === 'Stop' && e.result === 'fail') stopGateBlocks += 1;
     } catch {}

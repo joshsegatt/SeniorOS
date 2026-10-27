@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -33,6 +33,20 @@ test('guard always answers with a decision: Antigravity denies a call without on
   assert.deepEqual(hook('guard.mjs', 'not json', ['--passthrough=allow'], env), { decision: 'allow' });
   const destructive = hook('guard.mjs', { toolCall: { name: 'run_command', args: { CommandLine: 'git reset --hard' } } }, ['--passthrough=allow'], env);
   assert.equal(destructive.decision, 'force_ask');
+});
+
+test('hook log lines carry the conversation id, so parallel bench runs are told apart', () => {
+  const log = path.join(os.tmpdir(), `senioros-test-conv-${process.pid}.log`);
+  rmSync(log, { force: true });
+  try {
+    const input = { conversationId: 'conv-123', toolCall: { name: 'run_command', args: { CommandLine: 'git push --force' } } };
+    hook('guard.mjs', input, ['--passthrough=allow'], { SENIOROS_HOOK_LOG: log });
+    const lines = readFileSync(log, 'utf8').trim().split('\n').map((l) => JSON.parse(l) as Record<string, unknown>);
+    assert.ok(lines.length > 0);
+    assert.ok(lines.every((l) => l.conversationId === 'conv-123'));
+  } finally {
+    rmSync(log, { force: true });
+  }
 });
 
 test('pathsInArgs finds absolute paths in file arguments and command lines', () => {

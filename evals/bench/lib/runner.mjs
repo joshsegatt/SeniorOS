@@ -117,9 +117,9 @@ export async function conversationStats(conversationId) {
 
 /**
  * @param {'agentapi' | 'agy' | 'manual'} backend
- * @param {{ task: Record<string, any>, meta: Record<string, any>, model: string }} job
+ * @param {{ task: Record<string, any>, meta: Record<string, any>, model: string, parallel?: boolean }} job
  */
-export async function runConversation(backend, { task, meta, model }) {
+export async function runConversation(backend, { task, meta, model, parallel = false }) {
   const prompt = promptFor(task, meta.repo);
   const timeoutMs = (task.timeoutMinutes ?? 10) * 60_000;
   const started = Date.now();
@@ -132,6 +132,8 @@ export async function runConversation(backend, { task, meta, model }) {
     const r = run(languageServer(), ['agentapi', 'new-conversation', `--model=${model}`, `--title=${title}`, prompt], { timeoutMs: 60_000 });
     if (r.code !== 0) throw new Error(`agentapi new-conversation failed (exit ${r.code}): ${(r.err || r.out).trim()}`);
     const parsedId = conversationIdFrom(r.out);
+    // Guessing the newest marker is only safe when no other conversation runs at the same time.
+    if (!parsedId && parallel) throw new Error(`agentapi returned no conversation id, which --parallel needs: ${r.out.slice(0, 300)}`);
     const wait = await waitForStop(() => parsedId ?? newestMarkerSince(started), meta.repo, started + timeoutMs);
     return { ...wait, ...(await conversationStats(wait.conversationId)), backendOutput: r.out.slice(0, 2000) };
   }
