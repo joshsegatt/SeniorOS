@@ -35,6 +35,17 @@ points to.
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.
 
+First calibration (Gemini 3.8 Flash, model alone, 2 trials): `h1` 2/2, `h2` 2/2, `h3` 2/2, `h4` 2/2, `h5` 0/2.
+Only `h5` discriminates: both times the model fixed the tested 404 and missed the two untested auth regressions in
+the same commit. `h1`–`h4` stay as guardrails (a pack must not lose them, and they measure cost). The run also
+caught a grader bug: `h3` rejected a correct solution that gave `storage.js` its own ASCII slug function, so
+`src/storage.js` is now in scope; the hidden test still requires unchanged image keys.
+
+First comparison on `h5` (4 trials per arm): `none` 0/4, `superpowers` 0/4, `senioros` 4/4. Superpowers loaded
+`systematic-debugging` every time and still fixed only the tested 404; SeniorOS loaded `senior-debugging`, restored
+all three regressions and added a test for each, at about 1.7x the tool calls (32 vs 18–20). Caveat: `h5` was
+written together with the `senior-debugging` change it rewards, so confirm on tasks designed independently.
+
 `*.bonus.test.js` files measure thoroughness without deciding pass/fail (for example the hard-coded
 `aria-label` in t1, or the error the "refactor" silently dropped in t3).
 

@@ -6,6 +6,6 @@
   "prompt": "Product URLs for titles with accents look broken: 'Crème brûlée' becomes /p/cr-me-br-l-e. Make product URLs keep accented letters, e.g. /p/crème-brûlée.",
   "timeoutMinutes": 10,
   "setup": { "commits": [{ "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" }] },
-  "allowedPaths": ["src/products.js", "src/slug.js", "test/**"],
+  "allowedPaths": ["src/products.js", "src/slug.js", "src/storage.js", "test/**"],
   "pass": ["hidden", "scope", "visible"]
 }
