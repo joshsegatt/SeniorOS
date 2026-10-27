@@ -5,16 +5,31 @@
 // hooks and MCP servers out. The user's global CLAUDE.md is still read (Claude Code has no switch that drops it
 // while keeping `--plugin-dir`); it is the same text for every arm.
 import { spawn } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
+import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
 
-/** Extra `claude` arguments per arm. */
+/**
+ * The SeniorOS plugin without its hooks (no session-start rules, guard or finish gate), to measure what the hooks add.
+ * Built once per bench home from the repository's manifest and skills.
+ */
+function skillsOnlyPlugin() {
+  const dir = join(BENCH_HOME, 'plugins', 'senioros-skills');
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  cpSync(join(REPO_ROOT, '.claude-plugin'), join(dir, '.claude-plugin'), { recursive: true });
+  cpSync(join(REPO_ROOT, 'skills'), join(dir, 'skills'), { recursive: true });
+  return dir;
+}
+
+/** Extra `claude` arguments per arm (functions are resolved when a run starts). */
 export const CLAUDE_ARMS = {
   none: [],
   superpowers: ['--plugin-dir', SUPERPOWERS_DIR],
   senioros: ['--plugin-dir', REPO_ROOT],
+  'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
 };
+let skillsOnlyDir;
 
 const TOOLS = 'Bash Read Edit Write Glob Grep Skill';
 
@@ -60,7 +75,8 @@ export function summarizeStream(text) {
  * @param {{ prompt: string, repo: string, runDir: string, arm: string, model: string, timeoutMs: number }} job
  */
 export function runClaude({ prompt, repo, runDir, arm, model, timeoutMs }) {
-  const armArgs = CLAUDE_ARMS[arm];
+  const spec = CLAUDE_ARMS[arm];
+  const armArgs = typeof spec === 'function' ? spec() : spec;
   if (!armArgs) throw new Error(`Arm "${arm}" is not available for the claude backend (use ${Object.keys(CLAUDE_ARMS).join(', ')}).`);
   const args = [
     '-p', '--model', model, '--setting-sources', 'project', '--strict-mcp-config', '--no-session-persistence',

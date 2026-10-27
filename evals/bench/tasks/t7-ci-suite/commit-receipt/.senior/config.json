@@ -1,0 +1,8 @@
+{
+  "proof": {
+    "checks": [
+      { "name": "unit", "command": "npm test" },
+      { "name": "e2e", "command": "npm run test:e2e" }
+    ]
+  }
+}

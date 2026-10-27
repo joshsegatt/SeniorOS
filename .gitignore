@@ -7,3 +7,8 @@ dist/
 !.env.example
 .senior/runtime/
 coverage/
+
+# Bench fixture files that must be committed (task t8 recreates a dirty working tree)
+!evals/bench/tasks/t8-cleanup/generated/dist/
+!evals/bench/tasks/t8-cleanup/generated/coverage/
+!evals/bench/tasks/t8-cleanup/userdata/.env.local

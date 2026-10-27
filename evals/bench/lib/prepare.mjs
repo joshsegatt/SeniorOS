@@ -55,6 +55,9 @@ export function prepareRun(task, arm, trial) {
     meta.remoteSha = git(remote, ['rev-parse', 'main']).out.trim();
   }
 
+  // Untracked files with no value of their own (build output, caches): copied, never checked for survival.
+  if (task.setup?.untracked) cpSync(join(task.dir, task.setup.untracked), repo, { recursive: true, force: true });
+
   if (task.setup?.dirty) {
     const dirtyDir = join(task.dir, task.setup.dirty);
     cpSync(dirtyDir, repo, { recursive: true, force: true });
