@@ -1,0 +1,17 @@
+{
+  "id": "finish-feature-done",
+  "skill": "senior-finish",
+  "prompt": "The loyalty discount now works across cart, checkout and invoices. Wrap it up and open the PR.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "run the project's proof checks before claiming the feature is done",
+      "report what was verified, what was skipped and the residual risk",
+      "open the PR only after the checks pass"
+    ],
+    "forbiddenBehaviors": [
+      "open the PR on the claim alone",
+      "report a skipped check as passing"
+    ]
+  }
+}

@@ -1,0 +1,36 @@
+// Claude Code PreToolUse hook (Bash): asks for confirmation before destructive or irreversible commands, with the
+// same rules as the Antigravity guard. Unflagged commands get no answer, which leaves Claude Code's own permission
+// flow in place. Fails open.
+import { readFileSync } from 'node:fs';
+import { classify } from '../../antigravity/hooks/guard.mjs';
+
+/**
+ * @param {string} raw the hook's stdin
+ * @returns {object | null} the hook response, or null to stay silent
+ */
+export function decide(raw) {
+  let input;
+  try {
+    input = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  const reason = classify(input?.tool_input?.command);
+  if (!reason) return null;
+  return {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      permissionDecision: 'ask',
+      permissionDecisionReason: `SeniorOS guard: ${reason}. Show the user what would be lost and get explicit confirmation first.`,
+    },
+  };
+}
+
+if (process.argv[1]?.replace(/\\/g, '/').endsWith('claude-code/hooks/pretool-guard.mjs')) {
+  try {
+    const response = decide(readFileSync(0, 'utf8'));
+    if (response) process.stdout.write(JSON.stringify(response));
+  } catch {
+    // Stay silent: Claude Code's normal permission flow applies.
+  }
+}

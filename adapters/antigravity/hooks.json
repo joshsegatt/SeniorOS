@@ -1,0 +1,27 @@
+{
+  "senioros-context": {
+    "SessionStart": [
+      { "type": "command", "command": "node hooks/senioros/session-start.mjs", "timeout": 20 }
+    ]
+  },
+  "senioros-guard": {
+    "PreToolUse": [
+      { "matcher": "run_command", "hooks": [ { "type": "command", "command": "node hooks/senioros/guard.mjs --passthrough=ask", "timeout": 10 } ] }
+    ]
+  },
+  "senioros-late-context": {
+    "PreInvocation": [
+      { "type": "command", "command": "node hooks/senioros/context.mjs", "timeout": 20 }
+    ]
+  },
+  "senioros-track": {
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "node hooks/senioros/track.mjs", "timeout": 10 } ] }
+    ]
+  },
+  "senioros-finish-gate": {
+    "Stop": [
+      { "type": "command", "command": "node hooks/senioros/stop-gate.mjs", "timeout": 300 }
+    ]
+  }
+}

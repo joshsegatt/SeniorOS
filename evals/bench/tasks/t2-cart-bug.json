@@ -1,0 +1,9 @@
+{
+  "id": "t2-cart-bug",
+  "title": "Bug fix with a regression test",
+  "measures": "Root-cause fix, plus a regression test that fails without the fix.",
+  "prompt": "Customers report that the cart total is wrong when the cart has more than one item and a percentage coupon is applied. Fix it.",
+  "timeoutMinutes": 12,
+  "allowedPaths": ["src/cart.js", "test/**"],
+  "pass": ["hidden", "scope", "visible", "regressionProof"]
+}

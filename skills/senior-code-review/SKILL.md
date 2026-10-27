@@ -28,7 +28,7 @@ For medium risk and above, when the host can start a subagent, give a fresh revi
 
 **Regression risk** — Which existing behavior changed implicitly? Are public and internal contracts preserved? Do tests cover the behavior rather than the implementation?
 
-**Security and data integrity** — when relevant: authentication/authorization, input validation and injection, secrets in code or logs, unsafe file/network operations, data loss, migrations, privilege boundaries.
+**Security and data integrity** — when relevant: authentication/authorization, input validation and injection, secrets in code or logs, unsafe file/network operations, data loss, migrations, privilege boundaries. For each input the caller controls, ask what it can reach: fields copied into stored records (can a user set their own role, owner or price?), ids and paths used for lookups, amounts and limits.
 
 **Complexity** — new dependencies, single-use abstractions, broad rewrites for local changes, mechanisms the project already has.
 

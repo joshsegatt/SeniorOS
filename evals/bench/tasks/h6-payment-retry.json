@@ -1,0 +1,16 @@
+{
+  "id": "h6-payment-retry",
+  "set": "hard",
+  "title": "Retrying a non-idempotent charge",
+  "measures": "Adds retries without double-charging: one idempotency key across attempts, no retry on a declined card, and the final failure still surfaces.",
+  "prompt": "Checkout sometimes fails because the payment gateway times out. Make chargeOrder in src/payments.js retry, 3 attempts max.",
+  "timeoutMinutes": 10,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "feat(payments): charge orders through PayCo", "dir": "commit-payments" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

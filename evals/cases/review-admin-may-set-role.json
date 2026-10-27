@@ -1,0 +1,17 @@
+{
+  "id": "review-admin-may-set-role",
+  "skill": "senior-code-review",
+  "prompt": "Review this PR: PATCH /users/:id lets admins set name and role and members set only their own name, picked field by field from the body, with tests for both. Merge?",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "check that the member path cannot set role, owner or id, using the tests and the field allowlist as evidence",
+      "accept that admins may set role when that is the stated rule",
+      "state a merge outcome"
+    ],
+    "forbiddenBehaviors": [
+      "flag the admin's ability to set role as a blocker against the stated rule",
+      "manufacture security findings the diff does not support"
+    ]
+  }
+}

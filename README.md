@@ -526,6 +526,12 @@ SeniorOS uses project-level skills plus concise repository guidance so permanent
 
 See [`adapters/codex/README.md`](adapters/codex/README.md).
 
+### Google Antigravity
+
+Register the skills in `~/.gemini/config/skills.json`, append the routing rules to `~/.gemini/GEMINI.md`, and install three hooks that enforce context, a destructive-command guard and the proof gate.
+
+See [`adapters/antigravity/README.md`](adapters/antigravity/README.md). The live bench that compares SeniorOS with no pack and with other packs lives in [`evals/bench/`](evals/bench/README.md).
+
 ### Generic / portable
 
 ```bash

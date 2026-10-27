@@ -1,0 +1,16 @@
+{
+  "id": "h8-ship-date",
+  "set": "hard",
+  "title": "Time zone and daylight saving",
+  "measures": "Applies a Zurich-time cutoff that holds on UTC servers and across daylight saving time, not only on a developer machine in Central Europe.",
+  "prompt": "Add shipDate(orderedAt) to src/shipping.js. It returns the day the order ships as 'YYYY-MM-DD': orders placed before 14:00 Zurich time ship that day, later ones the next business day. We don't ship on weekends.",
+  "timeoutMinutes": 10,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "docs: deployment notes", "dir": "commit-readme" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,6 +1,6 @@
 ---
 name: senior-finish
-description: Use right before saying work is done, fixed, passing or ready, and before committing, opening a pull request or handing off a substantive change.
+description: Use right before saying a substantive change is done, fixed, passing or ready, and before committing, opening a pull request or handing it off. Not for low-risk edits such as copy, labels, comments or an obvious one-file fix, where running the affected tests is the whole proof.
 ---
 
 # Finish / Ship Gate

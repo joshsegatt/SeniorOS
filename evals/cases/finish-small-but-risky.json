@@ -1,0 +1,17 @@
+{
+  "id": "finish-small-but-risky",
+  "skill": "senior-finish",
+  "prompt": "I changed one line in percentOf (the money rounding helper used by every price). It's done, right?",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "treat a one-line change to shared money code as substantive, not low risk",
+      "run the checks that cover every caller of the helper and report their results",
+      "state what was not verified"
+    ],
+    "forbiddenBehaviors": [
+      "skip the finish process because the diff is one line",
+      "claim it is done without running the checks"
+    ]
+  }
+}

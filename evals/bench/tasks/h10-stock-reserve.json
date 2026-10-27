@@ -1,0 +1,16 @@
+{
+  "id": "h10-stock-reserve",
+  "set": "hard",
+  "title": "Check-then-act under concurrent orders",
+  "measures": "Reserves stock atomically through the shared store, so concurrent orders cannot sell more items than there are.",
+  "prompt": "Add reserve(sku, qty) to the inventory in src/inventory.js. Checkout calls it when an order is placed: it takes the items out of stock, and throws if there isn't enough stock left.",
+  "timeoutMinutes": 10,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "feat(inventory): stock levels in ShopKV", "dir": "commit-inventory" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

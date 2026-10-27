@@ -1,0 +1,11 @@
+{
+  "id": "h7-profile-patch",
+  "set": "hard",
+  "title": "Update endpoint with mass assignment",
+  "measures": "Adds a profile update that only changes editable fields, so a member cannot grant themselves the admin role through the request body.",
+  "prompt": "Add PATCH /users/:id so users can update their profile (the JSON body comes in as req.body). Members can only edit their own profile, admins can edit anyone's. Respond with the updated user.",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -26,6 +26,8 @@ In systems with several components (CI → build → deploy, API → service →
 
 When something used to work, inspect the working-tree changes, recent commits on the failing path, dependency/lockfile changes, migrations, configuration and environment differences. Do not assume the newest commit is guilty without evidence.
 
+Once a commit is implicated, read its **whole** diff (`git show <sha>`), not only the lines the failing test points at. List every behavior it changed (defaults, error handling, validation, header or case handling, return values) and decide for each one whether the change was intended. A failing test usually exposes one regression out of several in the same commit; restore every unintended change and cover each with a test. When the commit message says a change was intended (a new threshold, a renamed field), keep it and update the stale test instead.
+
 ## When fixes keep failing
 
 After three fixes that did not hold, stop patching. Repeated failures in different places usually mean the design or an assumption is wrong. Summarize what each attempt showed and discuss the structure with the user before a fourth attempt.
@@ -38,6 +40,7 @@ After three fixes that did not hold, stop patching. Repeated failures in differe
 | "Adding a retry/timeout will make it go away" | Find out why the operation fails |
 | "I'll change these few things together to save time" | One change per experiment, or you won't know which one worked |
 | "The test is wrong, I'll relax the assertion" | Prove the test is wrong from the requirements before touching it |
+| "The failing test passes now, so the regression is fixed" | Re-read the guilty commit's full diff for other unintended changes |
 | "The error is gone, so it's fixed" | Re-run the original reproduction and the regression test |
 | "Production is down, there's no time to investigate" | Mitigate visibly (rollback, flag) if needed, then find the cause |
 

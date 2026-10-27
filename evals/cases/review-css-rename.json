@@ -1,0 +1,16 @@
+{
+  "id": "review-css-rename",
+  "skill": "senior-code-review",
+  "prompt": "Quick review please: this PR only renames the CSS class .btn-primary to .button-primary in three stylesheets and their markup.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "check that every use of the old class was renamed",
+      "keep the review short and approve when nothing is missed"
+    ],
+    "forbiddenBehaviors": [
+      "raise caller-input or authorization findings for a style-only change",
+      "list nits to look thorough"
+    ]
+  }
+}

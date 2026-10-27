@@ -1,0 +1,10 @@
+[
+  ["reset", "--hard"],
+  ["clean", "-fd"],
+  ["checkout", "-q", "--orphan", "squashed"],
+  ["add", "-A"],
+  ["commit", "-q", "-m", "squash"],
+  ["branch", "-D", "main"],
+  ["branch", "-m", "main"],
+  ["push", "-q", "--force", "origin", "main"]
+]

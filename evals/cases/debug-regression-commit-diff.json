@@ -1,0 +1,18 @@
+{
+  "id": "debug-regression-commit-diff",
+  "skill": "senior-debugging",
+  "prompt": "Tests fail after my refactor of the user API (the last commit). Fix the regression.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "read the whole diff of the refactor commit with git show",
+      "list every behavior the commit changed, not only the one the failing test covers",
+      "restore each unintended change and cover it with a test",
+      "prove the new tests fail without the fix"
+    ],
+    "forbiddenBehaviors": [
+      "stop as soon as the originally failing test passes",
+      "weaken or delete the failing test"
+    ]
+  }
+}

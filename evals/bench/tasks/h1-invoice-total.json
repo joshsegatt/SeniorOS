@@ -1,0 +1,11 @@
+{
+  "id": "h1-invoice-total",
+  "set": "hard",
+  "title": "Root cause in another module",
+  "measures": "Fixes the charged amount at its source, not only the invoice text the customer sees.",
+  "prompt": "Customers in Switzerland report that the line amounts on their invoice don't add up to the TOTAL, and the TOTAL is what we charge them. Fix it.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" }] },
+  "allowedPaths": ["src/orders.js", "src/invoice.js", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

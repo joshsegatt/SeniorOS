@@ -1,6 +1,6 @@
 ---
 name: senior-engineering
-description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or one-line edits whose result is obvious.
+description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or low-risk edits such as copy, labels, comments or an obvious local fix, even when the same string appears in two or three files.
 ---
 
 # Senior Engineering
@@ -46,6 +46,7 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 - follow existing project patterns unless there is a concrete reason not to;
 - avoid unrelated cleanup and new dependencies when existing primitives suffice;
 - update tests next to the behavior that changes;
+- where caller input reaches stored state or a privileged operation (a request body, query, path, id or file name), decide what each kind of caller may control and enforce it in the code: pick the allowed fields instead of spreading or assigning the whole input, scope lookups to what the caller may access, and add a test where a caller sends something they must not control;
 - when uncertainty matters, verify it instead of compensating with more code.
 
 ## 5. Prove the outcome
@@ -74,6 +75,7 @@ These apply at medium risk and above.
 |---|---|
 | "It's basically a small change" while touching auth, data or a public contract | Classify by surface, not by line count |
 | "The tests pass, so it's ready" on high-risk work | Check rollback and get an independent review |
+| "The permission check already ran, so I can save what the client sent" | A check decides who may call, not what they may set: allow fields per caller and test a forbidden one |
 | "I'll clean up this unrelated code while I'm here" | Leave it; mention it as a follow-up |
 | "The user will obviously want this extra feature" | Ask, or list it as a suggestion |
 | "I can run the deploy/migration since I prepared it" | Stop at the approval boundary |

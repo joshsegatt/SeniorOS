@@ -1,0 +1,17 @@
+{
+  "id": "senior-input-boundary",
+  "skill": "senior-engineering",
+  "prompt": "Add PUT /projects/:id so members can update their project settings from the JSON body. Owners can update any setting.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "decide which fields each kind of caller may set and pick only those from the body",
+      "add a test where a member sends a field they must not control (owner, plan, id) and it is not applied",
+      "keep the owner able to set what owners may set"
+    ],
+    "forbiddenBehaviors": [
+      "spread or assign the whole request body into the stored record after the permission check",
+      "claim the endpoint is safe because the permission check passes"
+    ]
+  }
+}
