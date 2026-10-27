@@ -16,6 +16,7 @@
 </p>
 
 <p align="center">
+  <a href="#measured-not-claimed">Results</a> ·
   <a href="#quick-start">Quick start</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#for-vibe-coders">Vibe coders</a> ·
@@ -25,6 +26,24 @@
   <a href="#evals">Evals</a> ·
   <a href="#architecture">Architecture</a>
 </p>
+
+---
+
+## Measured, not claimed
+
+<p align="center">
+  <img src="brand/social/demo-approval-boundary.svg" alt="Replay of a real bench run: asked to discard local changes and force-push main, Claude Code alone rewrote main on the remote; with SeniorOS it stopped, listed what would be lost and asked first" width="100%" />
+</p>
+
+A live bench runs the same model on the same trap tasks with no pack, with [Superpowers](https://github.com/obra/superpowers) and with SeniorOS. Hidden tests and the repository state grade every run; no model judges another.
+
+| Host and model | No pack | Superpowers | SeniorOS |
+|---|---|---|---|
+| Claude Code, Claude Haiku (17 tasks, 3 trials each) | 45/51 | 44/51 | **49/51** |
+| Antigravity, Gemini Flash (4 hard tasks, 3 trials each) | not run | 8/12 | **12/12** |
+| Antigravity, Gemini Flash (multi-regression refactor, 4 trials) | 0/4 | 0/4 | **4/4** |
+
+In Claude Code, SeniorOS shipped no wrong code and never force-pushed `main`; Superpowers wrote wrong code three times (a refactor fixed only where a test pointed, a password-hash switch that locked out existing accounts). Every run, task and caveat (including which tasks were written alongside the changes they reward) is in [`evals/bench/`](evals/bench/README.md), and you can rerun it with one command.
 
 ---
 
@@ -109,29 +128,31 @@ because optimism remains stubbornly absent from every serious test framework.
 
 Requires Node.js 20 or newer. No clone needed: the CLI is published on npm as [`senioros`](https://www.npmjs.com/package/senioros), and its command is `senior`.
 
-### 1. Install the skills for your coding agent
+### 1. Install SeniorOS for your coding agent
 
-Run inside your project:
-
-```bash
-# Claude Code — project-local
-npx senioros install --target claude --scope project
-
-# Codex — project-local
-npx senioros install --target codex --scope project
-
-# Portable / generic Agent Skills layout
-npx senioros install --target generic --scope project
-```
-
-SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`.
-
-In Claude Code you can also install the skills as a plugin:
+**Claude Code** (recommended: the plugin adds the routing rules and the destructive-command guard):
 
 ```text
 /plugin marketplace add joshsegatt/SeniorOS
 /plugin install senioros@senioros
 ```
+
+**Google Antigravity** (skills, routing rules and hooks in `~/.gemini`, backed up and reversible):
+
+```bash
+npx senioros install --target antigravity
+```
+
+**Codex**, or skills only for any agent, run inside your project:
+
+```bash
+npx senioros install --target codex --scope project
+npx senioros install --target claude --scope project    # skills only, without the plugin's rules and guard
+npx senioros install --target generic --scope project   # portable Agent Skills layout
+```
+
+SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`. In the bench, Claude never loaded
+the skills on its own without the plugin's session-start rules, so prefer the plugin in Claude Code.
 
 **Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
 
@@ -246,6 +267,8 @@ senior doctor
 senior install --target claude --scope project
 senior install --target codex --scope project
 senior install --target generic --scope project
+senior install --target antigravity
+senior uninstall --target antigravity
 ```
 
 | Command | What it does |
@@ -425,7 +448,8 @@ Runtime-only state belongs under `.senior/runtime/` and stays out of Git.
 
 SeniorOS treats evals as product engineering, not post-launch decoration.
 
-The v0.1 foundation includes **18 initial eval cases** covering the core skills.
+SeniorOS has **34 eval cases** covering the core skills, and a **live bench** of 17 trap tasks that runs real agents
+(Claude Code, Google Antigravity) with and without skill packs; see [Measured, not claimed](#measured-not-claimed).
 
 Each case captures intent such as:
 
@@ -508,11 +532,13 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for system boundaries.
 
 ### Claude Code
 
-```bash
-senior install --target claude --scope project
+```text
+/plugin marketplace add joshsegatt/SeniorOS
+/plugin install senioros@senioros
 ```
 
-Project skills are installed under `.claude/skills/`.
+The plugin ships the skills plus two hooks: routing rules at session start and a guard that asks before destructive
+`Bash` commands. `senior install --target claude --scope project` installs the skills alone under `.claude/skills/`.
 
 See [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
 
@@ -528,7 +554,13 @@ See [`adapters/codex/README.md`](adapters/codex/README.md).
 
 ### Google Antigravity
 
-Register the skills in `~/.gemini/config/skills.json`, append the routing rules to `~/.gemini/GEMINI.md`, and install three hooks that enforce context, a destructive-command guard and the proof gate.
+```bash
+npx senioros install --target antigravity     # add --turbo if terminal auto-execution is on Turbo
+npx senioros uninstall --target antigravity   # removes only what the installer added
+```
+
+Registers the skills, adds the routing rules to `~/.gemini/GEMINI.md` and installs hooks for project context, a
+destructive-command guard and the proof gate. Files it changes are backed up once; your own rules and hooks are kept.
 
 See [`adapters/antigravity/README.md`](adapters/antigravity/README.md). The live bench that compares SeniorOS with no pack and with other packs lives in [`evals/bench/`](evals/bench/README.md).
 
