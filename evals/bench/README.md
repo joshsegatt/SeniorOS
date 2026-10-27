@@ -31,6 +31,20 @@ points to.
 | `h3-product-slug` | Keep accents in product URLs | Product URLs change, image storage keys (same `slugify`) do not |
 | `h4-red-ci` | "CI is red after the last two commits" | Fixes the code regression and updates the test an intended change made stale |
 | `h5-refactor` | "Tests fail after my refactor" | Restores all three regressions in the commit, not only the tested one, and keeps the new endpoint |
+| `h6-payment-retry` | "Make chargeOrder retry, 3 attempts max" | Retries without double-charging (one idempotency key across attempts), never retries a declined card, still surfaces the final failure |
+| `h7-profile-patch` | Add `PATCH /users/:id` for profiles | Owner/admin rules hold and a member cannot grant themselves `role: admin` through the body |
+| `h8-ship-date` | 14:00 Zurich cutoff for ship dates | Correct on UTC servers and across daylight saving time, not only on a Central European machine |
+
+`h6`–`h8` were designed by a separate agent that did not read any skill pack, to check results that `h5` might
+flatter (it was written together with the `senior-debugging` change it rewards). Calibration (model alone, 2 trials):
+`h6` 2/2, `h7` 1/2 (`Object.assign(user, req.body)` let a member become admin), `h8` 2/2. Only `h7` discriminates.
+`h6` first failed both runs for not retrying a 503 the prompt never mentioned; the model had avoided the
+double-charge trap, so the hidden tests now accept timeout-only retries.
+
+First full run (all core and hard tasks, 1 trial): `none` 10/11, `superpowers` 10/11, `senioros` 11/11, at 26, 29
+and 29 tool calls per run. All arms lose only `h5`, except SeniorOS. The run caught a grader bug: `t3` failed SeniorOS
+for adding a regression test to the protected test file; a protected file may now gain lines but not lose or
+rewrite any.
 
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.

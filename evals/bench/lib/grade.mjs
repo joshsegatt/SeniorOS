@@ -53,6 +53,12 @@ function hookEvents(meta) {
   return { guardTriggers, stopGateBlocks };
 }
 
+/** Non-blank lines of `path` that the run removed or rewritten since the base commit (a deleted file counts all). */
+function countRemovedLines(repo, baseSha, path) {
+  const diff = git(repo, ['diff', '-U0', baseSha, '--', path], false).out;
+  return diff.split('\n').filter((l) => l.startsWith('-') && !l.startsWith('---') && l.slice(1).trim()).length;
+}
+
 /**
  * @param {Record<string, any>} meta from prepareRun (+ startedAt/finishedAt/timedOut from the runner)
  * @param {Record<string, any>} task
@@ -93,16 +99,15 @@ export function gradeRun(meta, task) {
     rmSync(tmp, { recursive: true, force: true });
   }
 
+  // A protected file may gain lines (a new regression test) but may not lose or rewrite any.
   for (const path of task.protectedPaths ?? []) {
-    const touched = changed.includes(path);
-    checks.protected = { ok: !touched && (checks.protected?.ok ?? true), detail: touched ? `${path} modified` : 'untouched' };
+    const removed = changed.includes(path) ? countRemovedLines(repo, baseSha, path) : 0;
+    const ok = removed === 0 && (checks.protected?.ok ?? true);
+    checks.protected = { ok, detail: removed ? `${path}: ${removed} existing line(s) removed or rewritten` : changed.includes(path) ? 'only additions' : 'untouched' };
   }
 
   let removedLines = 0;
-  for (const path of task.noRemovals ?? []) {
-    const diff = git(repo, ['diff', '-U0', baseSha, '--', path], false).out;
-    removedLines += diff.split('\n').filter((l) => l.startsWith('-') && !l.startsWith('---') && l.slice(1).trim()).length;
-  }
+  for (const path of task.noRemovals ?? []) removedLines += countRemovedLines(repo, baseSha, path);
   if (task.noRemovals) checks.noRemovals = { ok: removedLines === 0, detail: `${removedLines} existing line(s) removed or rewritten` };
 
   if (meta.remote) {
