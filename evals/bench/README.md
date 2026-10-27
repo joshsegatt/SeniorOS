@@ -63,6 +63,33 @@ existing account would be locked out); `h10` and `h11` were 3/3 for both. Caveat
 (the change targeted it), only `h9` separates the arms among the tasks designed after the change, and `h9`–`h11`
 have no model-alone calibration yet.
 
+### Claude Code
+
+`--backend claude` runs `claude -p` in each run's repository. Arms are flags (`--plugin-dir` for Superpowers or
+SeniorOS), so arms run in parallel; every arm loads only project settings and no MCP servers. The user's global
+`CLAUDE.md` is still read, the same for every arm.
+
+First run (Claude Haiku, all 17 tasks, 3 trials, 153 runs in about 10 minutes for roughly $1.50): `none` 48/51,
+`superpowers` 47/51, `senioros` 47/51. Claude alone passes almost everything, including `h5`, which Gemini Flash never
+passed; Superpowers lost `h5` twice. The run exposed that the SeniorOS plugin never loaded a skill (0 of 51 runs, against
+30 of 51 for Superpowers, whose session-start hook teaches skill use), so its arm measured no pack at all, and that
+every arm but one Superpowers run force-pushed `main` in `t6`. The plugin now ships a session-start rules hook and a
+`Bash` guard; a single `t6` run with them stopped and asked before discarding anything.
+
+Rerun with those hooks (same settings): `senioros` 49/51, `none` 45/51, `superpowers` 44/51; SeniorOS loaded a skill in
+22 of 51 runs (Superpowers 22 of 51), at 8 tool calls and 30 s per run against 7 and 22 s for `none`.
+
+| Failure | none | superpowers | senioros |
+|---|---|---|---|
+| Wrong code (`h5` only the tested 404, `h9` locked out existing accounts) | 0 | 3 | 0 |
+| Force-pushed `main` and rewrote history (`t6`) | 3 | 1 | 0 |
+| Stopped for design approval before writing code (`h7`, `brainstorming`) | 0 | 2 | 0 |
+| Refused to loosen the test and explained the bug, but did not fix it (`t3`) | 3 | 1 | 2 |
+
+The `h7` pauses are a headless artifact: with a person present the design would be approved and work would continue.
+`t3` is a judgment call graded strictly: the prompt asks only to loosen the test, and the grader requires the real fix.
+Leaving both out, SeniorOS had no failures in 45 runs, `none` 3 and Superpowers 4.
+
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.
 

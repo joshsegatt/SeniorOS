@@ -7,6 +7,7 @@ import { ARMS, applyArm, armState, restoreArms } from './lib/arms.mjs';
 import { gradeRun } from './lib/grade.mjs';
 import { prepareRun } from './lib/prepare.mjs';
 import { buildReport } from './lib/report.mjs';
+import { CLAUDE_ARMS } from './lib/claude.mjs';
 import { runConversation } from './lib/runner.mjs';
 import { BENCH_HOME, BENCH_SRC, GEMINI_HOME, HOOK_LOG, git, loadTasks } from './lib/util.mjs';
 
@@ -19,8 +20,8 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|manual      (default: agentapi)
-      --model flash
+      --backend agentapi|agy|claude|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros)
+      --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)
   tasks                         List tasks
@@ -154,18 +155,21 @@ async function pool(items, limit, worker) {
 
 async function runBench(args) {
   const arms = option(args, 'arms', 'none,superpowers,senioros').split(',');
-  for (const a of arms) if (!ARMS[a]) throw new Error(`Unknown arm "${a}"`);
   const tasks = pickTasks(option(args, 'tasks', 'all'));
   const trials = Number(option(args, 'trials', '2'));
   const backend = /** @type {any} */ (option(args, 'backend', 'agentapi'));
-  const model = option(args, 'model', 'flash');
+  // Claude Code arms are per-process flags; every other backend swaps the global Antigravity config.
+  const perProcessArms = backend === 'claude';
+  const known = perProcessArms ? CLAUDE_ARMS : ARMS;
+  for (const a of arms) if (!known[a]) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
+  const model = option(args, 'model', perProcessArms ? 'haiku' : 'flash');
   const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
-  if (parallel > 1 && backend !== 'agentapi') throw new Error('--parallel needs the agentapi backend.');
+  if (parallel > 1 && backend !== 'agentapi' && backend !== 'claude') throw new Error('--parallel needs the agentapi or claude backend.');
   const resultsDir = join(BENCH_HOME, 'results', new Date().toISOString().replace(/[:.]/g, '-'));
   mkdirSync(resultsDir, { recursive: true });
   const total = trials * tasks.length * arms.length;
   console.log(`Bench: ${tasks.length} task(s) x ${arms.length} arm(s) x ${trials} trial(s) = ${total} runs, backend ${backend}, model ${model}.`);
-  if (parallel > 1) console.log(`Parallel: up to ${parallel} conversations at once, one arm at a time.`);
+  if (parallel > 1) console.log(`Parallel: up to ${parallel} conversations at once${perProcessArms ? ', arms interleaved' : ', one arm at a time'}.`);
   console.log(`Results: ${resultsDir}`);
 
   let done = 0;
@@ -189,7 +193,17 @@ async function runBench(args) {
   }
 
   try {
-    if (parallel > 1) {
+    if (perProcessArms) {
+      // No global config to swap: interleave arms so none runs only early or only late.
+      const jobs = [];
+      for (let trial = 1; trial <= trials; trial++) {
+        for (const [ti, task] of tasks.entries()) {
+          const shift = (ti + trial) % arms.length;
+          for (const arm of [...arms.slice(shift), ...arms.slice(0, shift)]) jobs.push([task, arm, trial]);
+        }
+      }
+      await pool(jobs, parallel, (job) => runOne(...job));
+    } else if (parallel > 1) {
       // The arm is global Antigravity config, so arms run one after another; runs within an arm overlap.
       for (const arm of arms) {
         applyArm(arm);
@@ -210,8 +224,10 @@ async function runBench(args) {
       }
     }
   } finally {
-    restoreArms();
-    console.log('Your Antigravity config was restored.');
+    if (!perProcessArms) {
+      restoreArms();
+      console.log('Your Antigravity config was restored.');
+    }
   }
   console.log('\n' + buildReport(resultsDir));
 }

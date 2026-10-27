@@ -38,6 +38,8 @@ export function buildReport(resultsDir) {
   row('New docs/plans created', (rs) => sum(rs, (r) => r.metrics?.ceremonyDocs));
   row('Avg duration (s)', (rs) => avg(rs, (r) => r.metrics?.durationSec) ?? '-');
   row('Avg agent actions (tool calls)', (rs) => avg(rs, (r) => r.outcome?.actions) ?? '-');
+  // Rounded to cents: avg() rounds to integers, so average in cents.
+  row('Avg cost per run (USD)', (rs) => { const c = avg(rs, (r) => (typeof r.outcome?.costUsd === 'number' ? r.outcome.costUsd * 100 : undefined)); return c === null ? '-' : (c / 100).toFixed(2); });
   row('Timeouts', (rs) => sum(rs, (r) => r.metrics?.timedOut ? 1 : 0));
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));
