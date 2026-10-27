@@ -5,10 +5,14 @@
 //             where ANTIGRAVITY_LS_ADDRESS is set). Completion is detected through the bench-marker Stop hook.
 //   agy       The Antigravity CLI (`agy -p <prompt>`), run inside the run's repository. Completion = exit.
 //   manual    Prints the prompt and waits for Enter: you run the conversation yourself.
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
-import { BENCH_HOME, newestMtime, run } from './util.mjs';
+import { BENCH_HOME, GEMINI_HOME, newestMtime, run } from './util.mjs';
+
+/** Step type of a tool call in Antigravity's conversation store (observed on 44.4.3). */
+const TOOL_CALL_STEP = 132;
 
 // Quiet time after the last Stop before a run counts as finished (a finish gate may send the agent back).
 const SETTLE_MS = Number(process.env.SENIOROS_BENCH_SETTLE_MS ?? 30_000);
@@ -82,6 +86,36 @@ async function waitForStop(getId, repo, deadline) {
 }
 
 /**
+ * Reads the finished conversation from Antigravity's store: how many tool calls the agent made and which
+ * skills it loaded. Best effort: null when the store or `node:sqlite` (Node 22.5+) is unavailable.
+ * @param {string | null | undefined} conversationId
+ */
+export async function conversationStats(conversationId) {
+  if (!conversationId) return null;
+  const src = join(GEMINI_HOME, 'antigravity', 'conversations', `${conversationId}.db`);
+  if (!existsSync(src)) return null;
+  const copy = join(tmpdir(), `sob-conv-${conversationId}.db`);
+  try {
+    const { DatabaseSync } = await import('node:sqlite');
+    copyFileSync(src, copy);
+    const db = new DatabaseSync(copy, { readOnly: true });
+    try {
+      const steps = db.prepare('select step_type as type, step_payload as payload from steps').all();
+      const actions = steps.filter((s) => s.type === TOOL_CALL_STEP).length;
+      const text = steps.map((s) => Buffer.from(s.payload ?? []).toString('utf8')).join('\n');
+      const skillsLoaded = [...new Set([...text.matchAll(/skills[\\/]+([\w-]+)[\\/]+SKILL\.md/g)].map((m) => m[1]))];
+      return { actions, skillsLoaded };
+    } finally {
+      db.close();
+    }
+  } catch {
+    return null;
+  } finally {
+    rmSync(copy, { force: true });
+  }
+}
+
+/**
  * @param {'agentapi' | 'agy' | 'manual'} backend
  * @param {{ task: Record<string, any>, meta: Record<string, any>, model: string }} job
  */
@@ -99,7 +133,7 @@ export async function runConversation(backend, { task, meta, model }) {
     if (r.code !== 0) throw new Error(`agentapi new-conversation failed (exit ${r.code}): ${(r.err || r.out).trim()}`);
     const parsedId = conversationIdFrom(r.out);
     const wait = await waitForStop(() => parsedId ?? newestMarkerSince(started), meta.repo, started + timeoutMs);
-    return { ...wait, backendOutput: r.out.slice(0, 2000) };
+    return { ...wait, ...(await conversationStats(wait.conversationId)), backendOutput: r.out.slice(0, 2000) };
   }
 
   if (backend === 'agy') {

@@ -16,7 +16,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
   probe                         One live harness check inside Antigravity (run this first)
   run [options]                 Run the bench and write a report
       --arms none,superpowers,senioros   (also: senioros-skills)
-      --tasks t1-label,...               (default: all)
+      --tasks core|hard|t1-label,...     (default: all)
       --trials 2
       --backend agentapi|agy|manual      (default: agentapi)
       --model flash
@@ -31,9 +31,12 @@ function option(args, name, fallback) {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 }
 
+/** `all`, a set name (`core`, `hard`) or a comma-separated list of task ids. */
 function pickTasks(list) {
   const all = loadTasks();
   if (!list || list === 'all') return all;
+  const sets = new Set(all.map((t) => t.set ?? 'core'));
+  if (sets.has(list)) return all.filter((t) => (t.set ?? 'core') === list);
   const ids = list.split(',');
   const unknown = ids.filter((id) => !all.some((t) => t.id === id));
   if (unknown.length) throw new Error(`Unknown task(s): ${unknown.join(', ')}`);
@@ -186,7 +189,7 @@ try {
   else if (command === 'arm' && args[0] === 'restore') console.log(restoreArms() ? 'Restored your Antigravity config.' : 'Nothing to restore.');
   else if (command === 'arm' && args[0] === 'status') console.log(JSON.stringify(armState() ?? { arm: null }, null, 2));
   else if (command === 'arm' && args[0]) { applyArm(args[0]); console.log(`Arm "${args[0]}" applied. Run "arm restore" to put your config back.`); }
-  else if (command === 'tasks') for (const t of loadTasks()) console.log(`${t.id.padEnd(16)} ${t.title}: ${t.measures}`);
+  else if (command === 'tasks') for (const t of loadTasks()) console.log(`${(t.set ?? 'core').padEnd(5)} ${t.id.padEnd(17)} ${t.title}: ${t.measures}`);
   else { console.log(USAGE); if (command) process.exitCode = 1; }
 } catch (err) {
   console.error(`bench: ${err instanceof Error ? err.message : String(err)}`);

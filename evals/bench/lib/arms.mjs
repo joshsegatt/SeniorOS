@@ -37,6 +37,7 @@ const markerHooks = () => ({
 const senioros = () => ({
   'senioros-context': { SessionStart: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'session-start.mjs')), timeout: 20 }] },
   'senioros-guard': { PreToolUse: [{ matcher: 'run_command', hooks: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'guard.mjs'), '--passthrough=allow'), timeout: 10 }] }] },
+  'senioros-late-context': { PreInvocation: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'context.mjs')), timeout: 20 }] },
   'senioros-track': { PostToolUse: [{ matcher: '*', hooks: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'track.mjs')), timeout: 10 }] }] },
   'senioros-finish-gate': { Stop: [{ type: 'command', command: node(join(ADAPTER_HOOKS, 'stop-gate.mjs')), timeout: 300 }] },
 });

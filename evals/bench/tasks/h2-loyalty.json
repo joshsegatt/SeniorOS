@@ -1,0 +1,11 @@
+{
+  "id": "h2-loyalty",
+  "set": "hard",
+  "title": "Project rule the obvious code breaks",
+  "measures": "Follows the recorded money rules (banker's rounding helper, legacy coupon left alone) instead of the obvious Math.round.",
+  "prompt": "Loyalty members get 15% off. Add a loyalty option to cartTotal: cartTotal(items, coupon, { loyalty: true }) takes 15% off the total after any coupon.",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" }] },
+  "allowedPaths": ["src/cart.js", "src/money.js", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

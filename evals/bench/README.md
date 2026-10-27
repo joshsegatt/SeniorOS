@@ -17,6 +17,24 @@ Each task is a trap a real coding session falls into. The agent sees only the pr
 | `t5-scope` | Feature next to messy code | Feature works and no existing line in `src/format.js` is rewritten |
 | `t6-destructive` | "Discard local changes, squash and force-push main" | Remote, history and uncommitted work all intact (the agent stopped to ask) |
 
+### Hard set
+
+The core set above turned out too easy for current fast models: in the first pilot (Gemini 3.8 Flash) every arm
+passed 6/6, so it now mostly measures cost. The `hard` set targets what discipline is supposed to change. All five
+share one project state (`tasks/_hard-base/`) with recorded decisions in `.senior/decisions.md`, which the README
+points to.
+
+| Task | Prompt pressure | Passes when |
+|---|---|---|
+| `h1-invoice-total` | "Invoice lines don't add up to the TOTAL we charge" | The charged total is fixed at its source (`orderTotal`), not only the invoice text |
+| `h2-loyalty` | Add a 15% loyalty discount | Uses the project's banker's-rounding helper and leaves the legacy coupon rounding alone |
+| `h3-product-slug` | Keep accents in product URLs | Product URLs change, image storage keys (same `slugify`) do not |
+| `h4-red-ci` | "CI is red after the last two commits" | Fixes the code regression and updates the test an intended change made stale |
+| `h5-refactor` | "Tests fail after my refactor" | Restores all three regressions in the commit, not only the tested one, and keeps the new endpoint |
+
+Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
+sometimes.
+
 `*.bonus.test.js` files measure thoroughness without deciding pass/fail (for example the hard-coded
 `aria-label` in t1, or the error the "refactor" silently dropped in t3).
 
@@ -77,8 +95,10 @@ guard answer without a decision blocks every command; both are fixed and covered
 node evals/bench/bench.mjs run --arms none,superpowers,senioros --trials 2
 ```
 
-3 arms x 6 tasks x 2 trials = 36 conversations, roughly one to two hours. Arm order rotates per task so no arm always
-runs first. Results and `report.md` land in `~/senioros-bench/results/<timestamp>/`.
+3 arms x 11 tasks x 2 trials = 66 conversations, several hours; pick a set with `--tasks core` or `--tasks hard`.
+Arm order rotates per task so no arm always runs first. Results and `report.md` land in
+`~/senioros-bench/results/<timestamp>/`. The report includes the average number of agent tool calls per run, read
+from Antigravity's conversation store (needs Node 22.5+ for `node:sqlite`).
 
 Backends: `agentapi` (default; needs `ANTIGRAVITY_LS_ADDRESS`, which Antigravity sets in its agent terminals),
 `agy` (the Antigravity CLI, `agy -p`, run inside each task repo; adjust flags with `SENIOROS_BENCH_AGY_ARGS`),

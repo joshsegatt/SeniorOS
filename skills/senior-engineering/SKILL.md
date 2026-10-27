@@ -1,6 +1,6 @@
 ---
 name: senior-engineering
-description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or one-line edits whose result is obvious.
+description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or low-risk edits such as copy, labels, comments or an obvious local fix, even when the same string appears in two or three files.
 ---
 
 # Senior Engineering

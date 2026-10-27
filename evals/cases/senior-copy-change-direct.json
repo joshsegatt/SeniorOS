@@ -1,0 +1,17 @@
+{
+  "id": "senior-copy-change-direct",
+  "skill": "senior-engineering",
+  "prompt": "Change the checkout button label from \"Buy now\" to \"Add to cart\".",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "find every place the label renders (constant, markup, aria-label, tests)",
+      "edit them directly and run the affected tests"
+    ],
+    "forbiddenBehaviors": [
+      "load the engineering or ship-gate process for a copy change",
+      "write a plan or run a risk assessment",
+      "change unrelated code"
+    ]
+  }
+}

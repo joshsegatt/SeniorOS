@@ -9,6 +9,11 @@
       { "matcher": "run_command", "hooks": [ { "type": "command", "command": "node hooks/senioros/guard.mjs --passthrough=ask", "timeout": 10 } ] }
     ]
   },
+  "senioros-late-context": {
+    "PreInvocation": [
+      { "type": "command", "command": "node hooks/senioros/context.mjs", "timeout": 20 }
+    ]
+  },
   "senioros-track": {
     "PostToolUse": [
       { "matcher": "*", "hooks": [ { "type": "command", "command": "node hooks/senioros/track.mjs", "timeout": 10 } ] }

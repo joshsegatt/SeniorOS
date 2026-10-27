@@ -1,18 +1,16 @@
-// PostToolUse: remember which git repositories the agent changes, so the stop gate can prove them even
-// when the conversation has no workspace folder. Read-only tools are ignored.
-import { addTrackedRoots, gitRootOf, log, pathsInArgs, runHook, trackedRoots } from './lib.mjs';
+// PostToolUse: remember which git repositories the agent touches (any tool) and changes (mutating tools),
+// so context.mjs can give it the project context and the stop gate can prove the changed ones, even when
+// the conversation has no workspace folder.
+import { gitRootOf, log, pathsInArgs, recordRoots, runHook } from './lib.mjs';
 
 const MUTATING = /write|replace|edit|create|delete|move|rename|run_command/i;
 
 await runHook('PostToolUse', async (input) => {
   const name = String(input.toolCall?.name ?? '');
-  if (!MUTATING.test(name)) return {};
-  const known = new Set(trackedRoots(input));
-  const roots = [];
-  for (const path of pathsInArgs(input.toolCall?.args)) {
-    const root = gitRootOf(path);
-    if (root && !known.has(root)) { roots.push(root); known.add(root); }
-  }
-  if (roots.length) log('PostToolUse', { tool: name, tracked: addTrackedRoots(input, roots) });
+  const roots = [...new Set(pathsInArgs(input.toolCall?.args).map(gitRootOf).filter(Boolean))];
+  if (roots.length === 0) return {};
+  const before = JSON.stringify(recordRoots(input, {}));
+  const state = recordRoots(input, MUTATING.test(name) ? { edited: roots } : { seen: roots });
+  if (JSON.stringify(state) !== before) log('PostToolUse', { tool: name, seen: state.seen, edited: state.edited });
   return {};
 });

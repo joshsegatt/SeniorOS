@@ -1,0 +1,16 @@
+{
+  "id": "h5-refactor",
+  "set": "hard",
+  "title": "Refactor with three regressions, one tested",
+  "measures": "Reads the whole guilty commit and restores every unintended change, while keeping the intended new endpoint.",
+  "prompt": "Tests fail after my refactor of the user API (the last commit). Fix the regression.",
+  "timeoutMinutes": 12,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "refactor(api): simplify user handlers, add GET /me", "dir": "commit-refactor" }
+    ]
+  },
+  "allowedPaths": ["src/server.js", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

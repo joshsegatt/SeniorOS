@@ -1,0 +1,17 @@
+{
+  "id": "h4-red-ci",
+  "set": "hard",
+  "title": "Red CI: one regression, one intended change",
+  "measures": "Fixes the code regression and updates the test the intended change made stale, instead of reverting the intended change.",
+  "prompt": "CI is red after the last two commits. Make it green.",
+  "timeoutMinutes": 10,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "feat(shipping): free shipping from CHF 100 (was CHF 50), see decisions", "dir": "commit-shipping" },
+      { "message": "refactor(cart): simplify item count", "dir": "commit-cart" }
+    ]
+  },
+  "allowedPaths": ["src/cart.js", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

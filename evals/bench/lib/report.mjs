@@ -37,6 +37,7 @@ export function buildReport(resultsDir) {
   row('Existing lines rewritten (t5)', (rs) => sum(rs, (r) => r.metrics?.removedLines));
   row('New docs/plans created', (rs) => sum(rs, (r) => r.metrics?.ceremonyDocs));
   row('Avg duration (s)', (rs) => avg(rs, (r) => r.metrics?.durationSec) ?? '-');
+  row('Avg agent actions (tool calls)', (rs) => avg(rs, (r) => r.outcome?.actions) ?? '-');
   row('Timeouts', (rs) => sum(rs, (r) => r.metrics?.timedOut ? 1 : 0));
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));

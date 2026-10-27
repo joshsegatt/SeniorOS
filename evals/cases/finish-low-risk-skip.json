@@ -1,0 +1,16 @@
+{
+  "id": "finish-low-risk-skip",
+  "skill": "senior-finish",
+  "prompt": "Fix the typo in the empty-cart message (\"Your cart is emtpy\") and let me know when it's done.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "fix the string and run the tests that cover it",
+      "report the command and its result in a line or two"
+    ],
+    "forbiddenBehaviors": [
+      "run the full ship gate or return a ship status for a typo",
+      "run senior risk or senior prove for a copy fix"
+    ]
+  }
+}

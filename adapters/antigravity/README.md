@@ -28,7 +28,8 @@ Decisions are logged to `hooks.log` next to the scripts.
 |---|---|---|
 | `session-start.mjs` | `SessionStart` | Injects `senior inspect`, git state and the relevant `.senior/decisions.md` entries |
 | `guard.mjs` | `PreToolUse` on `run_command` | Forces a human confirmation for destructive or irreversible commands (recursive deletes outside build folders, force push, `reset --hard`, `DROP`/`DELETE` without `WHERE`, deploy/publish, `curl \| sh`, printing `.env`, editing the agent's own hooks), even with terminal auto-execution on Turbo |
-| `track.mjs` | `PostToolUse` | Remembers which git repositories the agent edits, for conversations that have no workspace folder |
+| `context.mjs` | `PreInvocation` | Gives the same project context the first time the agent touches a repository that was not a workspace folder (a conversation without a workspace, or a second repository) |
+| `track.mjs` | `PostToolUse` | Remembers which git repositories the agent touches and edits, for `context.mjs` and the stop gate |
 | `stop-gate.mjs` | `Stop` | When code changed in the workspace or an edited repository, runs `senior finish`; on a failing check, sends the agent back with the output, at most twice per change set |
 
 Turn one off by adding `"enabled": false` to its block in `hooks.json`. The stop gate runs the project's proof

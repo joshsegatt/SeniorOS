@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -43,6 +43,30 @@ test('pathsInArgs finds absolute paths in file arguments and command lines', () 
     Relative: 'src/b.js',
   });
   assert.deepEqual(found.sort(), ['/Users/dev/site/index.html', 'C:/work/app/src/a.js', 'C:\\work\\api'].sort());
+});
+
+test('a repository first touched mid-conversation gets its project context once', () => {
+  const repo = mkdtempSync(path.join(os.tmpdir(), 'soc-'));
+  const env = {
+    SENIOROS_HOOK_LOG: path.join(repo, '..', `soc-${path.basename(repo)}.log`),
+    SENIOROS_CLI: `"${process.execPath}" "${path.join(process.cwd(), 'dist', 'src', 'index.js')}"`,
+  };
+  const conversationId = `ctx-${path.basename(repo)}`;
+  try {
+    git(repo, 'init', '-q');
+    mkdirSync(path.join(repo, '.senior'));
+    writeFileSync(path.join(repo, '.senior', 'decisions.md'), '# Decisions\n\n## 2026-10-01 — Money\n\nAll money is integer cents.\n');
+    assert.deepEqual(hook('context.mjs', { conversationId }, [], env), {});
+
+    hook('track.mjs', { conversationId, toolCall: { name: 'view_file', args: { Path: path.join(repo, 'README.md') } } }, [], env);
+    const injected = hook('context.mjs', { conversationId }, [], env) as { injectSteps?: Array<{ systemMessage: { systemMessage: string } }> };
+    const message = injected.injectSteps?.[0]?.systemMessage.systemMessage ?? '';
+    assert.match(message, /All money is integer cents/);
+    assert.deepEqual(hook('context.mjs', { conversationId }, [], env), {});
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+    rmSync(env.SENIOROS_HOOK_LOG, { force: true });
+  }
 });
 
 test('stop gate proves a repository the agent edited in a conversation without a workspace', () => {
