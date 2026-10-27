@@ -14,12 +14,15 @@ const dangerous = [
   'Set-Content C:\\Users\\me\\.gemini\\config\\hooks.json x', 'rm -rf node_modules src',
   // An absolute target next to a regenerable folder must not ride on its exemption.
   'rm -rf dist /home/user/project', 'rm -rf node_modules /', 'rd /s /q dist C:\\proj',
+  // Chained commands: each one is judged on its own.
+  'cd /work/app && rm -rf src', 'npm test && git push --force origin main', 'echo ok; git reset --hard', 'cd app && cat .env.local',
 ];
 const safe = [
   'npm run build', 'npm test', 'git status', 'git push origin main', 'git push -u origin feat', 'git checkout -b feat', 'git restore src/a.ts',
   'psql -c "delete from users where id=1"', 'npx prisma migrate dev', 'vercel dev', 'vercel env pull', 'Get-Content .env.example',
   'Remove-Item dist -Recurse -Force', 'rm -rf node_modules', 'rm -rf .next dist', 'Remove-Item -Recurse -Force node_modules, .next',
   'rd /s /q build', 'git log --oneline -5', 'senior finish', 'git rm --cached file.txt',
+  'cd "C:/work/app" && rm -rf dist coverage && git status --short', 'cat .gitignore && find .env.local data -printf "%p %s"',
 ];
 
 test('guard asks for confirmation on destructive commands', () => {

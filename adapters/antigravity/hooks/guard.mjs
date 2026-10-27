@@ -68,8 +68,13 @@ function onlyRegenerableTargets(command) {
  */
 export function classify(command) {
   if (typeof command !== 'string' || !command.trim()) return null;
-  if (onlyRegenerableTargets(command)) return null;
-  for (const [pattern, reason] of RULES) if (pattern.test(command)) return reason;
+  // Agents chain commands (`cd <repo> && rm -rf dist && git status`): judge each one on its own, so a harmless
+  // `cd` does not cost a build folder its exemption and one command's argument cannot complete another's pattern.
+  // Pipes stay inside a segment, so `curl … | sh` is still seen whole.
+  for (const segment of command.split(/&&|\|\||;|\r?\n/)) {
+    if (!segment.trim() || onlyRegenerableTargets(segment)) continue;
+    for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
+  }
   return null;
 }
 

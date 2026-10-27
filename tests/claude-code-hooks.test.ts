@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -32,4 +34,39 @@ test('Claude Code session start injects the SeniorOS routing rules', () => {
   assert.equal(out.hookSpecificOutput.hookEventName, 'SessionStart');
   assert.match(out.hookSpecificOutput.additionalContext, /senior-engineering/);
   assert.match(out.hookSpecificOutput.additionalContext, /Approval boundary/);
+});
+
+test('Claude Code stop gate blocks a finish with failing checks, at most twice, and lets a fixed change through', () => {
+  const repo = mkdtempSync(path.join(os.tmpdir(), 'sog-'));
+  const git = (...args: string[]) => assert.equal(spawnSync('git', args, { cwd: repo, encoding: 'utf8' }).status, 0);
+  // Without NODE_TEST_CONTEXT: inherited from this test run, it turns the project's own `node --test` into a reporting
+  // child that always exits 0, so the gate would see passing checks.
+  const { NODE_TEST_CONTEXT: _parent, ...base } = process.env;
+  const env = { ...base, SENIOROS_CLI: `"${process.execPath}" "${path.join(process.cwd(), 'dist', 'src', 'index.js')}"` };
+  const stop = () => {
+    const r = spawnSync(process.execPath, [path.join(hooksDir, 'stop-gate.mjs')], {
+      input: JSON.stringify({ cwd: repo, session_id: `t${process.pid}` }), encoding: 'utf8', env, timeout: 240_000
+    });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stdout ? (JSON.parse(r.stdout) as { decision: string; reason: string }) : null;
+  };
+  try {
+    writeFileSync(path.join(repo, 'package.json'), JSON.stringify({ type: 'module', scripts: { test: 'node --test' } }));
+    mkdirSync(path.join(repo, 'test'));
+    writeFileSync(path.join(repo, 'test', 'f.test.js'), "import t from 'node:test'; import a from 'node:assert/strict'; import { f } from '../f.js'; t('f', () => a.equal(f(), 1));\n");
+    writeFileSync(path.join(repo, 'f.js'), 'export const f = () => 1;\n');
+    git('init', '-q', '-b', 'main'); git('config', 'user.email', 't@t'); git('config', 'user.name', 't'); git('add', '-A'); git('commit', '-q', '-m', 'init');
+
+    assert.equal(stop(), null, 'no change: the agent may finish');
+    writeFileSync(path.join(repo, 'f.js'), 'export const f = () => 2;\n');
+    const blocked = stop();
+    assert.equal(blocked?.decision, 'block');
+    assert.match(blocked?.reason ?? '', /FAIL test/);
+    assert.equal(stop()?.decision, 'block', 'second block for the same change set');
+    assert.equal(stop(), null, 'never more than two blocks for one change set');
+    writeFileSync(path.join(repo, 'f.js'), 'export const f = () => 1;\nexport const g = 1;\n');
+    assert.equal(stop(), null, 'a passing change set may finish');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
 });

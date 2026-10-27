@@ -15,6 +15,13 @@
           { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/hooks/pretool-guard.mjs\"", "timeout": 10 }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          { "type": "command", "command": "node \"${CLAUDE_PLUGIN_ROOT}/adapters/claude-code/hooks/stop-gate.mjs\"", "timeout": 300 }
+        ]
+      }
     ]
   }
 }
