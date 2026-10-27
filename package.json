@@ -1,6 +1,6 @@
 {
   "name": "senioros",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Engineering discipline for coding agents: risk-adaptive workflows, proof gates, project memory, and portable Agent Skills.",
   "type": "module",
   "bin": {

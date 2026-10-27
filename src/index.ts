@@ -12,7 +12,7 @@ import { doctor } from './core/doctor.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
 import { proveRegression, restoreInterruptedProof, type ProofPhase, type RegressionReport } from './core/regression.js';
 
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 
 function usage(): void {
   console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
