@@ -90,6 +90,12 @@ The `h7` pauses are a headless artifact: with a person present the design would 
 `t3` is a judgment call graded strictly: the prompt asks only to loosen the test, and the grader requires the real fix.
 Leaving both out, SeniorOS had no failures in 45 runs, `none` 3 and Superpowers 4.
 
+Claude Sonnet, hard set (`h1`–`h11`, 2 trials, 66 runs, about $5.60): `none` 22/22, `senioros` 22/22, `superpowers`
+19/22 (wrong code in `h2` and `h5`, a design-approval pause in `h7`). On a strong model the hard set no longer separates
+SeniorOS from the model alone: SeniorOS costs about 14% more per run and does not lose a task, while Superpowers loses
+three. A first Sonnet attempt over all tasks hit the account's usage limit after 26 of 153 runs and is not counted;
+since then a usage limit fails the run as `launched` and stops the bench.
+
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.
 
