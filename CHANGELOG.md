@@ -4,6 +4,11 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-27
+
+Google Antigravity support, plugin hooks for Claude Code, and skill changes measured with a live bench against no pack
+and Superpowers (Gemini Flash in Antigravity, Claude Haiku in Claude Code; results in `evals/bench/README.md`).
+
 ### Added
 
 - `senior prove --regression --test "<cmd>"`: proves a regression test catches the bug (passes with the fix, fails with it reverted, passes again restored), with `--expect-failure`, `--base`, `--fix`, `--timeout` and `--json`; evidence written to `.senior/runtime/evidence/`;

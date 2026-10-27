@@ -1,6 +1,6 @@
 {
   "name": "senioros",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Engineering discipline for coding agents: risk-proportional workflows, proof gates that run in CI, and portable Agent Skills.",
   "author": {
     "name": "Josh Segatt",
