@@ -16,6 +16,8 @@ const dangerous = [
   'rm -rf dist /home/user/project', 'rm -rf node_modules /', 'rd /s /q dist C:\\proj',
   // Chained commands: each one is judged on its own.
   'cd /work/app && rm -rf src', 'npm test && git push --force origin main', 'echo ok; git reset --hard', 'cd app && cat .env.local',
+  // git clean without a pathspec, or with one outside the build folders, reaches user data.
+  'git clean -fdX', 'git clean -fdx', 'git clean -fd -- dist data', 'git clean -fdX -e dist', 'cd app && git clean -fdX -- src',
 ];
 const safe = [
   'npm run build', 'npm test', 'git status', 'git push origin main', 'git push -u origin feat', 'git checkout -b feat', 'git restore src/a.ts',
@@ -23,6 +25,7 @@ const safe = [
   'Remove-Item dist -Recurse -Force', 'rm -rf node_modules', 'rm -rf .next dist', 'Remove-Item -Recurse -Force node_modules, .next',
   'rd /s /q build', 'git log --oneline -5', 'senior finish', 'git rm --cached file.txt',
   'cd "C:/work/app" && rm -rf dist coverage && git status --short', 'cat .gitignore && find .env.local data -printf "%p %s"',
+  'git clean -fdX -- dist coverage', 'cd app && git clean -fdX -- node_modules && ls -la',
 ];
 
 test('guard asks for confirmation on destructive commands', () => {

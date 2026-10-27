@@ -13,6 +13,7 @@ All notable changes to SeniorOS will be documented here.
 
 ### Fixed
 
+- the guard no longer asks before `git clean` limited by pathspec to build folders (`git clean -fdX -- dist coverage`); without a pathspec, or with any other path, it still asks;
 - the destructive-command guard judges chained commands one by one: `cd <repo> && rm -rf dist coverage` was flagged because any `&&` cancelled the build-folder exemption, and `cat .gitignore && find .env.local` was flagged as printing secrets.
 
 ## [0.4.0] - 2026-10-27
