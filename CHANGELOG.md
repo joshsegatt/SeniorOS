@@ -4,6 +4,11 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-28
+
+The guard and the finish gate in Cursor, and SeniorOS as a native Antigravity plugin. Neither has been tested inside
+the Cursor app or `agy` yet; CI runs the hook commands through the shell on Linux and Windows.
+
 ### Added
 
 - Cursor plugin (`.cursor-plugin/plugin.json`, `adapters/cursor/`):
@@ -13,6 +18,10 @@ All notable changes to SeniorOS will be documented here.
   - a `stop` finish gate that sends the agent back on failing checks.
 - Native Antigravity plugin (`plugin.json` and `rules/senioros.md` at the root): `agy plugin install https://github.com/joshsegatt/SeniorOS` adds the skills and routing rules. The hooks still come from `senior install --target antigravity`.
 - `adapters/shared/`: the guard and finish gate shared by the plugin hosts. The Claude Code hooks now use it, with the same behavior.
+
+### Fixed
+
+- the finish gate no longer treats two repositories whose paths differ only in case as one outside Windows: on Linux and macOS each is checked and remembered separately.
 
 ## [0.5.0] - 2026-10-28
 
