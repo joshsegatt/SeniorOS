@@ -4,6 +4,11 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-28
+
+A finish gate in the Claude Code plugin, a guard that judges chained commands one by one, and bench results on Claude
+Sonnet: SeniorOS 24/24 on the core set, Superpowers 19/24, no pack 17/24.
+
 ### Added
 
 - Claude Code finish gate (`adapters/claude-code/hooks/stop-gate.mjs`, a `Stop` hook in the plugin): when code changed, runs `senior finish` (or `npx senioros finish`) before the agent may stop and sends it back on a failing check, at most twice per change set; a Sonnet bench run had reported "the full suite passes" with a failing test;
