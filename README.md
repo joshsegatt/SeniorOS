@@ -138,11 +138,22 @@ Requires Node.js 20 or newer. No clone needed: the CLI is published on npm as [`
 /plugin install senioros@senioros
 ```
 
+**Cursor**: a plugin with the routing rules, the destructive-command guard and the finish gate. Until it is listed in
+the Cursor marketplace, add a clone of this repository as a local plugin ([`adapters/cursor`](adapters/cursor/README.md)).
+
 **Google Antigravity** (skills, routing rules and hooks in `~/.gemini`, backed up and reversible):
 
 ```bash
 npx senioros install --target antigravity
 ```
+
+Or as a native Antigravity plugin, with the skills and routing rules only (no guard or finish gate):
+
+```bash
+agy plugin install https://github.com/joshsegatt/SeniorOS
+```
+
+Use one or the other, not both, or the skills are listed twice.
 
 **Codex**, or skills only for any agent, run inside your project:
 

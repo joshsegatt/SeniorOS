@@ -1,0 +1,24 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.CURSOR_PLUGIN_ROOT||'.','adapters/cursor/hooks/session-start.mjs')).href).then((m)=>m.main())\"",
+        "timeout": 10
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.CURSOR_PLUGIN_ROOT||'.','adapters/cursor/hooks/guard.mjs')).href).then((m)=>m.main())\"",
+        "timeout": 10
+      }
+    ],
+    "stop": [
+      {
+        "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.CURSOR_PLUGIN_ROOT||'.','adapters/cursor/hooks/stop-gate.mjs')).href).then((m)=>m.main())\"",
+        "timeout": 300,
+        "loop_limit": 2
+      }
+    ]
+  }
+}

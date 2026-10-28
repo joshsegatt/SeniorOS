@@ -19,11 +19,13 @@ test('package, CLI and plugin manifests declare the same version', async () => {
   const claude = await json('.claude-plugin/plugin.json');
   const marketplace = await json('.claude-plugin/marketplace.json');
   const codex = await json('.codex-plugin/plugin.json');
+  const cursor = await json('.cursor-plugin/plugin.json');
 
   assert.equal(cli, version);
   assert.equal(claude.version, version);
   assert.equal(marketplace.plugins[0].version, version);
   assert.equal(codex.version, version);
+  assert.equal(cursor.version, version);
 });
 
 test('plugin manifests point at the shipped skills and the real repository', async () => {
@@ -32,6 +34,13 @@ test('plugin manifests point at the shipped skills and the real repository', asy
   const { repository } = await json('package.json');
 
   assert.equal(codex.skills, './skills/');
+  const cursor = await json('.cursor-plugin/plugin.json');
+  assert.equal(cursor.skills, './skills/');
+  assert.equal(cursor.hooks, './adapters/cursor/hooks.json');
+  // Antigravity reads plugin.json at the root and rejects any key besides $schema, name and description.
+  const agy = await json('plugin.json');
+  assert.deepEqual(Object.keys(agy).sort(), ['description', 'name']);
+  assert.equal(agy.name, 'senioros');
   assert.equal(claude.repository, 'https://github.com/joshsegatt/SeniorOS');
   assert.match(repository.url, /github\.com\/joshsegatt\/SeniorOS\.git$/);
 });

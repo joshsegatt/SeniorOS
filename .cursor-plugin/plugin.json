@@ -1,0 +1,16 @@
+{
+  "name": "senioros",
+  "displayName": "SeniorOS",
+  "description": "Engineering discipline for coding agents: a guard that asks before destructive commands, a finish gate that runs your checks before the agent says done, and risk-proportional skills.",
+  "version": "0.5.0",
+  "author": {
+    "name": "Josh Segatt",
+    "url": "https://github.com/joshsegatt"
+  },
+  "homepage": "https://github.com/joshsegatt/SeniorOS",
+  "repository": "https://github.com/joshsegatt/SeniorOS",
+  "license": "Apache-2.0",
+  "keywords": ["skills", "engineering", "risk", "verification", "code-review", "debugging"],
+  "skills": "./skills/",
+  "hooks": "./adapters/cursor/hooks.json"
+}
