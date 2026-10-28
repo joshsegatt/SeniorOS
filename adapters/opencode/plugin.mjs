@@ -5,74 +5,10 @@
 //   so a flagged command fails and the agent is told to let the user run it);
 // - when a session goes idle with changed code, runs the finish gate and, on failing checks, sends the agent back.
 // Every hook fails open except the guard, whose only job is to stop a command.
-import { spawn } from 'node:child_process';
-import { readFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { classify } from '../shared/guard.mjs';
-
-const here = dirname(fileURLToPath(import.meta.url));
-const SKILLS = resolve(here, '..', '..', 'skills');
-const GATE = join(here, 'gate.mjs');
-
-let rules = '';
-try {
-  rules = readFileSync(join(here, 'rules.md'), 'utf8');
-} catch {}
-
-/** @param {string} reason */
-export const denyMessage = (reason) =>
-  `SeniorOS guard: ${reason}. This command was not run. Show the user exactly what it would change or lose, and ` +
-  'ask them to run it themselves if they confirm. Do not try another command that does the same thing.';
-
-/**
- * The guard's decision for one tool call: a message to fail it with, or null to let it run.
- * @param {string} tool
- * @param {any} args
- */
-export function guardDecision(tool, args) {
-  if (tool !== 'bash') return null;
-  const reason = classify(args?.command);
-  return reason ? denyMessage(reason) : null;
-}
-
-/** Adds the skills folder to OpenCode's config: `skills` is an array in newer configs, `{ paths }` in older ones. */
-export function addSkills(config) {
-  if (Array.isArray(config.skills)) {
-    if (!config.skills.includes(SKILLS)) config.skills.push(SKILLS);
-    return;
-  }
-  config.skills = config.skills || {};
-  config.skills.paths = config.skills.paths || [];
-  if (!config.skills.paths.includes(SKILLS)) config.skills.paths.push(SKILLS);
-}
-
-/**
- * Runs the finish gate in a child Node process.
- * @returns {Promise<string | null>} why the agent must go back, or null
- */
-export function runGate(cwd, sessionId) {
-  return new Promise((done) => {
-    let out = '';
-    let child;
-    try {
-      child = spawn('node', [GATE], { cwd, stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true });
-    } catch {
-      done(null);
-      return;
-    }
-    child.stdout.on('data', (d) => (out += d));
-    child.on('error', () => done(null));
-    child.on('close', () => {
-      try {
-        done(JSON.parse(out).reason ?? null);
-      } catch {
-        done(null);
-      }
-    });
-    child.stdin.end(JSON.stringify({ cwd, sessionId }));
-  });
-}
+//
+// The module exports only the plugin function: OpenCode 1.x loaders up to at least 1.2 call every export as
+// `fn(input)`, and later 1.x loaders treat a default export that is a function the same way.
+import { addSkills, guardDecision, rules, runGate } from './lib.mjs';
 
 export const SeniorOSPlugin = async ({ client, directory }) => {
   const running = new Set();
@@ -125,4 +61,4 @@ export const SeniorOSPlugin = async ({ client, directory }) => {
   };
 };
 
-export default { id: 'senioros', server: SeniorOSPlugin };
+export default SeniorOSPlugin;

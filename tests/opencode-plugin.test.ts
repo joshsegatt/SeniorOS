@@ -13,9 +13,9 @@ type Hooks = {
   'tool.execute.before': (i: { tool: string }, o: { args: Record<string, unknown> }) => Promise<void>;
   event: (e: { event: { type: string; properties?: { sessionID?: string } } }) => Promise<void>;
 };
-const mod = (await import(pathToFileURL(path.join(root, 'adapters', 'opencode', 'plugin.mjs')).href)) as {
-  default: { id: string; server: (ctx: object) => Promise<Hooks> };
-  SeniorOSPlugin: (ctx: object) => Promise<Hooks>;
+const entry = (await import(pathToFileURL(path.join(root, 'adapters', 'opencode', 'plugin.mjs')).href)) as Record<string, unknown>;
+const mod = entry as { default: (ctx: object) => Promise<Hooks>; SeniorOSPlugin: (ctx: object) => Promise<Hooks> };
+const lib = (await import(pathToFileURL(path.join(root, 'adapters', 'opencode', 'lib.mjs')).href)) as {
   addSkills: (c: Record<string, any>) => void;
 };
 
@@ -36,12 +36,18 @@ function fakeClient(parentID?: string) {
   };
 }
 
-test('the npm package main is the OpenCode plugin, with V1 named and default exports', async () => {
+test('the npm package main is the OpenCode plugin, and every export is the same plugin function', async () => {
   const pkg = JSON.parse(readFileSync(path.join(root, 'package.json'), 'utf8')) as { main: string; files: string[] };
   assert.equal(pkg.main, 'adapters/opencode/plugin.mjs');
   assert.ok(pkg.files.includes('adapters') && pkg.files.includes('skills'));
-  assert.equal(mod.default.id, 'senioros');
-  assert.equal(mod.default.server, mod.SeniorOSPlugin);
+  // OpenCode 1.x loaders call every export as a plugin: up to 1.2 with Object.entries(mod), later ones too when the
+  // default export is a function. A helper or a { id, server } object among the exports breaks loading.
+  const exports = Object.values(entry);
+  assert.ok(exports.every((e) => typeof e === 'function'));
+  assert.equal(new Set(exports).size, 1);
+  assert.equal(mod.default, mod.SeniorOSPlugin);
+  const hooks = await mod.default({ client: fakeClient(), directory: root });
+  assert.equal(typeof hooks['tool.execute.before'], 'function');
 });
 
 test('OpenCode plugin registers the skills and adds the rules once', async () => {
@@ -52,7 +58,7 @@ test('OpenCode plugin registers the skills and adds the rules once', async () =>
   await hooks.config(legacy);
   assert.deepEqual(legacy.skills.paths, [skills]);
   const flat: Record<string, any> = { skills: ['/other'] };
-  mod.addSkills(flat);
+  lib.addSkills(flat);
   assert.deepEqual(flat.skills, ['/other', skills]);
 
   const out = { system: ['base'] };
