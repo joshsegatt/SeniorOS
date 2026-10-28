@@ -10,6 +10,9 @@ import { SENIOR, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
+/** Identity of a repository path: Windows paths are case-insensitive, POSIX paths are not. */
+export const pathKey = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
+
 // Changes to these paths alone never trigger the gate.
 const NON_CODE = /(\.(md|mdx|txt|png|jpe?g|gif|svg|webp|ico|pdf|lock|log)$)|(^|\/)\.senior\/|(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/i;
 
@@ -54,7 +57,7 @@ export function evaluate({ cwd, sessionId, host }) {
   const stateFile = join(stateDir, `${session}.json`);
   let state = {};
   try { state = JSON.parse(readFileSync(stateFile, 'utf8')); } catch {}
-  const key = root.toLowerCase();
+  const key = pathKey(root);
   const prev = state[key];
   if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) return null;
 

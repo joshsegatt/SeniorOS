@@ -57,6 +57,7 @@ test('Cursor hooks.json commands load the hooks from the plugin root, whatever t
 
 test('Cursor stop gate sends the agent back on failing checks and ignores aborted runs', () => {
   const repo = mkdtempSync(path.join(os.tmpdir(), 'curs-'));
+  const clean = `${repo}-clean`;
   const git = (...args: string[]) => assert.equal(spawnSync('git', args, { cwd: repo, encoding: 'utf8' }).status, 0);
   const cli = { SENIOROS_CLI: `"${process.execPath}" "${path.join(root, 'dist', 'src', 'index.js')}"` };
   try {
@@ -70,7 +71,29 @@ test('Cursor stop gate sends the agent back on failing checks and ignores aborte
     const input = { conversation_id: `c${process.pid}`, workspace_roots: [repo] };
     assert.deepEqual(runHook('stop', { ...input, status: 'aborted' }, repo, cli), {}, 'an aborted run is not a claim of done');
     assert.match(runHook('stop', { ...input, status: 'completed' }, repo, cli).followup_message ?? '', /SeniorOS finish gate/);
+
+    // Multi-root workspace: a clean repository first must not hide the failing one, and two folders of the same
+    // repository are checked once.
+    const gitIn = (cwd: string, ...args: string[]) => assert.equal(spawnSync('git', args, { cwd, encoding: 'utf8' }).status, 0);
+    mkdirSync(clean);
+    writeFileSync(path.join(clean, 'package.json'), '{}');
+    gitIn(clean, 'init', '-q', '-b', 'main'); gitIn(clean, 'config', 'user.email', 't@t'); gitIn(clean, 'config', 'user.name', 't');
+    gitIn(clean, 'add', '-A'); gitIn(clean, 'commit', '-q', '-m', 'init');
+    const multi = { conversation_id: `m${process.pid}`, status: 'completed', workspace_roots: [clean, repo, path.join(repo, 'test')] };
+    const message = runHook('stop', multi, clean, cli).followup_message ?? '';
+    assert.equal(message.match(/SeniorOS finish gate/g)?.length, 1, message);
+    assert.match(message, /^Repository /);
   } finally {
     rmSync(repo, { recursive: true, force: true });
+    rmSync(clean, { recursive: true, force: true });
   }
+});
+
+test('repository identity ignores case only on Windows', async () => {
+  const { pathKey } = (await import(pathToFileURL(path.join(root, 'adapters', 'shared', 'finish-gate.mjs')).href)) as {
+    pathKey: (p: string) => string;
+  };
+  // On a case-sensitive filesystem /work/Repo and /work/repo are two repositories, and both must be checked.
+  const same = pathKey('/work/Repo') === pathKey('/work/repo');
+  assert.equal(same, process.platform === 'win32');
 });
