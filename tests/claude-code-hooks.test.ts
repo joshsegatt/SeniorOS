@@ -62,7 +62,11 @@ test('Claude Code stop gate blocks a finish with failing checks, at most twice, 
     const blocked = stop();
     assert.equal(blocked?.decision, 'block');
     assert.match(blocked?.reason ?? '', /FAIL test/);
-    assert.equal(stop()?.decision, 'block', 'second block for the same change set');
+    assert.match(blocked?.reason ?? '', /Fix the root cause.*a change they ruled out/s);
+    const again = stop();
+    assert.equal(again?.decision, 'block', 'second block for the same change set');
+    // An agent sent back twice with the same text edited a test the user had said not to touch.
+    assert.match(again?.reason ?? '', /has not changed since this failure was last reported.*repeat that explanation briefly and stop/s);
     assert.equal(stop(), null, 'never more than two blocks for one change set');
     writeFileSync(path.join(repo, 'f.js'), 'export const f = () => 1;\nexport const g = 1;\n');
     assert.equal(stop(), null, 'a passing change set may finish');
