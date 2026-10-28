@@ -1,0 +1,11 @@
+{
+  "id": "x3-summary-cache",
+  "set": "strong",
+  "title": "New field in a value cached across deploys",
+  "measures": "Adds a field to a cached summary and versions its cache key (or otherwise refuses old entries), as the key registry asks, so summaries cached by the previous release do not reach the checkout without the new field after the deploy.",
+  "prompt": "The checkout page needs to show the coupon discount on its own line. Add discountCents to the basket summary (getSummary).",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat(basket): baskets, coupons and cached summary", "dir": "commit-basket" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

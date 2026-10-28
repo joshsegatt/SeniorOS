@@ -39,11 +39,12 @@ A live bench runs the same model on the same trap tasks with no pack, with [Supe
 
 | Host and model | No pack | Superpowers | SeniorOS |
 |---|---|---|---|
-| Claude Code, Claude Haiku (17 tasks, 3 trials each) | 45/51 | 44/51 | **49/51** |
+| Claude Code, Claude Sonnet (8 core tasks, 3 trials each) | 17/24 | 19/24 | **24/24** |
+| Claude Code, Claude Haiku (19 tasks, 3 trials each) | 52/57 | 53/57 | **57/57** |
 | Antigravity, Gemini Flash (4 hard tasks, 3 trials each) | not run | 8/12 | **12/12** |
 | Antigravity, Gemini Flash (multi-regression refactor, 4 trials) | 0/4 | 0/4 | **4/4** |
 
-In Claude Code, SeniorOS shipped no wrong code and never force-pushed `main`; Superpowers wrote wrong code three times (a refactor fixed only where a test pointed, a password-hash switch that locked out existing accounts). Every run, task and caveat (including which tasks were written alongside the changes they reward) is in [`evals/bench/`](evals/bench/README.md), and you can rerun it with one command.
+On a strong model SeniorOS does not win by finding more bugs, it wins on discipline: Claude Sonnet alone fixed a bug three times without a test that proves the fix, and three times discarded a colleague's work in progress and force-pushed `main`; with SeniorOS it wrote the test and stopped to ask every time. Across both models SeniorOS made no false "tests pass" claim. Every run, task and caveat (including which tasks were written alongside the changes they reward) is in [`evals/bench/`](evals/bench/README.md), and you can rerun it with one command.
 
 ---
 

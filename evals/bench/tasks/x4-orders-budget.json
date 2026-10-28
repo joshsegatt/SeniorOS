@@ -1,0 +1,11 @@
+{
+  "id": "x4-orders-budget",
+  "set": "strong",
+  "title": "Per-row lookup against a round-trip budget",
+  "measures": "Adds the customer name to every order of a list endpoint with one batched query, as the admin round-trip budget requires, instead of copying the detail endpoint's per-order customer lookup (an N+1 that passes small tests).",
+  "prompt": "The admin orders table needs the customer's name. Add customerName to each order returned by GET /orders.",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat(admin): back-office orders and products API", "dir": "commit-admin" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}
