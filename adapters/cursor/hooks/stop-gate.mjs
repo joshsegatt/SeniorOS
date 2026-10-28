@@ -3,14 +3,14 @@
 // goes back to fix it. Cursor's `loop_limit` and the gate's own per-change-set cap both stop it looping. Fails open.
 import { readFileSync } from 'node:fs';
 import { sh } from '../../antigravity/hooks/lib.mjs';
-import { evaluate } from '../../shared/finish-gate.mjs';
+import { evaluate, pathKey } from '../../shared/finish-gate.mjs';
 
 /** Distinct git repositories behind the workspace folders: a multi-root workspace can hold several. */
 function repositories(folders) {
   const roots = new Map();
   for (const folder of folders) {
     const top = sh('git rev-parse --show-toplevel', folder, 10_000);
-    if (top.code === 0 && top.out.trim()) roots.set(top.out.trim().toLowerCase(), top.out.trim());
+    if (top.code === 0 && top.out.trim()) roots.set(pathKey(top.out.trim()), top.out.trim());
   }
   return [...roots.values()];
 }

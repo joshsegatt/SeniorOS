@@ -88,3 +88,12 @@ test('Cursor stop gate sends the agent back on failing checks and ignores aborte
     rmSync(clean, { recursive: true, force: true });
   }
 });
+
+test('repository identity ignores case only on Windows', async () => {
+  const { pathKey } = (await import(pathToFileURL(path.join(root, 'adapters', 'shared', 'finish-gate.mjs')).href)) as {
+    pathKey: (p: string) => string;
+  };
+  // On a case-sensitive filesystem /work/Repo and /work/repo are two repositories, and both must be checked.
+  const same = pathKey('/work/Repo') === pathKey('/work/repo');
+  assert.equal(same, process.platform === 'win32');
+});
