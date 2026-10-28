@@ -11,6 +11,7 @@
   "license": "Apache-2.0",
   "keywords": ["skills", "engineering", "risk", "verification", "code-review", "debugging"],
   "skills": "./skills/",
+  "hooks": "./adapters/codex/hooks.json",
   "interface": {
     "displayName": "SeniorOS",
     "shortDescription": "Risk-proportional engineering and proof gates for coding agents",

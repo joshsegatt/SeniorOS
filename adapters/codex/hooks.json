@@ -1,0 +1,42 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.PLUGIN_ROOT||process.env.CLAUDE_PLUGIN_ROOT||'.','adapters/codex/hooks/session-start.mjs')).href).then((m)=>m.main())\"",
+            "timeout": 10,
+            "statusMessage": "Loading SeniorOS rules"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "^Bash$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.PLUGIN_ROOT||process.env.CLAUDE_PLUGIN_ROOT||'.','adapters/codex/hooks/guard.mjs')).href).then((m)=>m.main())\"",
+            "timeout": 10,
+            "statusMessage": "SeniorOS guard"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.PLUGIN_ROOT||process.env.CLAUDE_PLUGIN_ROOT||'.','adapters/codex/hooks/stop-gate.mjs')).href).then((m)=>m.main())\"",
+            "timeout": 300,
+            "statusMessage": "SeniorOS finish gate"
+          }
+        ]
+      }
+    ]
+  }
+}
