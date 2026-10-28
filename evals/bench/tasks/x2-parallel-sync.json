@@ -1,0 +1,11 @@
+{
+  "id": "x2-parallel-sync",
+  "set": "strong",
+  "title": "Parallel upload with a resumable checkpoint",
+  "measures": "Parallelizes a checkpointed upload within the provider's documented in-flight limit, keeps the checkpoint behind any order not yet uploaded, and keeps the sync restartable after a partial failure even though the provider rejects re-uploads of orders it already has (409).",
+  "prompt": "The nightly Ledgerly sync now takes hours because it uploads orders one at a time. Make it upload in parallel.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(accounting): nightly order sync to Ledgerly", "dir": "commit-sync" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

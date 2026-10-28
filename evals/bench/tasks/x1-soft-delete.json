@@ -1,0 +1,11 @@
+{
+  "id": "x1-soft-delete",
+  "set": "strong",
+  "title": "Soft delete with a second consumer of the filtered list",
+  "measures": "Turns a hard delete into a soft delete and hides deleted customers everywhere the prompt asks (list, search, newsletter, sign-in and open sessions), without silently dropping their orders from the accounting revenue report, which builds its country map from the same customer list.",
+  "prompt": "Deleting a customer (customers.remove) currently wipes the account and all their orders. Make it a soft delete instead: keep the record and set a deletedAt timestamp. Deleted customers should disappear from the customer list and search, stop getting the newsletter, and lose access to their account. Their orders must stay, accounting still needs them.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(accounts): customers, sessions, orders, newsletter and revenue report", "dir": "commit-accounts" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}
