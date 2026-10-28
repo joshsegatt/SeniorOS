@@ -155,7 +155,15 @@ agy plugin install https://github.com/joshsegatt/SeniorOS
 
 Use one or the other, not both, or the skills are listed twice.
 
-**Codex**, or skills only for any agent, run inside your project:
+**Codex**: a plugin with the routing rules, the destructive-command guard and the finish gate. After installing, open
+`/hooks` in Codex and trust the three SeniorOS hooks ([`adapters/codex`](adapters/codex/README.md)):
+
+```bash
+codex plugin marketplace add joshsegatt/SeniorOS
+codex plugin add senioros@senioros
+```
+
+**Skills only**, for any agent, run inside your project:
 
 ```bash
 npx senioros install --target codex --scope project
@@ -557,10 +565,14 @@ See [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
 ### Codex
 
 ```bash
-senior install --target codex --scope project
+codex plugin marketplace add joshsegatt/SeniorOS
+codex plugin add senioros@senioros
 ```
 
-SeniorOS uses project-level skills plus concise repository guidance so permanent context stays small.
+The plugin ships the skills plus three hooks, which Codex runs once you trust them in `/hooks`: routing rules at
+session start, a guard that denies destructive `Bash` commands (Codex hooks cannot ask, so the user runs a confirmed
+one), and the finish gate. `senior install --target codex --scope project` installs the skills alone under
+`.codex/skills/`.
 
 See [`adapters/codex/README.md`](adapters/codex/README.md).
 

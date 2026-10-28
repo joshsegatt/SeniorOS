@@ -34,6 +34,10 @@ test('plugin manifests point at the shipped skills and the real repository', asy
   const { repository } = await json('package.json');
 
   assert.equal(codex.skills, './skills/');
+  // Without this entry Codex would load hooks/hooks.json, the Claude Code hooks, whose "ask" Codex does not support.
+  assert.equal(codex.hooks, './adapters/codex/hooks.json');
+  const codexMarket = await json('.agents/plugins/marketplace.json');
+  assert.deepEqual(codexMarket.plugins.map((p: { name: string; source: { path: string } }) => [p.name, p.source.path]), [['senioros', './']]);
   const cursor = await json('.cursor-plugin/plugin.json');
   assert.equal(cursor.skills, './skills/');
   assert.equal(cursor.hooks, './adapters/cursor/hooks.json');

@@ -4,6 +4,18 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Codex plugin hooks (`adapters/codex/`, declared in `.codex-plugin/plugin.json`), and a Codex marketplace (`.agents/plugins/marketplace.json`) so `codex plugin marketplace add joshsegatt/SeniorOS` installs the plugin:
+  - a `SessionStart` hook with the routing rules;
+  - a `PreToolUse` guard that denies destructive commands (Codex hooks cannot ask), telling the agent to show what would be lost and let the user run it;
+  - a `Stop` finish gate that sends the agent back on failing checks.
+- Verified in Codex CLI 0.164.0 on Windows: the guard blocked `git reset --hard`, and the finish gate sent the agent back on a failing test and turned its "done" into a report of the failure.
+
+### Fixed
+
+- the Codex plugin no longer picks up `hooks/hooks.json`, the Claude Code hooks, whose guard answer (`ask`) Codex treats as an error and ignores.
+
 ## [0.6.0] - 2026-10-28
 
 The guard and the finish gate in Cursor, and SeniorOS as a native Antigravity plugin. Neither has been tested inside
