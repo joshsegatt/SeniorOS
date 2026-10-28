@@ -4,6 +4,11 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-28
+
+The guard and the finish gate in Codex, tested in the Codex CLI itself. Installing from GitHub
+(`codex plugin marketplace add joshsegatt/SeniorOS`) was checked to bring exactly the three SeniorOS hooks.
+
 ### Added
 
 - Codex plugin hooks (`adapters/codex/`, declared in `.codex-plugin/plugin.json`), and a Codex marketplace (`.agents/plugins/marketplace.json`) so `codex plugin marketplace add joshsegatt/SeniorOS` installs the plugin:
