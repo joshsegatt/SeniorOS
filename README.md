@@ -163,6 +163,13 @@ codex plugin marketplace add joshsegatt/SeniorOS
 codex plugin add senioros@senioros
 ```
 
+**OpenCode** (1.x): a plugin with the skills, the routing rules, the destructive-command guard and the finish gate.
+Add it to `opencode.json` and restart OpenCode ([`adapters/opencode`](adapters/opencode/README.md)):
+
+```json
+{ "plugin": ["senioros"] }
+```
+
 **Skills only**, for any agent, run inside your project:
 
 ```bash
@@ -575,6 +582,18 @@ one), and the finish gate. `senior install --target codex --scope project` insta
 `.codex/skills/`.
 
 See [`adapters/codex/README.md`](adapters/codex/README.md).
+
+### OpenCode
+
+```json
+{ "plugin": ["senioros"] }
+```
+
+The npm package's `main` is an OpenCode 1.x plugin: it registers the skills, adds the routing rules to the system
+prompt, fails destructive `bash` calls (OpenCode's tool hook cannot ask, so the user runs a confirmed one), and runs
+the finish gate when a session goes idle.
+
+See [`adapters/opencode/README.md`](adapters/opencode/README.md).
 
 ### Google Antigravity
 

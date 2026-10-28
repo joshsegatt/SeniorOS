@@ -4,6 +4,19 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- OpenCode 1.x plugin (`adapters/opencode/plugin.mjs`, the npm package's `main`), enabled with `"plugin": ["senioros"]` in `opencode.json`:
+  - registers the `senior-*` skills;
+  - adds the routing rules to the system prompt;
+  - fails destructive `bash` calls (OpenCode's tool hook cannot ask), telling the agent to show what would be lost and let the user run it;
+  - runs the finish gate in a separate Node process when a session goes idle, and sends failing checks back to the session.
+- Verified in OpenCode 1.14.34 on Windows: the guard blocked `git reset --hard` after the user said yes, and the finish gate sent the agent back on a failing test.
+
+### Fixed
+
+- the finish gate's message now tells the agent to stay within what the user asked, and the second time, for unchanged code, to repeat its explanation and stop. In OpenCode, an agent sent back twice with the same text had edited a test the user had said not to touch; with the new text it kept its explanation and changed nothing (one run). Applies to Claude Code, Codex, Cursor, OpenCode and the Antigravity hooks.
+
 ## [0.7.0] - 2026-10-28
 
 The guard and the finish gate in Codex, tested in the Codex CLI itself. Installing from GitHub
