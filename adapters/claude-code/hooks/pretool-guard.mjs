@@ -2,7 +2,7 @@
 // same rules as the Antigravity guard. Unflagged commands get no answer, which leaves Claude Code's own permission
 // flow in place. Fails open.
 import { readFileSync } from 'node:fs';
-import { classify } from '../../antigravity/hooks/guard.mjs';
+import { classify, guardMessage } from '../../shared/guard.mjs';
 
 /**
  * @param {string} raw the hook's stdin
@@ -21,7 +21,7 @@ export function decide(raw) {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
       permissionDecision: 'ask',
-      permissionDecisionReason: `SeniorOS guard: ${reason}. Show the user what would be lost and get explicit confirmation first.`,
+      permissionDecisionReason: guardMessage(reason),
     },
   };
 }

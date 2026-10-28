@@ -4,6 +4,16 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Cursor plugin (`.cursor-plugin/plugin.json`, `adapters/cursor/`):
+  - the skills;
+  - a `sessionStart` hook with the routing rules;
+  - a `beforeShellExecution` guard that asks before destructive commands;
+  - a `stop` finish gate that sends the agent back on failing checks.
+- Native Antigravity plugin (`plugin.json` and `rules/senioros.md` at the root): `agy plugin install https://github.com/joshsegatt/SeniorOS` adds the skills and routing rules. The hooks still come from `senior install --target antigravity`.
+- `adapters/shared/`: the guard and finish gate shared by the plugin hosts. The Claude Code hooks now use it, with the same behavior.
+
 ## [0.5.0] - 2026-10-28
 
 A finish gate in the Claude Code plugin, a guard that judges chained commands one by one, and bench results on Claude
