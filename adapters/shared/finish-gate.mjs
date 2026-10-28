@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { SENIOR, finishGateNextStep, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -81,6 +81,6 @@ export function evaluate({ cwd, sessionId, host }) {
     'SeniorOS finish gate: code changed and the project checks fail. Do not report the task as done yet.',
     summary,
     `Last output lines:\n${tail(run.err || run.out, 40, 3500)}`,
-    'Fix the root cause (do not weaken or skip tests) and run the checks again. If the failure existed before your change or cannot be fixed now, say so with this evidence instead of claiming success.'
+    finishGateNextStep(blocks > 1)
   ].join('\n\n');
 }

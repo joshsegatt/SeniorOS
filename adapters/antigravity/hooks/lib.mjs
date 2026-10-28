@@ -220,3 +220,20 @@ export function tail(text, maxLines, maxChars) {
   if (out.length > maxChars) out = '…' + out.slice(-maxChars);
   return out;
 }
+
+/**
+ * The finish gate's closing instruction. The second time, for code that has not changed since the first report, it
+ * tells the agent to stand by an explanation it already gave rather than break a limit the user set (a test the
+ * user said not to touch, for example).
+ * @param {boolean} again true when the same failing change set was already reported
+ */
+export function finishGateNextStep(again) {
+  const limits =
+    'Stay within what the user asked: if the fix needs a change they ruled out (a file, a test, the scope), do not make it.';
+  return again
+    ? 'The code has not changed since this failure was last reported. If you already explained why it cannot be fixed ' +
+        `within what the user asked, repeat that explanation briefly and stop. ${limits} Otherwise fix the root cause ` +
+        '(do not weaken or skip tests) and run the checks again.'
+    : `Fix the root cause (do not weaken or skip tests) and run the checks again. ${limits} In that case, or if the ` +
+        'failure existed before your change, tell the user so with this evidence instead of claiming success.';
+}

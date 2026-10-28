@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
+import { SENIOR, finishGateNextStep, log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -49,6 +49,7 @@ await runHook('Stop', async (input) => {
   const conversationId = String(input.conversationId ?? 'unknown').replace(/[^\w-]/g, '');
   const state = loadState(conversationId);
   const failures = [];
+  let repeated = true;
 
   for (const { root, git } of workspaceRoots(input)) {
     if (!git || !hasProofSource(root)) continue;
@@ -81,6 +82,7 @@ await runHook('Stop', async (input) => {
 
     const blocks = prev?.fingerprint === changes.fingerprint ? (prev.blocks ?? 0) + 1 : 1;
     state[key] = { fingerprint: changes.fingerprint, result: 'fail', blocks };
+    if (blocks === 1) repeated = false;
     const summary = checks.map((c) => `${c.status.toUpperCase()} ${c.name}${c.command ? ` (${c.command}${c.exitCode != null ? `, exit ${c.exitCode}` : ''})` : ''}`).join('\n');
     failures.push(`Project ${root}\n${summary}\nLast output lines:\n${tail(run.err, 40, 3500)}`);
     log('Stop', { root, result: 'fail', blocks, ms, failed: failed.map((c) => c.name) });
@@ -93,7 +95,7 @@ await runHook('Stop', async (input) => {
     reason: [
       'SeniorOS finish gate: code changed and `senior finish` failed. Do not finish yet.',
       ...failures,
-      'Fix the root cause (do not weaken or skip tests) and run `senior finish` again. If the failure existed before your change or cannot be fixed now, tell the user so with the evidence above instead of declaring the task done.'
+      finishGateNextStep(repeated)
     ].join('\n\n')
   };
 });

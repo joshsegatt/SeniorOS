@@ -3,6 +3,7 @@
   "version": "0.7.0",
   "description": "Engineering discipline for coding agents: risk-adaptive workflows, proof gates, project memory, and portable Agent Skills.",
   "type": "module",
+  "main": "adapters/opencode/plugin.mjs",
   "bin": {
     "senior": "dist/src/index.js"
   },
