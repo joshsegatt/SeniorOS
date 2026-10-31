@@ -61,6 +61,7 @@ export const isAgentConfigPath = (path) => typeof path === 'string' && AGENT_CON
 
 // Shell operations that change a file. Redirections to the null device are not writes.
 const WRITES = /(^|[^<>=!-])>{1,2}|\b(rm|del|erase|rd|rmdir|mv|move|cp|copy|tee|truncate|touch|chmod|ln|unlink|Set-Content|Add-Content|Out-File|Remove-Item|Move-Item|Copy-Item|New-Item|Rename-Item|Clear-Content)\b|\bsed\s+(-\w+\s+)*-i|\bperl\s+-\w*i|\bgit\s+(checkout|restore|rm|mv)\b/i;
+const SHELL_WRAPPER = /\b(bash|sh|zsh|dash|ksh|pwsh|powershell|cmd)(\.exe)?\b[^|]*?\s[-/](c|Command)\b/i;
 const INTERPRETER = /\b(node|python3?|py|ruby|perl|php|deno|bun|pwsh|powershell)\b[^|]*?\s-(e|c|Command)\b/i;
 const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|remove|delete|truncate|copy|move|Set-Content|Out-File|\bopen\([^)]*["'][wax]/i;
 
@@ -68,7 +69,44 @@ const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|rem
 function changesAgentConfig(segment) {
   if (!isAgentConfigPath(segment)) return false;
   const s = segment.replace(/\d*>+\s*(\/dev\/null|\$null|nul)(?![\w.])/gi, ' ').replace(/\d*>&\d/g, ' ');
-  return INTERPRETER.test(s) ? INTERPRETER_WRITE.test(s) : WRITES.test(s);
+  // The shell's own writes (a redirection, `tee`, `mv`) count whatever runs before them, so they are looked for
+  // outside quoted arguments, where a script's `a > b` or a `grep ">"` pattern cannot pass for one. An interpreter's
+  // script is a quoted argument: its writes are judged by what it calls.
+  // A quoted shell script (`bash -c "…"`, `pwsh -Command "…"`) is shell code, judged as such.
+  if (WRITES.test(SHELL_WRAPPER.test(s) ? s : unquoted(s))) return true;
+  return INTERPRETER.test(s) && INTERPRETER_WRITE.test(s);
+}
+
+/** The command with every quoted argument blanked out. */
+function unquoted(command) {
+  return command.replace(/"(?:[^"\\]|\\.)*"?|'[^']*'?/g, '""');
+}
+
+/**
+ * Splits a command line into the commands it chains (`&&`, `||`, `;`, newlines), leaving quoted arguments whole:
+ * `node -e "a(); b()"` is one command.
+ * @param {string} command
+ */
+function splitOutsideQuotes(command) {
+  const parts = [];
+  let current = '';
+  let quote = '';
+  for (let i = 0; i < command.length; i++) {
+    const c = command[i];
+    if (quote) {
+      if (c === '\\' && quote === '"' && i + 1 < command.length) { current += c + command[++i]; continue; }
+      if (c === quote) quote = '';
+      current += c;
+      continue;
+    }
+    if (c === '"' || c === "'") { quote = c; current += c; continue; }
+    const two = command.slice(i, i + 2);
+    if (two === '&&' || two === '||') { parts.push(current); current = ''; i++; continue; }
+    if (c === ';' || c === '\n' || c === '\r') { parts.push(current); current = ''; continue; }
+    current += c;
+  }
+  parts.push(current);
+  return parts;
 }
 
 // Regenerable build/dependency folders: deleting only these is routine, not destructive.
@@ -118,8 +156,10 @@ export function classify(command) {
   if (typeof command !== 'string' || !command.trim()) return null;
   // Agents chain commands (`cd <repo> && rm -rf dist && git status`): judge each one on its own, so a harmless
   // `cd` does not cost a build folder its exemption and one command's argument cannot complete another's pattern.
-  // Pipes stay inside a segment, so `curl … | sh` is still seen whole.
-  for (const segment of command.split(/&&|\|\||;|\r?\n/)) {
+  // Pipes stay inside a segment, so `curl … | sh` is still seen whole. Both splits are judged: the plain one, as
+  // before, and one that keeps quoted arguments whole, so a `;` inside `node -e "…"` cannot cut a script in two.
+  const segments = new Set([...command.split(/&&|\|\||;|\r?\n/), ...splitOutsideQuotes(command)]);
+  for (const segment of segments) {
     if (!segment.trim() || onlyRegenerableTargets(segment)) continue;
     if (changesAgentConfig(segment)) return AGENT_CONFIG_REASON;
     for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
