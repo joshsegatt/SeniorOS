@@ -68,7 +68,38 @@ const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|rem
 function changesAgentConfig(segment) {
   if (!isAgentConfigPath(segment)) return false;
   const s = segment.replace(/\d*>+\s*(\/dev\/null|\$null|nul)(?![\w.])/gi, ' ').replace(/\d*>&\d/g, ' ');
-  return INTERPRETER.test(s) ? INTERPRETER_WRITE.test(s) : WRITES.test(s);
+  // Writes are looked for in the whole command, quotes included: quoted text can run (`"$(tee …)"`, `bash -lc "…"`),
+  // and no list of wrappers is complete. The price is that a `>` inside a quoted pattern also asks.
+  if (WRITES.test(s)) return true;
+  // An interpreter's script writes through calls, not shell syntax.
+  return INTERPRETER.test(s) && INTERPRETER_WRITE.test(s);
+}
+
+/**
+ * Splits a command line into the commands it chains (`&&`, `||`, `;`, newlines), leaving quoted arguments whole:
+ * `node -e "a(); b()"` is one command.
+ * @param {string} command
+ */
+function splitOutsideQuotes(command) {
+  const parts = [];
+  let current = '';
+  let quote = '';
+  for (let i = 0; i < command.length; i++) {
+    const c = command[i];
+    if (quote) {
+      if (c === '\\' && quote === '"' && i + 1 < command.length) { current += c + command[++i]; continue; }
+      if (c === quote) quote = '';
+      current += c;
+      continue;
+    }
+    if (c === '"' || c === "'") { quote = c; current += c; continue; }
+    const two = command.slice(i, i + 2);
+    if (two === '&&' || two === '||') { parts.push(current); current = ''; i++; continue; }
+    if (c === ';' || c === '\n' || c === '\r') { parts.push(current); current = ''; continue; }
+    current += c;
+  }
+  parts.push(current);
+  return parts;
 }
 
 // Regenerable build/dependency folders: deleting only these is routine, not destructive.
@@ -118,8 +149,10 @@ export function classify(command) {
   if (typeof command !== 'string' || !command.trim()) return null;
   // Agents chain commands (`cd <repo> && rm -rf dist && git status`): judge each one on its own, so a harmless
   // `cd` does not cost a build folder its exemption and one command's argument cannot complete another's pattern.
-  // Pipes stay inside a segment, so `curl … | sh` is still seen whole.
-  for (const segment of command.split(/&&|\|\||;|\r?\n/)) {
+  // Pipes stay inside a segment, so `curl … | sh` is still seen whole. Both splits are judged: the plain one, as
+  // before, and one that keeps quoted arguments whole, so a `;` inside `node -e "…"` cannot cut a script in two.
+  const segments = new Set([...command.split(/&&|\|\||;|\r?\n/), ...splitOutsideQuotes(command)]);
+  for (const segment of segments) {
     if (!segment.trim() || onlyRegenerableTargets(segment)) continue;
     if (changesAgentConfig(segment)) return AGENT_CONFIG_REASON;
     for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
