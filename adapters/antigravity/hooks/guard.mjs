@@ -61,7 +61,6 @@ export const isAgentConfigPath = (path) => typeof path === 'string' && AGENT_CON
 
 // Shell operations that change a file. Redirections to the null device are not writes.
 const WRITES = /(^|[^<>=!-])>{1,2}|\b(rm|del|erase|rd|rmdir|mv|move|cp|copy|tee|truncate|touch|chmod|ln|unlink|Set-Content|Add-Content|Out-File|Remove-Item|Move-Item|Copy-Item|New-Item|Rename-Item|Clear-Content)\b|\bsed\s+(-\w+\s+)*-i|\bperl\s+-\w*i|\bgit\s+(checkout|restore|rm|mv)\b/i;
-const SHELL_WRAPPER = /\b(bash|sh|zsh|dash|ksh|pwsh|powershell|cmd)(\.exe)?\b[^|]*?\s[-/](c|Command)\b/i;
 const INTERPRETER = /\b(node|python3?|py|ruby|perl|php|deno|bun|pwsh|powershell)\b[^|]*?\s-(e|c|Command)\b/i;
 const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|remove|delete|truncate|copy|move|Set-Content|Out-File|\bopen\([^)]*["'][wax]/i;
 
@@ -69,17 +68,11 @@ const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|rem
 function changesAgentConfig(segment) {
   if (!isAgentConfigPath(segment)) return false;
   const s = segment.replace(/\d*>+\s*(\/dev\/null|\$null|nul)(?![\w.])/gi, ' ').replace(/\d*>&\d/g, ' ');
-  // The shell's own writes (a redirection, `tee`, `mv`) count whatever runs before them, so they are looked for
-  // outside quoted arguments, where a script's `a > b` or a `grep ">"` pattern cannot pass for one. An interpreter's
-  // script is a quoted argument: its writes are judged by what it calls.
-  // A quoted shell script (`bash -c "…"`, `pwsh -Command "…"`) is shell code, judged as such.
-  if (WRITES.test(SHELL_WRAPPER.test(s) ? s : unquoted(s))) return true;
+  // Writes are looked for in the whole command, quotes included: quoted text can run (`"$(tee …)"`, `bash -lc "…"`),
+  // and no list of wrappers is complete. The price is that a `>` inside a quoted pattern also asks.
+  if (WRITES.test(s)) return true;
+  // An interpreter's script writes through calls, not shell syntax.
   return INTERPRETER.test(s) && INTERPRETER_WRITE.test(s);
-}
-
-/** The command with every quoted argument blanked out. */
-function unquoted(command) {
-  return command.replace(/"(?:[^"\\]|\\.)*"?|'[^']*'?/g, '""');
 }
 
 /**

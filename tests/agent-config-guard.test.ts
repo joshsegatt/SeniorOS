@@ -34,9 +34,13 @@ const changes = [
   `python -c "print('{}')" > .gemini/config/hooks.json`,
   `node -e "const fs = require('fs'); fs.writeFileSync('.gemini/config/hooks.json', '{}')"`,
   `node -e "const fs = require('fs'); fs.writeFileSync('.claude/settings.json', '{}')" && git status`,
-  // A quoted shell script is shell code.
+  // Quoted text can run: shell scripts, combined options and command substitutions (review findings on #25).
   `bash -c "echo {} > ~/.claude/settings.json"`,
+  `bash -lc "echo x > .claude/settings.json"`,
+  `echo "$(tee .claude/settings.json < new.json)"`,
   `pwsh -Command "'{}' | Set-Content .codex/hooks.json"`,
+  // A `>` inside quotes also asks: quoted text cannot be told apart from code that runs.
+  'grep ">" .cursor/hooks.json',
 ];
 const reads = [
   'cat ~/.claude/settings.json',
@@ -47,9 +51,7 @@ const reads = [
   'ls .claude/plugins',
   'jq . opencode.json',
   'cat ~/.gemini/GEMINI.md',
-  // A `>` inside a quoted pattern or script is not a redirection.
-  'grep ">" .cursor/hooks.json',
-  `python -c "import json; c = json.load(open('.codex/hooks.json')); print(len(c) > 0)"`,
+  `python -c "import json; print(len(json.load(open('.codex/hooks.json'))))"`,
   // Not agent configuration: plugin manifests in a repository, skills, ordinary files.
   'cat .codex-plugin/plugin.json > /tmp/manifest.json',
   'cp skills/a/SKILL.md .claude/skills/a/SKILL.md',
