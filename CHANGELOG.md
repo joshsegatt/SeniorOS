@@ -4,6 +4,10 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-10-31
+
+SeniorOS as an OpenCode plugin, and a guard that also protects the settings, hooks and plugins of the host it runs in.
+
 ### Added
 
 - OpenCode 1.x plugin (`adapters/opencode/plugin.mjs`, the npm package's `main`), enabled with `"plugin": ["senioros"]` in `opencode.json`:
@@ -12,7 +16,7 @@ All notable changes to SeniorOS will be documented here.
   - fails destructive `bash` calls (OpenCode's tool hook cannot ask), telling the agent to show what would be lost and let the user run it;
   - runs the finish gate in a separate Node process when a session goes idle, and sends failing checks back to the session.
 - Verified in OpenCode 1.14.34 on Windows: the guard blocked `git reset --hard` after the user said yes, and the finish gate sent the agent back on a failing test.
-- The guard protects the agent's own configuration in every supported host (`.claude/settings*.json` and `.claude/plugins/`, `.codex/config.toml`, `hooks.json` and `plugins/`, `.cursor/hooks.json` and `plugins/`, `opencode.json` and plugin folders, `.gemini` hooks and rules). An agent that could rewrite these could switch the guard and the finish gate off. Shell commands that change them need confirmation, and reading them stays free (before, only `.gemini` was covered, and reads were flagged too). File-edit tools are covered too: Claude Code `Edit`/`Write`/`MultiEdit`/`NotebookEdit`, Codex `apply_patch` (judged by the files it writes), OpenCode `edit`/`write`/patch. Cursor and Antigravity have no hook before a file edit, so there only shell commands are covered.
+- The guard protects the agent's own configuration in every supported host (`.claude/settings*.json` and `.claude/plugins/`, `.codex/config.toml`, `hooks.json` and `plugins/`, `.cursor/hooks.json` and `plugins/`, `opencode.json` and plugin folders, `.gemini` hooks and rules). An agent that could rewrite these could switch the guard and the finish gate off. Shell commands that change them need confirmation, including through quoted scripts, command substitutions and interpreter one-liners; plain reads stay free, though a `>` inside quotes also asks (before, only `.gemini` was covered, and every read was flagged). File-edit tools are covered too: Claude Code `Edit`/`Write`/`MultiEdit`/`NotebookEdit`, Codex `apply_patch` (judged by the files it writes), OpenCode `edit`/`write`/patch. Cursor and Antigravity have no hook before a file edit, so there only shell commands are covered.
 
 ### Fixed
 
