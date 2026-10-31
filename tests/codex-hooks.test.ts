@@ -42,7 +42,7 @@ test('Codex guard denies destructive commands and stays silent otherwise', () =>
 });
 
 test('Codex hooks.json commands load the hooks from PLUGIN_ROOT, whatever the working folder', () => {
-  assert.equal(hooksJson.hooks.PreToolUse?.[0]?.matcher, '^Bash$');
+  assert.equal(hooksJson.hooks.PreToolUse?.[0]?.matcher, '^(Bash|apply_patch|Edit|Write)$');
   for (const groups of Object.values(hooksJson.hooks)) for (const g of groups) for (const h of g.hooks) {
     assert.equal(h.type, 'command');
     assert.doesNotMatch(h.command, /\$/, 'no shell variables: PowerShell and POSIX shells expand them differently');

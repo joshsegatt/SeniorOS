@@ -38,9 +38,38 @@ export const RULES = [
   [/\b(Format-Volume|diskpart|bcdedit|Stop-Computer|Restart-Computer|Set-ExecutionPolicy)\b|\bformat\s+[a-z]:|\breg\s+delete\b|\bshutdown\s+[/-]/i, 'system change'],
   [/\b(cat|type|more|less|Get-Content|gc)\s+[^|;\n]*\.env(?!\.(example|sample|template)\b)(\.\w+)?(\s|"|'|$)/i, 'printing .env secrets into the transcript'],
   [/\bgit\s+add\s+[^|;\n]*\.env(\s|$)/, 'committing a secrets file'],
-  // The agent editing its own guardrails
-  [/\.gemini[\\/]+(config[\\/]+(hooks|hooks\.json|config\.json|skills\.json)|GEMINI\.md)/i, "changing the agent's own rules or hooks"],
 ];
+
+export const AGENT_CONFIG_REASON = "changing the agent's own settings, hooks or plugins";
+
+/**
+ * The agent's own configuration in every host SeniorOS supports: settings, hooks and installed plugins. Turning a
+ * guard off is the user's call, so changing these needs their confirmation; reading them stays free. Skills folders
+ * are not here: installing or editing skills is ordinary work.
+ */
+const AGENT_CONFIG = [
+  /\.claude[\\/]+(settings(\.local)?\.json|plugins[\\/])/i,
+  /\.codex[\\/]+(config\.toml|hooks\.json|requirements\.toml|plugins[\\/])/i,
+  /\.cursor[\\/]+(hooks\.json|plugins[\\/])/i,
+  /(^|[\\/\s"'=])opencode\.jsonc?(?![\w.-])/i,
+  /(\.opencode|[\\/]opencode)[\\/]+plugins?[\\/]/i,
+  /\.gemini[\\/]+(config[\\/]+(hooks|hooks\.json|config\.json|skills\.json)|GEMINI\.md)/i,
+];
+
+/** @param {unknown} path */
+export const isAgentConfigPath = (path) => typeof path === 'string' && AGENT_CONFIG.some((r) => r.test(path));
+
+// Shell operations that change a file. Redirections to the null device are not writes.
+const WRITES = /(^|[^<>=!-])>{1,2}|\b(rm|del|erase|rd|rmdir|mv|move|cp|copy|tee|truncate|touch|chmod|ln|unlink|Set-Content|Add-Content|Out-File|Remove-Item|Move-Item|Copy-Item|New-Item|Rename-Item|Clear-Content)\b|\bsed\s+(-\w+\s+)*-i|\bperl\s+-\w*i|\bgit\s+(checkout|restore|rm|mv)\b/i;
+const INTERPRETER = /\b(node|python3?|py|ruby|perl|php|deno|bun|pwsh|powershell)\b[^|]*?\s-(e|c|Command)\b/i;
+const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|remove|delete|truncate|copy|move|Set-Content|Out-File|\bopen\([^)]*["'][wax]/i;
+
+/** True when a single shell command changes one of the agent's own configuration files. */
+function changesAgentConfig(segment) {
+  if (!isAgentConfigPath(segment)) return false;
+  const s = segment.replace(/\d*>+\s*(\/dev\/null|\$null|nul)(?![\w.])/gi, ' ').replace(/\d*>&\d/g, ' ');
+  return INTERPRETER.test(s) ? INTERPRETER_WRITE.test(s) : WRITES.test(s);
+}
 
 // Regenerable build/dependency folders: deleting only these is routine, not destructive.
 const REGENERABLE = /^(\.\/|\.\\)?(node_modules|dist|build|out|\.next|\.nuxt|\.turbo|\.cache|\.parcel-cache|\.vite|coverage|target|__pycache__|\.pytest_cache)[\\/]?$/i;
@@ -92,6 +121,7 @@ export function classify(command) {
   // Pipes stay inside a segment, so `curl … | sh` is still seen whole.
   for (const segment of command.split(/&&|\|\||;|\r?\n/)) {
     if (!segment.trim() || onlyRegenerableTargets(segment)) continue;
+    if (changesAgentConfig(segment)) return AGENT_CONFIG_REASON;
     for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
   }
   return null;
