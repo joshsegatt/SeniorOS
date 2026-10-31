@@ -7,10 +7,11 @@ plus three hooks from [`hooks.json`](hooks.json). Each hook uses the same core a
 | Hook | Cursor event | What it does |
 |---|---|---|
 | `hooks/session-start.mjs` | `sessionStart` | Adds [`rules.md`](rules.md) to the conversation: when to use each `senior-*` skill, the low-risk exception and the approval boundary |
-| `hooks/guard.mjs` | `beforeShellExecution` | Answers `ask` before destructive or irreversible commands (force-push, `reset --hard`, `rm -rf src`, `DROP TABLE`, deploys, publishing, printing `.env`), and `allow` (no objection, Cursor's own approval still applies) otherwise. Chained commands are judged one by one |
+| `hooks/guard.mjs` | `beforeShellExecution` | Answers `ask` before destructive or irreversible commands (force-push, `reset --hard`, `rm -rf src`, `DROP TABLE`, deploys, publishing, printing `.env`, changing the agent's own settings, hooks or plugins), and `allow` (no objection, Cursor's own approval still applies) otherwise. Chained commands are judged one by one |
 | `hooks/stop-gate.mjs` | `stop` | When the agent completes with changed code, runs `senior finish` (or `npx senioros finish` without the CLI). A failing check comes back as a follow-up message with the output, at most twice per change set (`loop_limit: 2`) |
 
-All three fail open: a hook error never blocks the agent. The guard always answers with valid JSON, because Cursor
+All three fail open: a hook error never blocks the agent. Cursor has no hook before a file edit, so the guard sees shell
+commands only: an edit tool can still change `.cursor/hooks.json`. The guard always answers with valid JSON, because Cursor
 blocks a shell command when a permission hook's output is invalid.
 
 ## Install

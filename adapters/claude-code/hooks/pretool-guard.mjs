@@ -1,8 +1,9 @@
-// Claude Code PreToolUse hook (Bash): asks for confirmation before destructive or irreversible commands, with the
-// same rules as the Antigravity guard. Unflagged commands get no answer, which leaves Claude Code's own permission
+// Claude Code PreToolUse hook (Bash and the file-edit tools): asks for confirmation before destructive or
+// irreversible commands, with the same rules as the Antigravity guard, and before an edit to the agent's own settings,
+// hooks or plugins. Unflagged commands get no answer, which leaves Claude Code's own permission
 // flow in place. Fails open.
 import { readFileSync } from 'node:fs';
-import { classify, guardMessage } from '../../shared/guard.mjs';
+import { classify, editReason, guardMessage } from '../../shared/guard.mjs';
 
 /**
  * @param {string} raw the hook's stdin
@@ -15,7 +16,10 @@ export function decide(raw) {
   } catch {
     return null;
   }
-  const reason = classify(input?.tool_input?.command);
+  const tool = input?.tool_input ?? {};
+  const reason = input?.tool_name === 'Bash' || input?.tool_name === undefined
+    ? classify(tool.command)
+    : editReason([tool.file_path, tool.notebook_path]);
   if (!reason) return null;
   return {
     hookSpecificOutput: {

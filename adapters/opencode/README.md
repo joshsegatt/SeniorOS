@@ -7,7 +7,7 @@ same core as the Claude Code, Codex and Cursor plugins ([`adapters/shared/`](../
 |---|---|
 | `config` | Registers the `senior-*` skills, so OpenCode's `skill` tool lists them |
 | `experimental.chat.system.transform` | Adds [`rules.md`](rules.md) to the system prompt: when to use each skill, the low-risk exception and the approval boundary |
-| `tool.execute.before` | Fails destructive or irreversible `bash` calls (force-push, `reset --hard`, `rm -rf src`, `DROP TABLE`, deploys, publishing, printing `.env`). The agent is told to show what would be lost and to ask the user to run the command themselves. Chained commands are judged one by one |
+| `tool.execute.before` | Fails destructive or irreversible `bash` calls (force-push, `reset --hard`, `rm -rf src`, `DROP TABLE`, deploys, publishing, printing `.env`), and any `bash`, `edit`, `write` or patch call that changes the agent's own settings, hooks or plugins (`opencode.json`, plugin folders, and the other hosts' equivalents). The agent is told to show what would be lost and to ask the user to run the command themselves. Chained commands are judged one by one |
 | `event` (`session.idle`) | When a top-level session goes idle with changed code, runs `senior finish` (or `npx senioros finish`) in a separate Node process, and on a failing check sends the output back to the session as a new message, at most twice per change set. Subagent sessions are skipped |
 
 Every hook except the guard fails open: an error never blocks the agent.

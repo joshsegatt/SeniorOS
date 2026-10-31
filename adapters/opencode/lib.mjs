@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { classify } from '../shared/guard.mjs';
+import { classify, editReason, patchTargets } from '../shared/guard.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const SKILLS = resolve(here, '..', '..', 'skills');
@@ -30,8 +30,10 @@ export const denyMessage = (reason) =>
  * @param {any} args
  */
 export function guardDecision(tool, args) {
-  if (tool !== 'bash') return null;
-  const reason = classify(args?.command);
+  let reason = null;
+  if (tool === 'bash' || tool === 'shell') reason = classify(args?.command);
+  else if (tool === 'edit' || tool === 'write' || tool === 'multiedit') reason = editReason([args?.filePath]);
+  else if (tool === 'patch' || tool === 'apply_patch') reason = editReason(patchTargets(args?.patchText ?? args?.patch));
   return reason ? denyMessage(reason) : null;
 }
 
