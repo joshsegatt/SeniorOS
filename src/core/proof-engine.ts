@@ -1,9 +1,10 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { spawn, spawnSync, type StdioOptions } from 'node:child_process';
+import { execFileSync, spawn, spawnSync, type StdioOptions } from 'node:child_process';
 import { exists, readJson } from './fs-utils.js';
 import { ecosystemPlan, environmentFailure, noTestsCollected, type EcosystemCheck } from './ecosystems.js';
+import { testsRan } from './test-counts.js';
 import type { ProofCheck, ProofReport } from '../types.js';
 import type { ProofCheckConfig } from './config.js';
 
@@ -12,7 +13,9 @@ interface PackageJson {
 }
 
 const ORDER = ['typecheck', 'lint', 'test', 'build'] as const;
-const NO_TESTS = 'no tests collected';
+const NO_TESTS = 'no tests ran';
+/** Checks whose output is read for the number of tests that ran. */
+const isTestCheck = (name: string) => /\btests?\b/i.test(name);
 
 function packageRunner(manager: string | null): string {
   if (manager === 'pnpm') return 'pnpm';
@@ -40,6 +43,11 @@ export interface ProofOptions {
    * omitted runs every project.
    */
   changed?: string[] | null;
+  /**
+   * Whether the working tree has uncommitted changes, when the caller already knows it (index.ts scans once); otherwise
+   * provenance runs its own scan. Changes under .senior/ do not count.
+   */
+  dirty?: boolean | null;
 }
 
 interface PlannedCheck {
@@ -78,7 +86,7 @@ function configPlan(checks: ProofCheckConfig[]): PlannedCheck[] {
 }
 
 /** Runs a command, showing its output as it comes (stdout to `out`, stderr to stderr) and keeping a copy of both. */
-function runTeed(file: string, args: string[], cwd: string, out: NodeJS.WriteStream, env: NodeJS.ProcessEnv): Promise<{ status: number | null; signal: NodeJS.Signals | null; error?: Error; log: string }> {
+function runTeed(file: string, args: string[] | undefined, shell: boolean, cwd: string, out: NodeJS.WriteStream, env: NodeJS.ProcessEnv): Promise<{ status: number | null; signal: NodeJS.Signals | null; error?: Error; log: string }> {
   return new Promise((resolve) => {
     const chunks: string[] = [];
     let size = 0;
@@ -86,7 +94,10 @@ function runTeed(file: string, args: string[], cwd: string, out: NodeJS.WriteStr
       // The copy is only read for error messages: cap it so a very chatty suite cannot exhaust memory.
       if (size < 16 * 1024 * 1024) { chunks.push(text); size += text.length; }
     };
-    const child = spawn(file, args, { cwd, env, stdio: ['inherit', 'pipe', 'pipe'], windowsHide: true });
+    const options = { cwd, env, shell, stdio: ['inherit', 'pipe', 'pipe'] as StdioOptions, windowsHide: true };
+    // A shell command line (package scripts on Windows, .senior/config.json checks) is passed whole, without args.
+    const child = args ? spawn(file, args, options) : spawn(file, options);
+    if (!child.stdout || !child.stderr) throw new Error('no output pipes');
     child.stdout.setEncoding('utf8').on('data', (d: string) => { out.write(d); keep(d); });
     child.stderr.setEncoding('utf8').on('data', (d: string) => { process.stderr.write(d); keep(d); });
     child.on('error', (error) => resolve({ status: null, signal: null, error, log: chunks.join('') }));
@@ -107,7 +118,24 @@ async function standardPlan(root: string, packageManager: string | null, changed
   return { plan: [...node, ...others], others: others.length > 0 };
 }
 
+/** The commit the checks run on and whether the working tree has uncommitted changes; nulls outside git. */
+function provenanceOf(root: string, knownDirty?: boolean | null): ProofReport['provenance'] {
+  const git = (args: string[]) => {
+    try {
+      return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    } catch {
+      return null;
+    }
+  };
+  const head = git(['rev-parse', 'HEAD']);
+  if (head === null) return { ranAt: new Date().toISOString(), head, dirty: null };
+  if (knownDirty !== undefined) return { ranAt: new Date().toISOString(), head, dirty: knownDirty };
+  const status = git(['status', '--porcelain', '--untracked-files=all', '--', '.', ':(exclude).senior']);
+  return { ranAt: new Date().toISOString(), head, dirty: status === null ? null : status.length > 0 };
+}
+
 export async function runProof(root: string, packageManager: string | null, options: ProofOptions = {}): Promise<ProofReport> {
+  const provenance = provenanceOf(root, options.dirty);
   let source: ProofReport['source'] = 'config';
   let plan: PlannedCheck[];
   if (options.checks) plan = configPlan(options.checks);
@@ -153,9 +181,13 @@ export async function runProof(root: string, packageManager: string | null, opti
     const cwd = planned.cwd ?? root;
     let result: { status: number | null; signal: NodeJS.Signals | null; error?: Error };
     let log = '';
-    if (planned.python !== undefined && planned.args) {
-      // Python test output is shown live and also read, to tell an uninstalled dependency from a broken change.
-      const teed = await runTeed(planned.file, planned.args, cwd, options.childOutput === 'stderr' ? process.stderr : process.stdout, envFor(planned) ?? process.env);
+    if (isTestCheck(name)) {
+      // Test output is shown live and also read: for the number of tests that ran, and for Python, to tell an
+      // uninstalled dependency from a broken change.
+      const out = options.childOutput === 'stderr' ? process.stderr : process.stdout;
+      // Piped output loses the runner's colours; keep them when a person is watching a terminal.
+      const env = { ...(envFor(planned) ?? process.env), ...(out.isTTY ? { FORCE_COLOR: '1' } : {}) };
+      const teed = await runTeed(planned.file, planned.args, planned.shell ?? false, cwd, out, env);
       result = teed;
       log = teed.log;
     } else {
@@ -173,10 +205,11 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
-    if (noTestsCollected(name, result.status, log)) {
-      // Nothing to verify is not a failure, and not a pass either.
+    const tests = isTestCheck(name) ? testsRan(log) : null;
+    if (noTestsCollected(name, result.status, log) || (result.status === 0 && tests === 0)) {
+      // A test command that ran nothing is not a failure, and not a pass either: its silence proves nothing.
       availableChecks -= 1;
-      checks.push({ name, command, status: 'skip', exitCode: result.status, durationMs, reason: NO_TESTS });
+      checks.push({ name, command, status: 'skip', exitCode: result.status, durationMs, reason: NO_TESTS, tests: 0 });
       continue;
     }
     const environment = result.status !== 0 && planned.python ? environmentFailure(log, planned.python) : null;
@@ -185,7 +218,7 @@ export async function runProof(root: string, packageManager: string | null, opti
       checks.push({ name, command, status: 'skip', exitCode: result.status, durationMs, reason: environment });
       continue;
     }
-    checks.push({ name, command, status: result.status === 0 ? 'pass' : 'fail', exitCode: result.status, durationMs });
+    checks.push({ name, command, status: result.status === 0 ? 'pass' : 'fail', exitCode: result.status, durationMs, ...(tests !== null ? { tests } : {}) });
     if (result.status !== 0) blockedBy = name;
   }
   } finally {
@@ -193,5 +226,5 @@ export async function runProof(root: string, packageManager: string | null, opti
   }
 
   const baselinePassed = availableChecks > 0 && checks.every((check) => check.status === 'pass' || check.command === null || check.reason === NO_TESTS);
-  return { source, checks, baselinePassed, availableChecks, totalChecks: plan.length };
+  return { source, checks, provenance, baselinePassed, availableChecks, totalChecks: plan.length };
 }

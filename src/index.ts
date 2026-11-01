@@ -4,6 +4,8 @@ import { detectStack } from './core/detect-stack.js';
 import { initProject } from './core/project-state.js';
 import { getChangeSet, getRepositoryRoot, type ChangeScope } from './core/git.js';
 import path from 'node:path';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
 import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
@@ -16,21 +18,45 @@ import { proveRegression, restoreInterruptedProof, type ProofPhase, type Regress
 const VERSION = '0.8.0';
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--record] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
 }
 
 /**
- * Absolute paths of the uncommitted changes, so `finish` runs only the projects they touch. Null (run everything)
- * outside git or on a clean tree.
+ * Absolute paths of the uncommitted changes, so `finish` runs only the projects they touch; empty on a clean tree, null
+ * outside git.
  */
 function changedFiles(cwd: string): string[] | null {
   try {
     const top = getRepositoryRoot(cwd);
-    const files = getChangeSet(cwd).files.map((f) => path.resolve(top, f.path));
-    return files.length ? files : null;
+    // SeniorOS's own records (.senior/) are not a change to any project, nor to the code the evidence is about.
+    return getChangeSet(cwd).files.filter((f) => !f.path.startsWith('.senior/')).map((f) => path.resolve(top, f.path));
   } catch {
     return null;
   }
+}
+
+/**
+ * Writes the proof report to `.senior/evidence/<commit>.json` (`<commit>-uncommitted.json` when the working tree had
+ * changes): a durable record of what was verified, on which code, with which commands and results. It holds no command
+ * output, so nothing a test printed (tokens, personal data) lands in the repository.
+ */
+async function recordEvidence(cwd: string, report: Awaited<ReturnType<typeof runProof>>): Promise<string> {
+  let top = cwd;
+  try {
+    top = getRepositoryRoot(cwd);
+  } catch {}
+  const { head, dirty } = report.provenance;
+  const name = `${head ? head.slice(0, 12) : 'no-commit'}${dirty ? '-uncommitted' : ''}.json`;
+  const dir = path.join(top, '.senior', 'evidence');
+  await mkdir(dir, { recursive: true });
+  const file = path.join(dir, name);
+  await writeFile(file, `${JSON.stringify({ senioros: VERSION, ...report }, null, 2)}\n`);
+  // Real paths: git and the working folder may spell one folder differently (Windows short names, symlinks).
+  let from = cwd;
+  try {
+    from = realpathSync.native(cwd);
+  } catch {}
+  return path.relative(from, file).split(path.sep).join('/');
 }
 
 function hasFlag(args: string[], flag: string): boolean {
@@ -128,19 +154,23 @@ async function main(): Promise<void> {
     // In JSON mode, script output goes to stderr so stdout stays parseable.
     const result = await runProof(root, stack.packageManager, {
       childOutput: json ? 'stderr' : 'inherit',
-      changed: hasFlag(args, '--all') ? null : changedFiles(root),
+      // One scan of the working tree serves both: which projects to run, and whether the code had uncommitted changes.
+      ...((changed) => ({ changed: hasFlag(args, '--all') || !changed?.length ? null : changed, dirty: changed ? changed.length > 0 : null }))(changedFiles(root)),
       ...(config?.proof ? { checks: config.proof.checks } : {})
     });
-    if (json) console.log(JSON.stringify(result, null, 2));
+    const recorded = hasFlag(args, '--record') ? await recordEvidence(root, result) : null;
+    if (json) console.log(JSON.stringify(recorded ? { ...result, recorded } : result, null, 2));
     else {
       for (const check of result.checks) {
-        const detail = [check.command, check.reason].filter(Boolean).join(' — ');
+        const count = check.tests !== undefined ? `${check.tests} test${check.tests === 1 ? '' : 's'}` : null;
+        const detail = [check.command, count, check.reason].filter(Boolean).join(' — ');
         console.log(`${check.status.toUpperCase().padEnd(4)} ${check.name}${detail ? `  (${detail})` : ''}`);
       }
       const coverage = `${result.availableChecks}/${result.totalChecks}`;
       const kind = result.source === 'config' ? `configured checks from ${CONFIG_PATH}` : 'standard checks available';
       console.log(`\nPROOF BASELINE: ${result.baselinePassed ? 'PASS' : 'NOT PROVEN'} (${coverage} ${kind})`);
       console.log('Final ship readiness still depends on task-specific acceptance criteria and risk.');
+      if (recorded) console.log(`Evidence recorded: ${recorded}`);
     }
     if (!result.baselinePassed) process.exitCode = 1;
     return;
