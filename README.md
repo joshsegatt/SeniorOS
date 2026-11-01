@@ -317,6 +317,26 @@ senior uninstall --target antigravity
 typecheck → lint → test → build
 ```
 
+These are the `package.json` scripts. Python, Go and Rust projects get standard checks, at the repository root and up
+to two folders below it (`backend/`, `services/api/`):
+
+| Project | Detected by | Checks |
+|---|---|---|
+| Python | `pyproject.toml`, `setup.py`, `setup.cfg`, `requirements.txt` | `mypy` and `ruff` when configured; `pytest`, or `unittest` when pytest is not installed. Runs in the project's `.venv`/`venv`, or its Poetry or Pipenv environment |
+| Go | `go.mod` | `go vet ./...`, `go test ./...` |
+| Rust | `Cargo.toml` (a workspace covers its members) | `cargo test` |
+
+- **Only what changed:** with uncommitted changes, `senior finish` runs the projects they touch and reports the others
+  as `SKIP` (`no changes in this project`); `senior finish --all` runs everything. A clean tree runs everything.
+- **Never a false pass:** a tool that is not installed, or no tests collected, is `SKIP` with the reason.
+- **Environment or change:** a Python test run that fails only because modules the project **declares** are not
+  installed is `SKIP` (`not verified: declared dependencies not installed`), not a failure the finish gate blames on
+  the change. Declared means listed in a dependency declaration (`requirements*.txt`, `requirements/`, `[project]`
+  dependencies and extras, dependency groups, Poetry, Pipfile, `install_requires`). A module the project does not
+  declare, its own module, a test that ran and failed, or any other error in the run is a `FAIL`.
+- Tests that need setup the agent's shell lacks (a database, a service) still fail: describe the real commands in
+  `.senior/config.json` (`proof.checks`, below), which replaces the standard checks.
+
 Every check is reported as `PASS`, `FAIL`, or `SKIP`. A missing test command is **SKIP**, not “tests passed” after a brief spiritual consultation.
 
 The proof stops at the first failure; later checks are reported as `SKIP` with the reason `not run: "<check>" failed`.

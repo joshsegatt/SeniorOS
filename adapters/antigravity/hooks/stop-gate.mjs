@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, finishGateNextStep, log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
+import { SENIOR, finishGateNextStep, hasProofSource, log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -37,11 +37,6 @@ function changeSet(root) {
     try { const s = statSync(join(root, f)); hash.update(`${f}:${s.size}:${s.mtimeMs}\n`); } catch { hash.update(`${f}:gone\n`); }
   }
   return { files, fingerprint: hash.digest('hex') };
-}
-
-/** @param {string} root */
-function hasProofSource(root) {
-  return existsSync(join(root, 'package.json')) || existsSync(join(root, '.senior', 'config.json'));
 }
 
 await runHook('Stop', async (input) => {

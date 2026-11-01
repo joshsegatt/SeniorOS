@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, finishGateNextStep, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { SENIOR, finishGateNextStep, hasProofSource, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -48,7 +48,7 @@ export function evaluate({ cwd, sessionId, host }) {
   const top = sh('git rev-parse --show-toplevel', cwd ?? process.cwd(), 10_000);
   if (top.code !== 0) return null;
   const root = top.out.trim();
-  if (!existsSync(join(root, 'package.json')) && !existsSync(join(root, '.senior', 'config.json'))) return null;
+  if (!hasProofSource(root)) return null;
   const changes = changeSet(root);
   if (!changes) return null;
 

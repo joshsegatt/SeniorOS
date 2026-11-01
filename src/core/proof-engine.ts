@@ -1,6 +1,7 @@
 import path from 'node:path';
-import { spawnSync, type StdioOptions } from 'node:child_process';
-import { readJson } from './fs-utils.js';
+import { spawn, spawnSync, type StdioOptions } from 'node:child_process';
+import { exists, readJson } from './fs-utils.js';
+import { ecosystemPlan, environmentFailure, noTestsCollected, type EcosystemCheck } from './ecosystems.js';
 import type { ProofCheck, ProofReport } from '../types.js';
 import type { ProofCheckConfig } from './config.js';
 
@@ -9,6 +10,7 @@ interface PackageJson {
 }
 
 const ORDER = ['typecheck', 'lint', 'test', 'build'] as const;
+const NO_TESTS = 'no tests collected';
 
 function packageRunner(manager: string | null): string {
   if (manager === 'pnpm') return 'pnpm';
@@ -31,6 +33,11 @@ export interface ProofOptions {
   childOutput?: 'inherit' | 'stderr';
   /** Checks from `.senior/config.json`; when present they replace the package-script baseline. */
   checks?: ProofCheckConfig[];
+  /**
+   * Absolute paths of the changed files. Python, Go and Rust projects that own none of them are skipped; null or
+   * omitted runs every project.
+   */
+  changed?: string[] | null;
 }
 
 interface PlannedCheck {
@@ -41,6 +48,8 @@ interface PlannedCheck {
   file?: string;
   args?: string[];
   shell?: boolean;
+  cwd?: string;
+  python?: EcosystemCheck['python'];
 }
 
 function packageScriptPlan(pkg: PackageJson | null, packageManager: string | null): PlannedCheck[] {
@@ -65,11 +74,45 @@ function configPlan(checks: ProofCheckConfig[]): PlannedCheck[] {
   return checks.map(({ name, command }) => ({ name, command, file: command, shell: true }));
 }
 
+/** Runs a command, showing its output as it comes (stdout to `out`, stderr to stderr) and keeping a copy of both. */
+function runTeed(file: string, args: string[], cwd: string, out: NodeJS.WriteStream): Promise<{ status: number | null; signal: NodeJS.Signals | null; error?: Error; log: string }> {
+  return new Promise((resolve) => {
+    const chunks: string[] = [];
+    let size = 0;
+    const keep = (text: string) => {
+      // The copy is only read for error messages: cap it so a very chatty suite cannot exhaust memory.
+      if (size < 16 * 1024 * 1024) { chunks.push(text); size += text.length; }
+    };
+    const child = spawn(file, args, { cwd, stdio: ['inherit', 'pipe', 'pipe'], windowsHide: true });
+    child.stdout.setEncoding('utf8').on('data', (d: string) => { out.write(d); keep(d); });
+    child.stderr.setEncoding('utf8').on('data', (d: string) => { process.stderr.write(d); keep(d); });
+    child.on('error', (error) => resolve({ status: null, signal: null, error, log: chunks.join('') }));
+    child.on('close', (status, signal) => resolve({ status, signal, log: chunks.join('') }));
+  });
+}
+
+/**
+ * Standard checks: the package scripts when there is a package.json (or no other project), then the Python, Go and
+ * Rust checks for the projects in the repository (see ecosystems.ts).
+ */
+async function standardPlan(root: string, packageManager: string | null, changed: string[] | null): Promise<{ plan: PlannedCheck[]; others: boolean }> {
+  const others = ecosystemPlan(root, changed).map((c): PlannedCheck => ({ ...c, shell: false }));
+  const hasPackage = await exists(path.join(root, 'package.json'));
+  const node = hasPackage || others.length === 0
+    ? packageScriptPlan(await readJson<PackageJson>(path.join(root, 'package.json')), packageManager)
+    : [];
+  return { plan: [...node, ...others], others: others.length > 0 };
+}
+
 export async function runProof(root: string, packageManager: string | null, options: ProofOptions = {}): Promise<ProofReport> {
-  const source: ProofReport['source'] = options.checks ? 'config' : 'package-scripts';
-  const plan = options.checks
-    ? configPlan(options.checks)
-    : packageScriptPlan(await readJson<PackageJson>(path.join(root, 'package.json')), packageManager);
+  let source: ProofReport['source'] = 'config';
+  let plan: PlannedCheck[];
+  if (options.checks) plan = configPlan(options.checks);
+  else {
+    const standard = await standardPlan(root, packageManager, options.changed ?? null);
+    plan = standard.plan;
+    source = standard.others ? 'standard' : 'package-scripts';
+  }
   const stdio: StdioOptions = options.childOutput === 'stderr' ? ['inherit', 2, 2] : 'inherit';
   const checks: ProofCheck[] = [];
   let blockedBy: string | null = null;
@@ -89,8 +132,18 @@ export async function runProof(root: string, packageManager: string | null, opti
     }
 
     const started = Date.now();
-    const spawnOptions = { cwd: root, stdio, shell: planned.shell ?? false };
-    const result = planned.args ? spawnSync(planned.file, planned.args, spawnOptions) : spawnSync(planned.file, spawnOptions);
+    const cwd = planned.cwd ?? root;
+    let result: { status: number | null; signal: NodeJS.Signals | null; error?: Error };
+    let log = '';
+    if (planned.python !== undefined && planned.args) {
+      // Python test output is shown live and also read, to tell an uninstalled dependency from a broken change.
+      const teed = await runTeed(planned.file, planned.args, cwd, options.childOutput === 'stderr' ? process.stderr : process.stdout);
+      result = teed;
+      log = teed.log;
+    } else {
+      const spawnOptions = { cwd, stdio, shell: planned.shell ?? false };
+      result = planned.args ? spawnSync(planned.file, planned.args, spawnOptions) : spawnSync(planned.file, spawnOptions);
+    }
     const durationMs = Date.now() - started;
 
     if (result.error || result.status === null) {
@@ -102,10 +155,22 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
+    if (noTestsCollected(name, result.status, log)) {
+      // Nothing to verify is not a failure, and not a pass either.
+      availableChecks -= 1;
+      checks.push({ name, command, status: 'skip', exitCode: result.status, durationMs, reason: NO_TESTS });
+      continue;
+    }
+    const environment = result.status !== 0 && planned.python ? environmentFailure(log, planned.python) : null;
+    if (environment) {
+      // Not proven either way: reported, but it neither passes the baseline nor blames the change.
+      checks.push({ name, command, status: 'skip', exitCode: result.status, durationMs, reason: environment });
+      continue;
+    }
     checks.push({ name, command, status: result.status === 0 ? 'pass' : 'fail', exitCode: result.status, durationMs });
     if (result.status !== 0) blockedBy = name;
   }
 
-  const baselinePassed = availableChecks > 0 && checks.every((check) => check.status === 'pass' || check.command === null);
+  const baselinePassed = availableChecks > 0 && checks.every((check) => check.status === 'pass' || check.command === null || check.reason === NO_TESTS);
   return { source, checks, baselinePassed, availableChecks, totalChecks: plan.length };
 }
