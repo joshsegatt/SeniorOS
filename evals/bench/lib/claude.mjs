@@ -2,18 +2,21 @@
 //
 // Arms are command-line flags, not global config, so runs of different arms can overlap. Every arm loads only
 // project settings (`--setting-sources project`) and no MCP servers, which keeps the user's own skills, plugins,
-// hooks and MCP servers out. Claude Code still reads the user's global CLAUDE.md, and an instruction there ("ask
-// before changing auth or payments") stops headless runs no one can answer. CLAUDE_CONFIG_DIR alone does not keep it
-// out: Claude Code also reads ~/.claude/CLAUDE.md from the home folder. So each run gets an empty throwaway home
-// (USERPROFILE and HOME) with an empty config folder inside, removed when the bench exits; git keeps the user's
-// identity through GIT_CONFIG_GLOBAL. `bench.mjs isolation` checks that no user instructions reach a run.
+// hooks and MCP servers out. Each run also gets an empty throwaway config folder (CLAUDE_CONFIG_DIR), removed when the
+// bench exits, so the user's settings, history and memory stay out too.
 //
-// The login is NOT copied into it: a subscription login rotates its refresh token on use, so a copy that refreshes
-// leaves the user's own login expired. Isolated runs authenticate with CLAUDE_CODE_OAUTH_TOKEN (from
-// `claude setup-token`) or ANTHROPIC_API_KEY instead. SENIOROS_BENCH_USER_CONFIG=1 keeps the user's own folder.
+// That is not enough for the user's global CLAUDE.md: Claude Code finds ~/.claude/CLAUDE.md through the operating
+// system's profile folder, whatever CLAUDE_CONFIG_DIR, HOME or USERPROFILE say (measured on Windows). An instruction
+// there ("ask before changing payments") stops headless runs no one can answer, so `run` first asks one run whether
+// user instructions reached it (`checkIsolation`) and refuses to start if they did. Move the file aside for the
+// bench (and put it back after) to pass the check.
+//
+// The login is NOT copied into the folder: a subscription login rotates its refresh token on use, so a copy that
+// refreshes leaves the user's own login expired. Isolated runs authenticate with CLAUDE_CODE_OAUTH_TOKEN (from
+// `claude setup-token`) or ANTHROPIC_API_KEY instead. SENIOROS_BENCH_USER_CONFIG=1 keeps the user's own folder and
+// skips the check, as runs before November 2026 did.
 import { spawn, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
 
@@ -42,26 +45,19 @@ let skillsOnlyDir;
 const TOOLS = 'Bash Read Edit Write Glob Grep Skill';
 
 /**
- * The environment of an isolated run: an empty home and config folder, the user's git identity, and the token from
- * the environment. The user's own environment when SENIOROS_BENCH_USER_CONFIG=1.
+ * The environment of an isolated run: an empty config folder and the token from the environment. The user's own
+ * environment when SENIOROS_BENCH_USER_CONFIG=1. The home folder is left alone: changing it did not keep CLAUDE.md out
+ * and would change how npm, git and Python behave inside the task.
  */
 export function isolatedEnv() {
-  const home = isolatedConfigDir();
-  if (!home) return process.env;
-  const userGitConfig = join(homedir(), '.gitconfig');
-  return {
-    ...process.env,
-    USERPROFILE: home,
-    HOME: home,
-    CLAUDE_CONFIG_DIR: join(home, '.claude'),
-    ...(existsSync(userGitConfig) && !process.env.GIT_CONFIG_GLOBAL ? { GIT_CONFIG_GLOBAL: userGitConfig } : {}),
-  };
+  const config = isolatedConfigDir();
+  return config ? { ...process.env, CLAUDE_CONFIG_DIR: config } : process.env;
 }
 
 let isolatedConfig;
 /**
- * An empty home folder with an empty `.claude` inside: no CLAUDE.md, settings, hooks, plugins, history or login.
- * Created once per bench process and removed when it exits. Null when the user's folders should be used.
+ * An empty config folder: no settings, hooks, plugins, history, memory or login. Created once per bench process and
+ * removed when it exits. Null when the user's folder should be used.
  */
 export function isolatedConfigDir() {
   if (process.env.SENIOROS_BENCH_USER_CONFIG === '1') return null;
@@ -73,10 +69,9 @@ export function isolatedConfigDir() {
     );
   }
   mkdirSync(BENCH_HOME, { recursive: true });
-  const dir = mkdtempSync(join(BENCH_HOME, 'claude-home-'));
-  mkdirSync(join(dir, '.claude'));
+  const dir = mkdtempSync(join(BENCH_HOME, 'claude-config-'));
+  // Removed on a normal exit; a folder left by Ctrl+C is empty of anything personal and can be deleted.
   process.on('exit', () => rmSync(dir, { recursive: true, force: true }));
-  for (const signal of ['SIGINT', 'SIGTERM']) process.once(signal, () => process.exit(130));
   isolatedConfig = dir;
   return dir;
 }

@@ -61,6 +61,37 @@ test('a low-risk change with passing checks finishes without the review', () => 
   }
 });
 
+test('Antigravity: a review that waits for a failure in another repository is still asked later (review finding)', () => {
+  const a = repoWith('src/auth/policy.js');
+  const b = repoWith('src/format.js');
+  writeFileSync(path.join(b, 'test', 'a.test.js'), "import t from 'node:test'; import x from 'node:assert'; t('bad', () => x.fail('boom'));\n");
+  const log = path.join(os.tmpdir(), `rev2-${process.pid}.log`);
+  const conversationId = `agy2${process.pid}`;
+  const hook = (script: string, input: object) => {
+    const r = spawnSync(process.execPath, [path.join(root, 'adapters', 'antigravity', 'hooks', script)], {
+      input: JSON.stringify(input), encoding: 'utf8', env: { ...env, SENIOROS_HOOK_LOG: log }, timeout: 240_000,
+    });
+    assert.equal(r.status, 0, r.stderr);
+    return JSON.parse(r.stdout || '{}') as { decision?: string; reason?: string };
+  };
+  try {
+    for (const file of [path.join(a, 'src', 'auth', 'policy.js'), path.join(b, 'test', 'a.test.js')]) {
+      hook('track.mjs', { conversationId, workspacePaths: [], toolCall: { name: 'replace_file_content', args: { Path: file } } });
+    }
+    const stop = { conversationId, workspacePaths: [], terminationReason: 'NO_TOOL_CALL' };
+    const first = hook('stop-gate.mjs', stop);
+    assert.match(first.reason ?? '', /checks fail|failed/, 'the failure comes first');
+    writeFileSync(path.join(b, 'test', 'a.test.js'), "import t from 'node:test'; t('ok', () => {});\n");
+    const second = hook('stop-gate.mjs', stop);
+    assert.match(second.reason ?? '', /senior-finish step 4/, 'then the review that had to wait');
+    assert.deepEqual(hook('stop-gate.mjs', stop), {});
+  } finally {
+    rmSync(a, { recursive: true, force: true });
+    rmSync(b, { recursive: true, force: true });
+    rmSync(log, { force: true });
+  }
+});
+
 test('the Antigravity stop gate asks for the same review, once', () => {
   const dir = repoWith('src/auth/policy.js');
   const log = path.join(os.tmpdir(), `rev-${process.pid}.log`);

@@ -46,6 +46,8 @@ await runHook('Stop', async (input) => {
   const state = loadState(conversationId);
   const failures = [];
   const review = [];
+  /** State of each review candidate before this stop, restored when its review has to wait for a failure elsewhere. */
+  const before = new Map();
   let repeated = true;
 
   for (const { root, git } of workspaceRoots(input)) {
@@ -75,9 +77,12 @@ await runHook('Stop', async (input) => {
     if (!report || failed.length === 0) {
       // Once per conversation and project, a medium-or-higher-risk change whose checks pass goes back for the risk
       // review of senior-finish (see finishReviewMessage).
-      const askReview = Boolean(report) && !reviewed && needsFinishReview(root);
-      if (askReview) review.push(root);
-      state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed: reviewed || askReview };
+      // Marked reviewed only once the review is actually sent (below): a failure elsewhere takes precedence this turn.
+      if (Boolean(report) && !reviewed && needsFinishReview(root)) {
+        review.push(key);
+        before.set(key, prev);
+      }
+      state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed };
       log('Stop', { root, result: report ? 'pass' : 'unparsed', ms, available: report?.availableChecks });
       continue;
     }
@@ -90,8 +95,15 @@ await runHook('Stop', async (input) => {
     log('Stop', { root, result: 'fail', blocks, ms, failed: failed.map((c) => c.name) });
   }
 
+  const sendReview = failures.length === 0 && review.length > 0;
+  for (const key of review) {
+    if (sendReview) state[key].reviewed = true;
+    // Not cached as passed, so the next stop checks it again and asks for its review then.
+    else if (before.get(key)) state[key] = before.get(key);
+    else delete state[key];
+  }
   saveState(conversationId, state);
-  if (failures.length === 0 && review.length > 0) {
+  if (sendReview) {
     log('Stop', { result: 'review', roots: review });
     return { decision: 'continue', reason: finishReviewMessage() };
   }

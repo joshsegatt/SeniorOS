@@ -169,6 +169,11 @@ async function runBench(args) {
   const model = option(args, 'model', perProcessArms ? 'haiku' : 'flash');
   const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
   if (parallel > 1 && backend !== 'agentapi' && backend !== 'claude') throw new Error('--parallel needs the agentapi or claude backend.');
+  if (perProcessArms && process.env.SENIOROS_BENCH_USER_CONFIG !== '1') {
+    // A user's CLAUDE.md reaching the runs would skew every arm; check before spending any run (see lib/claude.mjs).
+    const { answer, clean } = checkIsolation(model);
+    if (!clean) throw new Error(`user instructions reach the runs (the check run answered: ${answer}). Move your ~/.claude/CLAUDE.md aside for the bench, or set SENIOROS_BENCH_USER_CONFIG=1 to measure with it.`);
+  }
   const resultsDir = join(BENCH_HOME, 'results', new Date().toISOString().replace(/[:.]/g, '-'));
   mkdirSync(resultsDir, { recursive: true });
   const total = trials * tasks.length * arms.length;
