@@ -309,6 +309,7 @@ test('only dependency declarations count, not names, descriptions or comments', 
       '[project]', 'name = "flask-helper"', 'description = "Thin wrapper around the requests API"',
       'dependencies = [', '  "httpx>=0.27",', '  "pydantic[email]~=2.0",', ']', '',
       '[project.optional-dependencies]', 'dev = ["pytest>=8"]', '',
+      '[dependency-groups]', 'lint = ["mypy", {include-group = "typing"}]', '',
       '[tool.poetry.group.test.dependencies]', 'hypothesis = "^6"', '',
       '[tool.ruff]', 'line-length = 100',
     ].join('\n'),
@@ -318,8 +319,8 @@ test('only dependency declarations count, not names, descriptions or comments', 
   });
   try {
     const declared = declaredDependencies(dir);
-    for (const name of ['httpx', 'pydantic', 'pytest', 'hypothesis', 'django', 'black', 'click', 'rich']) assert.ok(declared.has(name), name);
-    for (const name of ['requests', 'flask-helper', 'flask', 'line-length', 'api', 'packages']) assert.ok(!declared.has(name), name);
+    for (const name of ['httpx', 'pydantic', 'pytest', 'mypy', 'hypothesis', 'django', 'black', 'click', 'rich']) assert.ok(declared.has(name), name);
+    for (const name of ['requests', 'flask-helper', 'flask', 'line-length', 'api', 'packages', 'typing']) assert.ok(!declared.has(name), name);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

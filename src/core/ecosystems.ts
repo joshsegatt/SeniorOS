@@ -317,7 +317,10 @@ export function declaredDependencies(dir: string): Set<string> {
   for (const body of tables(pyproject, /^project$/)) {
     names.push(...quoted(listAfter(body, /^\s*dependencies\s*=\s*\[/m)).map(requirementName));
   }
-  for (const body of tables(pyproject, /^(project\.optional-dependencies|dependency-groups)$/)) names.push(...quoted(body).map(requirementName));
+  // Inline tables such as `{include-group = "test"}` name other groups, not dependencies.
+  for (const body of tables(pyproject, /^(project\.optional-dependencies|dependency-groups)$/)) {
+    names.push(...quoted(body.replace(/\{[^}]*\}/g, '')).map(requirementName));
+  }
   for (const body of tables(pyproject, /^tool\.poetry(\.group\.[^.]+)?\.(dev-)?dependencies$/)) names.push(...keys(body));
 
   for (const body of tables(read(path.join(dir, 'Pipfile')), /^(dev-)?packages$/)) names.push(...keys(body));
