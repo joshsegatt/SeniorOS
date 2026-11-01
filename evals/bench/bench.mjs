@@ -7,7 +7,7 @@ import { ARMS, applyArm, armState, restoreArms } from './lib/arms.mjs';
 import { gradeRun } from './lib/grade.mjs';
 import { prepareRun } from './lib/prepare.mjs';
 import { buildReport } from './lib/report.mjs';
-import { CLAUDE_ARMS } from './lib/claude.mjs';
+import { CLAUDE_ARMS, checkIsolation } from './lib/claude.mjs';
 import { runConversation } from './lib/runner.mjs';
 import { BENCH_HOME, BENCH_SRC, GEMINI_HOME, HOOK_LOG, git, loadTasks } from './lib/util.mjs';
 
@@ -15,6 +15,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
 
   selftest                      Grade the reference good/bad solutions (validates the grader; no model needed)
   probe                         One live harness check inside Antigravity (run this first)
+  isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
       --arms none,superpowers,senioros   (also: senioros-skills)
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
@@ -244,6 +245,11 @@ const [command, ...args] = process.argv.slice(2);
 try {
   if (command === 'selftest') await selftest();
   else if (command === 'probe') await probe();
+  else if (command === 'isolation') {
+    const { answer, clean } = checkIsolation(option(args, 'model', 'sonnet'));
+    console.log(clean ? 'Isolation OK: no user-level instructions reached the run.' : `Isolation FAILED, the run answered: ${answer}`);
+    if (!clean) process.exitCode = 1;
+  }
   else if (command === 'run') await runBench(args);
   else if (command === 'report' && args[0]) console.log(buildReport(args[0]));
   else if (command === 'arm' && args[0] === 'restore') console.log(restoreArms() ? 'Restored your Antigravity config.' : 'Nothing to restore.');
