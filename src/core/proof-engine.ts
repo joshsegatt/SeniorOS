@@ -1,3 +1,5 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { spawn, spawnSync, type StdioOptions } from 'node:child_process';
 import { exists, readJson } from './fs-utils.js';
@@ -50,6 +52,7 @@ interface PlannedCheck {
   shell?: boolean;
   cwd?: string;
   python?: EcosystemCheck['python'];
+  pythonTool?: true;
 }
 
 function packageScriptPlan(pkg: PackageJson | null, packageManager: string | null): PlannedCheck[] {
@@ -75,7 +78,7 @@ function configPlan(checks: ProofCheckConfig[]): PlannedCheck[] {
 }
 
 /** Runs a command, showing its output as it comes (stdout to `out`, stderr to stderr) and keeping a copy of both. */
-function runTeed(file: string, args: string[], cwd: string, out: NodeJS.WriteStream): Promise<{ status: number | null; signal: NodeJS.Signals | null; error?: Error; log: string }> {
+function runTeed(file: string, args: string[], cwd: string, out: NodeJS.WriteStream, env: NodeJS.ProcessEnv): Promise<{ status: number | null; signal: NodeJS.Signals | null; error?: Error; log: string }> {
   return new Promise((resolve) => {
     const chunks: string[] = [];
     let size = 0;
@@ -83,7 +86,7 @@ function runTeed(file: string, args: string[], cwd: string, out: NodeJS.WriteStr
       // The copy is only read for error messages: cap it so a very chatty suite cannot exhaust memory.
       if (size < 16 * 1024 * 1024) { chunks.push(text); size += text.length; }
     };
-    const child = spawn(file, args, { cwd, stdio: ['inherit', 'pipe', 'pipe'], windowsHide: true });
+    const child = spawn(file, args, { cwd, env, stdio: ['inherit', 'pipe', 'pipe'], windowsHide: true });
     child.stdout.setEncoding('utf8').on('data', (d: string) => { out.write(d); keep(d); });
     child.stderr.setEncoding('utf8').on('data', (d: string) => { process.stderr.write(d); keep(d); });
     child.on('error', (error) => resolve({ status: null, signal: null, error, log: chunks.join('') }));
@@ -118,6 +121,21 @@ export async function runProof(root: string, packageManager: string | null, opti
   let blockedBy: string | null = null;
   let availableChecks = 0;
 
+  // Python tools write bytecode and caches next to the code. Sent to a throwaway folder instead, they neither dirty the
+  // repository (which would count as a change) nor leave stale bytecode that runs instead of an edited file.
+  let cacheDir: string | null = null;
+  const envFor = (planned: PlannedCheck): NodeJS.ProcessEnv | undefined => {
+    if (!planned.pythonTool) return undefined;
+    cacheDir ??= mkdtempSync(path.join(tmpdir(), 'senioros-py-'));
+    return {
+      ...process.env,
+      PYTHONPYCACHEPREFIX: path.join(cacheDir, 'pycache'),
+      MYPY_CACHE_DIR: path.join(cacheDir, 'mypy'),
+      RUFF_CACHE_DIR: path.join(cacheDir, 'ruff'),
+    };
+  };
+
+  try {
   for (const planned of plan) {
     const { name, command } = planned;
     if (command === null || planned.file === undefined) {
@@ -137,11 +155,11 @@ export async function runProof(root: string, packageManager: string | null, opti
     let log = '';
     if (planned.python !== undefined && planned.args) {
       // Python test output is shown live and also read, to tell an uninstalled dependency from a broken change.
-      const teed = await runTeed(planned.file, planned.args, cwd, options.childOutput === 'stderr' ? process.stderr : process.stdout);
+      const teed = await runTeed(planned.file, planned.args, cwd, options.childOutput === 'stderr' ? process.stderr : process.stdout, envFor(planned) ?? process.env);
       result = teed;
       log = teed.log;
     } else {
-      const spawnOptions = { cwd, stdio, shell: planned.shell ?? false };
+      const spawnOptions = { cwd, stdio, shell: planned.shell ?? false, env: envFor(planned) };
       result = planned.args ? spawnSync(planned.file, planned.args, spawnOptions) : spawnSync(planned.file, spawnOptions);
     }
     const durationMs = Date.now() - started;
@@ -169,6 +187,9 @@ export async function runProof(root: string, packageManager: string | null, opti
     }
     checks.push({ name, command, status: result.status === 0 ? 'pass' : 'fail', exitCode: result.status, durationMs });
     if (result.status !== 0) blockedBy = name;
+  }
+  } finally {
+    if (cacheDir) rmSync(cacheDir, { recursive: true, force: true });
   }
 
   const baselinePassed = availableChecks > 0 && checks.every((check) => check.status === 'pass' || check.command === null || check.reason === NO_TESTS);

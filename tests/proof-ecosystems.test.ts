@@ -325,3 +325,54 @@ test('only dependency declarations count, not names, descriptions or comments', 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+// Review findings on #28 and the first CI run on Linux.
+
+test('running Python checks writes nothing into the repository', { skip: !PYTHON && 'python not installed' }, () => {
+  const dir = project({
+    'pyproject.toml': '[project]\nname = "demo"\nversion = "0.1.0"\n',
+    'calc.py': 'def add(a, b):\n    return a + b\n',
+    'test_calc.py': 'import unittest\nfrom calc import add\n\nclass T(unittest.TestCase):\n    def test_add(self):\n        self.assertEqual(add(2, 2), 4)\n',
+  });
+  try {
+    gitRepo(dir);
+    // Some machines set PYTHONDONTWRITEBYTECODE, which would hide the problem; CI runners do not.
+    const { PYTHONDONTWRITEBYTECODE: _set, ...writesBytecode } = baseEnv;
+    assert.equal(byName(finish(dir, writesBytecode), 'python test')?.status, 'pass');
+    // Bytecode in the repository would show up as a change, and stale bytecode of the same size and second could run
+    // instead of an edited file.
+    const status = spawnSync('git', ['status', '--porcelain', '--untracked-files=all'], { cwd: dir, encoding: 'utf8' }).stdout;
+    assert.equal(status, '', `the run left files behind:\n${status}`);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a missing submodule of an installed package is a broken import, not the environment', { skip: !PYTHON && 'python not installed' }, () => {
+  // `json` is installed with every Python; declaring it makes the old rule (top-level name declared) apply.
+  const dir = project({
+    'requirements.txt': 'json\n',
+    'test_a.py': 'import unittest\nimport json.nonexistent_senioros_submodule\n\nclass T(unittest.TestCase):\n    def test_it(self):\n        self.assertTrue(True)\n',
+  });
+  try {
+    assert.equal(byName(finish(dir), 'python test')?.status, 'fail');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a Cargo workspace whose root is also a package tests every member', { skip: !HAS_CARGO && 'cargo not installed' }, () => {
+  const dir = project({
+    'Cargo.toml': '[package]\nname = "root"\nversion = "0.1.0"\nedition = "2021"\n\n[workspace]\nmembers = ["member"]\n',
+    'src/lib.rs': '#[cfg(test)]\nmod tests {\n    #[test]\n    fn ok() {}\n}\n',
+    'member/Cargo.toml': '[package]\nname = "member"\nversion = "0.1.0"\nedition = "2021"\n',
+    'member/src/lib.rs': '#[cfg(test)]\nmod tests {\n    #[test]\n    fn broken() { assert_eq!(1, 2); }\n}\n',
+  });
+  try {
+    const check = byName(finish(dir), 'rust test');
+    assert.equal(check?.command, 'cargo test --workspace');
+    assert.equal(check?.status, 'fail', 'the failing member is tested');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

@@ -16,6 +16,8 @@ export interface EcosystemCheck {
   skipReason?: string;
   /** Set on Python test checks: lets a failure caused by an uninstalled, declared dependency be told apart. */
   python?: { dir: string; interpreter: string };
+  /** Runs a Python tool: its caches go to a temporary folder, not the repository (see proof-engine.ts). */
+  pythonTool?: true;
 }
 
 type Kind = 'python' | 'go' | 'rust';
@@ -150,7 +152,7 @@ function pythonChecks(dir: string, label: string, probe: boolean): EcosystemChec
     ];
   }
   const python = pythonFor(dir);
-  const run = (n: string, args: string[]): EcosystemCheck => ({ name: name(n), command: display(python ?? 'python', args), file: python ?? 'python', args, cwd: dir });
+  const run = (n: string, args: string[]): EcosystemCheck => ({ name: name(n), command: display(python ?? 'python', args), file: python ?? 'python', args, cwd: dir, pythonTool: true });
   const skip = (n: string, why: string): EcosystemCheck => ({ name: name(n), command: null, skipReason: why });
   const plan: EcosystemCheck[] = [];
 
@@ -167,7 +169,7 @@ function pythonChecks(dir: string, label: string, probe: boolean): EcosystemChec
   const pytestConfigured = configured('pytest', ['pytest.ini', 'conftest.py']) || /^\[pytest\]/m.test(read(path.join(dir, 'tox.ini')));
   let test: EcosystemCheck;
   if (!python) test = skip('test', 'python not found');
-  else if (runs(python, ['-c', 'import pytest'], dir)) test = run('test', ['-m', 'pytest', '-q', '--continue-on-collection-errors']);
+  else if (runs(python, ['-c', 'import pytest'], dir)) test = run('test', ['-m', 'pytest', '-q', '--continue-on-collection-errors', '-p', 'no:cacheprovider']);
   else if (pytestConfigured) test = skip('test', 'pytest is configured but not installed');
   else if (hasPythonTests(dir)) test = run('test', ['-m', 'unittest', 'discover']);
   else test = skip('test', 'no Python tests found');
@@ -188,7 +190,8 @@ function goChecks(dir: string, label: string, probe: boolean): EcosystemCheck[] 
 function rustChecks(dir: string, label: string, probe: boolean): EcosystemCheck[] {
   if (!probe) return [{ name: `rust test${label}`, command: null }];
   if (!runs('cargo', ['--version'], dir)) return [{ name: `rust test${label}`, command: null, skipReason: 'cargo not found' }];
-  return [{ name: `rust test${label}`, command: 'cargo test', file: 'cargo', args: ['test'], cwd: dir }];
+  // --workspace: a root that is also a package, or sets default-members, would otherwise leave members untested.
+  return [{ name: `rust test${label}`, command: 'cargo test --workspace', file: 'cargo', args: ['test', '--workspace'], cwd: dir }];
 }
 
 const relative = (root: string, dir: string) => path.relative(root, dir).split(path.sep).join('/');
@@ -333,6 +336,12 @@ export function declaredDependencies(dir: string): Set<string> {
   return new Set(names.filter(Boolean).map(normalize));
 }
 
+/** Whether the interpreter can find a top-level package (without importing it). */
+function installed(python: { dir: string; interpreter: string }, module: string): boolean {
+  if (!/^\w+$/.test(module)) return false;
+  return runs(python.interpreter, ['-c', `import importlib.util, sys; sys.exit(0 if importlib.util.find_spec('${module}') else 1)`], python.dir);
+}
+
 /** Whether `module` is the project's own code rather than a dependency. */
 function isLocalModule(dir: string, module: string): boolean {
   return [module, `${module}.py`, path.join('src', module), path.join('src', `${module}.py`)].some((p) => existsSync(path.join(dir, p)));
@@ -344,8 +353,14 @@ function isLocalModule(dir: string, module: string): boolean {
  * including a module that is the project's own or that it does not declare, stays a failure (null).
  */
 export function environmentFailure(log: string, python: { dir: string; interpreter: string }): string | null {
-  const missing = [...new Set([...log.matchAll(/No module named '([\w.]+)'/g)].map((m) => (m[1] ?? '').split('.')[0] ?? ''))].filter(Boolean);
-  if (missing.length === 0) return null;
+  const missingNames = [...new Set([...log.matchAll(/No module named '([\w.]+)'/g)].map((m) => m[1] ?? ''))].filter(Boolean);
+  if (missingNames.length === 0) return null;
+  // `pytest.nonexistent` missing while `pytest` is installed is a broken import in the code, not the environment.
+  for (const name of missingNames) {
+    const top = name.split('.')[0] ?? name;
+    if (name !== top && installed(python, top)) return null;
+  }
+  const missing = [...new Set(missingNames.map((name) => name.split('.')[0] ?? name))];
   // A test that ran and failed is a failure, whatever else could not be imported.
   const failedTests = Number(/(\d+) failed/.exec(log)?.[1] ?? 0) + Number(/failures=(\d+)/.exec(log)?.[1] ?? 0);
   if (failedTests > 0) return null;
