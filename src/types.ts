@@ -39,8 +39,11 @@ export interface ProofCheck {
 }
 
 export interface ProofReport {
-  /** `config` when checks come from `.senior/config.json`, otherwise the package-script baseline. */
-  source: 'package-scripts' | 'config';
+  /**
+   * `config` when checks come from `.senior/config.json`; `standard` when the baseline includes Python, Go or Rust
+   * checks; otherwise `package-scripts`.
+   */
+  source: 'package-scripts' | 'standard' | 'config';
   checks: ProofCheck[];
   baselinePassed: boolean;
   availableChecks: number;

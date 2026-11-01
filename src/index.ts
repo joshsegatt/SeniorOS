@@ -2,7 +2,8 @@
 import process from 'node:process';
 import { detectStack } from './core/detect-stack.js';
 import { initProject } from './core/project-state.js';
-import { getChangeSet, type ChangeScope } from './core/git.js';
+import { getChangeSet, getRepositoryRoot, type ChangeScope } from './core/git.js';
+import path from 'node:path';
 import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
@@ -15,7 +16,21 @@ import { proveRegression, restoreInterruptedProof, type ProofPhase, type Regress
 const VERSION = '0.8.0';
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
+}
+
+/**
+ * Absolute paths of the uncommitted changes, so `finish` runs only the projects they touch. Null (run everything)
+ * outside git or on a clean tree.
+ */
+function changedFiles(cwd: string): string[] | null {
+  try {
+    const top = getRepositoryRoot(cwd);
+    const files = getChangeSet(cwd).files.map((f) => path.resolve(top, f.path));
+    return files.length ? files : null;
+  } catch {
+    return null;
+  }
 }
 
 function hasFlag(args: string[], flag: string): boolean {
@@ -113,6 +128,7 @@ async function main(): Promise<void> {
     // In JSON mode, script output goes to stderr so stdout stays parseable.
     const result = await runProof(root, stack.packageManager, {
       childOutput: json ? 'stderr' : 'inherit',
+      changed: hasFlag(args, '--all') ? null : changedFiles(root),
       ...(config?.proof ? { checks: config.proof.checks } : {})
     });
     if (json) console.log(JSON.stringify(result, null, 2));

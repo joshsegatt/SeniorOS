@@ -6,7 +6,7 @@
 // - A PreToolUse response without a `decision` DENIES the tool call. Hooks must answer explicitly.
 // - Conversations started without a workspace (e.g. through agentapi) have empty `workspacePaths`, so the
 //   project is learned from the files the agent edits (see track.mjs).
-import { appendFileSync, existsSync, mkdirSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -236,4 +236,30 @@ export function finishGateNextStep(again) {
         '(do not weaken or skip tests) and run the checks again.'
     : `Fix the root cause (do not weaken or skip tests) and run the checks again. ${limits} In that case, or if the ` +
         'failure existed before your change, tell the user so with this evidence instead of claiming success.';
+}
+
+// Copies of PROJECT_MANIFESTS, IGNORED_DIRS and MAX_DEPTH in src/core/ecosystems.ts, which plans the checks of these
+// projects. The installed hooks run without that module; tests/proof-ecosystems.test.ts keeps the copies equal.
+export const PROJECT_MANIFESTS = ['pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'go.mod', 'Cargo.toml'];
+export const IGNORED_DIRS = /^(\..*|node_modules|vendor|third_party|target|build|dist|out|venv|env|__pycache__|site-packages)$/;
+export const MAX_DEPTH = 2;
+
+/**
+ * True when the finish gate has something to run in this repository: package scripts or a SeniorOS config at the
+ * root, or a Python, Go or Rust project at the root or up to two folders below it.
+ */
+export function hasProofSource(root) {
+  if (existsSync(join(root, 'package.json')) || existsSync(join(root, '.senior', 'config.json'))) return true;
+  const walk = (dir, depth) => {
+    if (PROJECT_MANIFESTS.some((file) => existsSync(join(dir, file)))) return true;
+    if (depth >= MAX_DEPTH) return false;
+    let entries = [];
+    try {
+      entries = readdirSync(dir, { withFileTypes: true });
+    } catch {
+      return false;
+    }
+    return entries.some((e) => e.isDirectory() && !IGNORED_DIRS.test(e.name) && walk(join(dir, e.name), depth + 1));
+  };
+  return walk(root, 0);
 }

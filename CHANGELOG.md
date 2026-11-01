@@ -4,6 +4,15 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- Proof beyond Node: `senior finish` and the finish gate now check Python, Go and Rust projects. Before, the finish gate stayed silent on any repository without `package.json` or `.senior/config.json`.
+  - Python: `pytest` (continuing past import errors) or `unittest`, plus `mypy` and `ruff` when configured, in the project's `.venv`/`venv` or Poetry/Pipenv environment. Go: `go vet`, `go test`. Rust: `cargo test` (a workspace covers its members).
+  - Projects are found at the root and up to two folders below it; a repository with several runs them all.
+  - With uncommitted changes, only the projects the changes touch run; `senior finish --all` runs everything.
+  - A missing tool or no collected tests is `SKIP`, never a pass. A Python run that fails only because declared dependencies are not installed is `SKIP` with that reason, not a failure blamed on the change; an undeclared or local module, or a test that ran and failed, stays `FAIL`.
+  - `finish --json` reports `source: "standard"` when these checks are part of the baseline.
+
 ## [0.8.0] - 2026-10-31
 
 SeniorOS as an OpenCode plugin, and a guard that also protects the settings, hooks and plugins of the host it runs in.

@@ -57,9 +57,12 @@ Every host gets the guard and the finish gate, and every claim of support is tes
 
 Most repositories are not a single `package.json`. Without this, the finish gate is silent on them.
 
-- [ ] Default checks for Python (`pytest`, `ruff`, `mypy` when configured), Go (`go test`, `go vet`), Rust
-      (`cargo test`, `cargo clippy`), JVM (`gradle test`, `mvn test`) and Make targets, detected from the repository
-- [ ] Monorepos and workspaces: run the checks of the packages a change touches, not the whole tree
+- [x] Default checks for Python (`pytest` or `unittest`, `ruff`, `mypy` when configured), Go (`go vet`, `go test`)
+      and Rust (`cargo test`), detected from the repository root
+- [ ] JVM (`gradle test`, `mvn test`), `cargo clippy` and Make targets
+- [x] Projects in subfolders (two levels) and Cargo workspaces; only the projects a change touches run (`--all` runs
+      every one)
+- [ ] Node workspaces: run the scripts of the packages a change touches
 - [ ] Slow suites: affected tests first, the full suite in CI; a timeout reports "not verified" instead of passing
 - [ ] Acceptance contracts in `.senior/acceptance/` run by `senior prove`
 - [ ] Runtime and UI proof: a browser check (page renders, no console errors, a flow completes) as a proof source
