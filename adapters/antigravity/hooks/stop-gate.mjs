@@ -1,11 +1,12 @@
 // Stop: when the agent tries to finish a turn with code changes in the workspace, run `senior finish`.
 // If a check fails, send the agent back to work with the failure output (at most MAX_BLOCKS times
-// for the same set of changes, so it can never loop forever). Passing results are cached per change set.
+// for the same set of changes, so it can never loop forever). Passing results are cached per change set. Once per
+// conversation and project, a medium-or-higher-risk change whose checks pass goes back for senior-finish's risk review.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, finishGateNextStep, hasProofSource, log, runHook, sh, tail, workspaceRoots } from './lib.mjs';
+import { SENIOR, finishGateNextStep, finishReviewMessage, hasProofSource, log, needsFinishReview, runHook, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -44,6 +45,7 @@ await runHook('Stop', async (input) => {
   const conversationId = String(input.conversationId ?? 'unknown').replace(/[^\w-]/g, '');
   const state = loadState(conversationId);
   const failures = [];
+  const review = [];
   let repeated = true;
 
   for (const { root, git } of workspaceRoots(input)) {
@@ -53,6 +55,7 @@ await runHook('Stop', async (input) => {
 
     const key = root.toLowerCase();
     const prev = state[key];
+    const reviewed = Boolean(prev?.reviewed);
     if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) continue;
 
     const started = Date.now();
@@ -63,20 +66,24 @@ await runHook('Stop', async (input) => {
 
     if (run.timedOut) {
       log('Stop', { root, result: 'timeout', ms });
-      state[key] = { fingerprint: changes.fingerprint, result: 'pass' }; // never hold the agent hostage to a slow suite
+      state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed }; // never hold the agent hostage to a slow suite
       continue;
     }
     /** @type {Array<{name: string, status: string, command: string | null, exitCode: number | null}>} */
     const checks = report?.checks ?? [];
     const failed = checks.filter((c) => c.status === 'fail');
     if (!report || failed.length === 0) {
-      state[key] = { fingerprint: changes.fingerprint, result: 'pass' };
+      // Once per conversation and project, a medium-or-higher-risk change whose checks pass goes back for the risk
+      // review of senior-finish (see finishReviewMessage).
+      const askReview = Boolean(report) && !reviewed && needsFinishReview(root);
+      if (askReview) review.push(root);
+      state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed: reviewed || askReview };
       log('Stop', { root, result: report ? 'pass' : 'unparsed', ms, available: report?.availableChecks });
       continue;
     }
 
     const blocks = prev?.fingerprint === changes.fingerprint ? (prev.blocks ?? 0) + 1 : 1;
-    state[key] = { fingerprint: changes.fingerprint, result: 'fail', blocks };
+    state[key] = { fingerprint: changes.fingerprint, result: 'fail', blocks, reviewed };
     if (blocks === 1) repeated = false;
     const summary = checks.map((c) => `${c.status.toUpperCase()} ${c.name}${c.command ? ` (${c.command}${c.exitCode != null ? `, exit ${c.exitCode}` : ''})` : ''}`).join('\n');
     failures.push(`Project ${root}\n${summary}\nLast output lines:\n${tail(run.err, 40, 3500)}`);
@@ -84,6 +91,10 @@ await runHook('Stop', async (input) => {
   }
 
   saveState(conversationId, state);
+  if (failures.length === 0 && review.length > 0) {
+    log('Stop', { result: 'review', roots: review });
+    return { decision: 'continue', reason: finishReviewMessage() };
+  }
   if (failures.length === 0) return {};
   return {
     decision: 'continue',

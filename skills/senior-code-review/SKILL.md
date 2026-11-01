@@ -34,6 +34,14 @@ For medium risk and above, when the host can start a subagent, give a fresh revi
 
 **Operability** — for runtime changes: failure behavior, logs, rollback, observability.
 
+## Try to break it
+
+Reading a diff tends to confirm it. For medium risk and above, switch to attacking it once you understand it.
+
+For each behavior the change adds or alters, name the input, state or timing most likely to make it wrong: empty, boundary and malformed values, a second caller of the same code, a retry or a rerun, two requests at once, existing data written by the old version, another OS, timezone or locale, a guard the diff removed. Then check it — run it, write a quick test, or trace it through the code — instead of judging it plausible.
+
+Keep a one-line record of each attack and its result. An attack that held is evidence too. Effort follows risk: a few attacks for a medium change, more for auth, money, data or concurrency. Skip this for low-risk diffs.
+
 ## Findings
 
 Order by impact. Each actionable finding has:
@@ -43,13 +51,14 @@ Order by impact. Each actionable finding has:
 - why it matters — a concrete input or scenario that breaks;
 - the smallest credible fix, or a question.
 
-Do not manufacture findings to look thorough. A clean review is a valid outcome.
+Do not manufacture findings to look thorough. A clean review is a valid outcome; when you attacked the change, list the attacks that held, so the reader can see what "clean" covers.
 
 ## Red flags
 
 | If you notice yourself thinking… | Do this instead |
 |---|---|
 | "The tests pass, so the logic is right" | Check what the tests actually assert |
+| "I can't think of how this breaks" | Try the inputs and timings above before concluding it holds |
 | "This looks like a style issue" about a behavior change | Classify by consequence, not by appearance |
 | "I wrote this, I know it's fine" | Review it as a stranger's diff, or hand it to a fresh reviewer |
 | "I'll list every nit to be thorough" | Keep minor findings brief and separate from blockers |

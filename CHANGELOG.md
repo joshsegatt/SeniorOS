@@ -6,6 +6,10 @@ All notable changes to SeniorOS will be documented here.
 
 ### Added
 
+- The finish gate puts `senior-finish` to work: when the checks pass on a change `senior risk` rates medium or higher, it sends the agent back once per session to name the two likeliest ways the change is still wrong and the evidence that rules each out, then give the ship status. Low-risk changes are untouched. In the Claude Sonnet bench, no run had loaded `senior-finish` on its own. Applies to Claude Code, Codex, Cursor, OpenCode and the Antigravity hooks.
+- `senior-code-review` gains a "Try to break it" pass for medium-risk changes and above, and `senior-finish` a step to name what could still be wrong before choosing a status.
+- Bench: Claude runs are isolated from the user's own instructions with an empty home and config folder, authenticated by `CLAUDE_CODE_OAUTH_TOKEN`; `bench.mjs isolation` checks it before a run. The login file is never copied.
+
 - A test command that runs no tests is no longer a pass. `senior finish` and the finish gate read how many tests ran from node:test, Jest, Vitest, Mocha, pytest, unittest, `cargo test` and `go test` output; zero is `SKIP (no tests ran)`, and the count is shown next to the check and reported as `tests` in `--json`. Before, `npm test` with no test files, or `go test` with no test files, reported PASS. Output that is not recognised changes nothing.
 - Provenance: every proof report says when and on which code it ran (`provenance`: commit, uncommitted changes, time). `senior finish --record` keeps the report in `.senior/evidence/<commit>.json` as a durable record of what was verified; it stores no command output. Changes under `.senior/` no longer count as changes to a project.
 
