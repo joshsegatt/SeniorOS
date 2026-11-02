@@ -3,7 +3,7 @@
 SeniorOS is being built in layers so the project can earn complexity instead of cosplay it. Nothing ships because it
 sounds better: it ships when the bench, a deterministic test or a run in the real host shows it.
 
-## Where SeniorOS stands (0.7.0)
+## Where SeniorOS stands (0.8.0)
 
 Measured (see [`evals/bench/`](evals/bench/README.md)): on Claude Sonnet, core set, SeniorOS 24/24, Superpowers 19/24,
 no pack 17/24; it never force-pushed `main` in `t6`, and its regression test was proven in every `t2` run. The win is
@@ -15,7 +15,7 @@ scores as well.
 | Claude Code | plugin | yes | asks | yes | yes |
 | Codex | plugin | yes | denies (hooks cannot ask) | yes | yes, Windows |
 | Cursor | plugin | yes | asks | yes | no, CI only |
-| OpenCode 1.x | plugin (`main`, unreleased) | yes | fails the call | yes | yes, Windows |
+| OpenCode 1.x | plugin (`main`) | yes | fails the call | yes | yes, Windows |
 | Antigravity | installer or native plugin | yes | installer only | installer only | no |
 
 Superpowers is ahead on reach (about 13 hosts, official stores) and breadth (15 skills: planning, TDD, subagents,
@@ -33,16 +33,19 @@ work before "done", where Superpowers injects text.
 - Claude Code finish gate; guard judges chained commands one by one (0.5)
 - Cursor plugin, native Antigravity plugin, shared hooks core (0.6)
 - Codex plugin hooks and marketplace (0.7)
-- OpenCode 1.x plugin; finish gate keeps the agent within what the user asked (unreleased)
+- OpenCode 1.x plugin; finish gate keeps the agent within what the user asked; guard protects each host's own
+  settings, hooks and plugins (0.8.0)
+- Finish gate risk review for medium-risk changes; a test command that runs no tests is not a pass; `senior risk`
+  rates payment and password/encryption code; guard bypass corpus (unreleased)
 
 ## Phase 4 — Reach that holds (in progress)
 
 Every host gets the guard and the finish gate, and every claim of support is tested in the host.
 
-- [ ] Release 0.8.0 (OpenCode plugin, finish-gate wording)
-- [ ] Guard protects each host's own configuration: `.claude/settings*.json`, `.codex/` hooks and config,
+- [x] Release 0.8.0 (OpenCode plugin, finish-gate wording)
+- [x] Guard protects each host's own configuration: `.claude/settings*.json`, `.codex/` hooks and config,
       `.cursor/hooks.json`, `opencode.json`, the plugin caches, and the rules files the hooks inject
-- [ ] Guard bypass corpus: a table-driven test of equivalent commands (`git push --mirror`, `find -delete`,
+- [x] Guard bypass corpus: a table-driven test of equivalent commands (`git push --mirror`, `find -delete`,
       `python -c "shutil.rmtree(...)"`, `Remove-Item` without `-Recurse` on folders, `git checkout -- <dir>`, …),
       each either flagged or documented as out of scope
 - [ ] `senior setup`: detects installed hosts and installs or prints the right step for each; `senior doctor` reports
