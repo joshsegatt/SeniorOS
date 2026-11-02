@@ -37,7 +37,10 @@ export interface HostEnvironment {
   root: string;
 }
 
-const defaultEnvironment = (root: string): HostEnvironment => ({ home: os.homedir(), env: process.env, root });
+export const defaultEnvironment = (root: string): HostEnvironment => ({ home: os.homedir(), env: process.env, root });
+
+/** Antigravity's folder (`~/.gemini`), as the installer resolves it. */
+export const geminiHome = (e: HostEnvironment) => e.env.SENIOROS_GEMINI_HOME ?? path.join(e.home, '.gemini');
 
 const isDir = (p: string) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const read = (p: string): string | null => { try { return readFileSync(p, 'utf8'); } catch { return null; } };
@@ -68,7 +71,9 @@ function presence(commands: string[], folder: string, e: HostEnvironment): Findi
 /** A `senioros` folder one level below `dir` (`<cache>/<marketplace>/senioros`), as plugin caches lay them out. */
 function cachedPlugin(dir: string): string | null {
   if (!isDir(dir)) return null;
-  for (const entry of readdirSync(dir)) {
+  let entries: string[];
+  try { entries = readdirSync(dir); } catch { return null; }
+  for (const entry of entries) {
     const candidate = path.join(dir, entry, 'senioros');
     if (isDir(candidate)) return candidate;
   }
@@ -83,14 +88,22 @@ function claude(e: HostEnvironment): HostStatus {
   let plugin: Finding;
   const text = read(record);
   if (text !== null) {
-    let installed: boolean | null = null;
+    // Each install record has a scope; a project-scope install loads only in its own project.
+    let installs: Array<{ scope?: unknown; projectPath?: unknown }> | null = null;
     try {
       const data = JSON.parse(text) as { plugins?: Record<string, unknown> };
-      installed = Object.keys(data.plugins ?? {}).some((k) => /^senioros@/i.test(k));
+      installs = Object.entries(data.plugins ?? {})
+        .filter(([k]) => /^senioros@/i.test(k))
+        .flatMap(([, v]) => (Array.isArray(v) ? v : [v])) as Array<{ scope?: unknown; projectPath?: unknown }>;
     } catch {}
-    plugin = installed === null
+    const key = (p: string) => (process.platform === 'win32' ? path.resolve(p).toLowerCase() : path.resolve(p));
+    const here = (p: unknown) => typeof p === 'string' && key(p) === key(e.root);
+    const loads = installs?.some((i) => (i?.scope !== 'project' && i?.scope !== 'local') || here(i?.projectPath));
+    plugin = installs === null
       ? { state: 'unknown', evidence: `${tilde(record, e.home)} could not be read` }
-      : { state: installed ? 'yes' : 'no', evidence: tilde(record, e.home) };
+      : loads
+        ? { state: 'yes', evidence: tilde(record, e.home) }
+        : { state: 'no', evidence: installs.length ? `installed for another project only (${tilde(record, e.home)})` : tilde(record, e.home) };
   } else if (cache) {
     plugin = { state: 'yes', evidence: tilde(cache, e.home) };
   } else {
@@ -108,6 +121,26 @@ function claude(e: HostEnvironment): HostStatus {
   return { id: 'claude', name: 'Claude Code', present, plugin, steps };
 }
 
+/** The plugin's hooks: session start, the guard and the finish gate. */
+const CODEX_HOOKS = 3;
+
+/**
+ * SeniorOS hooks Codex trusts: `[hooks.state.'<source>:<event>:…']` sections (single or double quoted) that name
+ * SeniorOS and hold a `trusted_hash`, wherever it sits in the section.
+ */
+export function trustedCodexHooks(toml: string): number {
+  let count = 0;
+  let current: string | null = null;
+  let counted = false;
+  for (const line of toml.split(/\r?\n/)) {
+    const header = /^\s*\[\s*hooks\.state\.(?:'([^']*)'|"((?:[^"\\]|\\.)*)")\s*\]\s*$/.exec(line);
+    if (header) { current = header[1] ?? header[2] ?? ''; counted = false; continue; }
+    if (/^\s*\[/.test(line)) { current = null; continue; }
+    if (current !== null && !counted && /senioros/i.test(current) && /^\s*trusted_hash\s*=/.test(line)) { count++; counted = true; }
+  }
+  return count;
+}
+
 function codex(e: HostEnvironment): HostStatus {
   const home = e.env.CODEX_HOME ?? path.join(e.home, '.codex');
   const present = presence(['codex'], home, e);
@@ -121,13 +154,14 @@ function codex(e: HostEnvironment): HostStatus {
   const steps: string[] = [];
   let hooks: HostStatus['hooks'];
   if (plugin.state === 'yes') {
-    // Codex records each trusted hook as `[hooks.state.'<source>:<event>:…']` with a `trusted_hash`.
-    const toml = read(path.join(home, 'config.toml')) ?? '';
-    const trusted = [...toml.matchAll(/^\[hooks\.state\.'([^']*)'\]\s*\r?\n\s*trusted_hash\s*=/gim)].filter((m) => /senioros/i.test(m[1] ?? '')).length;
-    hooks = trusted > 0
-      ? { label: 'hooks trusted', state: 'yes', evidence: `${trusted} SeniorOS hook${trusted === 1 ? '' : 's'} trusted in ${tilde(path.join(home, 'config.toml'), e.home)}` }
-      : { label: 'hooks trusted', state: 'unknown', evidence: `no trusted SeniorOS hook found in ${tilde(path.join(home, 'config.toml'), e.home)}` };
-    if (trusted < 3) steps.push('In Codex: open /hooks and trust the three SeniorOS hooks');
+    const file = tilde(path.join(home, 'config.toml'), e.home);
+    const trusted = trustedCodexHooks(read(path.join(home, 'config.toml')) ?? '');
+    hooks = trusted >= CODEX_HOOKS
+      ? { label: 'hooks trusted', state: 'yes', evidence: `${trusted} SeniorOS hooks trusted in ${file}` }
+      : trusted > 0
+        ? { label: 'hooks trusted', state: 'no', evidence: `${trusted} of the ${CODEX_HOOKS} SeniorOS hooks trusted in ${file}` }
+        : { label: 'hooks trusted', state: 'unknown', evidence: `no trusted SeniorOS hook found in ${file}` };
+    if (trusted < CODEX_HOOKS) steps.push('In Codex: open /hooks and trust the three SeniorOS hooks');
   } else {
     steps.push('codex plugin marketplace add joshsegatt/SeniorOS', 'codex plugin add senioros@senioros', 'Then in Codex: open /hooks and trust the three SeniorOS hooks');
   }
@@ -171,12 +205,34 @@ function opencode(e: HostEnvironment): HostStatus {
       if (plugin.state === 'no') plugin = { state: 'unknown', evidence: `${tilde(file, e.home)} could not be parsed` };
     }
   }
-  const steps = plugin.state === 'yes' ? [] : ['Add "senioros" to "plugin" in opencode.json (senior setup --apply does it), then restart OpenCode'];
+  const blocked = plugin.state === 'yes' ? null : opencodeEditBlocked(e);
+  const steps = plugin.state === 'yes'
+    ? []
+    : blocked
+      ? [`Add "senioros" to "plugin" in your OpenCode config by hand (${blocked}), then restart OpenCode`]
+      : ['Add "senioros" to "plugin" in opencode.json (senior setup --apply does it), then restart OpenCode'];
   return { id: 'opencode', name: 'OpenCode', present, plugin, steps };
 }
 
+/**
+ * Why `senior setup --apply` cannot add the plugin to the user's opencode.json, or null when it can: rewriting a
+ * JSONC file, or one it cannot parse as an object, would drop what the user wrote.
+ */
+export function opencodeEditBlocked(e: HostEnvironment): string | null {
+  const { user } = opencodeConfigFiles(e);
+  if (existsSync(`${user}c`)) return `${tilde(`${user}c`, e.home)} is JSONC`;
+  const text = read(user);
+  if (text === null) return existsSync(user) ? `${tilde(user, e.home)} cannot be read` : null;
+  let data: unknown;
+  try { data = JSON.parse(text); } catch { return `${tilde(user, e.home)} is not plain JSON`; }
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) return `${tilde(user, e.home)} is not a JSON object`;
+  const list = (data as { plugin?: unknown }).plugin;
+  if (list !== undefined && !Array.isArray(list)) return `"plugin" in ${tilde(user, e.home)} is not a list`;
+  return null;
+}
+
 function antigravity(e: HostEnvironment): HostStatus {
-  const paths = antigravityPaths(e.env.SENIOROS_GEMINI_HOME ?? path.join(e.home, '.gemini'));
+  const paths = antigravityPaths(geminiHome(e));
   // ~/.gemini is shared with Gemini CLI; Antigravity keeps its own folder inside it.
   const present = presence(['agy', 'antigravity'], path.join(paths.gemini, 'antigravity'), e);
   const manifest = path.join(paths.home, 'install.json');

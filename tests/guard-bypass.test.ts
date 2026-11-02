@@ -124,6 +124,9 @@ const asks: Array<[string, RegExp]> = [
   ['senior setup --apply', /agent's own settings/],
   ['npx senioros install --target antigravity', /agent's own settings/],
   ['npx senioros uninstall --target antigravity', /agent's own settings/],
+  ['npx senioros@0.8.0 install --target antigravity', /agent's own settings/],
+  ['npx senioros@latest setup --apply', /agent's own settings/],
+  ['node dist/src/index.js setup --apply', /agent's own settings/],
   // Built at run time but still readable in the text: caught, though not guaranteed (see out of scope).
   ['$(echo rm) -rf src', /recursive file deletion/],
 ];

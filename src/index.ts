@@ -227,11 +227,13 @@ async function main(): Promise<void> {
   if (command === 'setup') {
     const apply = hasFlag(args, '--apply');
     const report = await setup(root, { apply });
-    if (json) { console.log(JSON.stringify(report, null, 2)); return; }
+    if (json) { console.log(JSON.stringify(report, null, 2)); if (report.skipped.length) process.exitCode = 1; return; }
     const found = report.hosts.filter((h) => h.present.state === 'yes');
     console.log(found.length ? formatHosts(report.hosts, { onlyPresent: true }) : 'No supported host found on this machine (Claude Code, Codex, Cursor, OpenCode, Antigravity).');
     for (const line of report.applied) console.log(`applied: ${line}`);
     for (const line of report.skipped) console.warn(`not applied: ${line}`);
+    // A step --apply could not do leaves setup incomplete: scripts must see it.
+    if (report.skipped.length) process.exitCode = 1;
     if (!apply && found.some((h) => h.steps.some((s) => s.includes('senior setup --apply')))) {
       console.log('\nRun senior setup --apply to do the OpenCode and Antigravity steps; the others happen in the app.');
     }

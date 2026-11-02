@@ -92,7 +92,8 @@ const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|rem
 
 // SeniorOS's own commands that write a host's hooks or plugin list (`setup --apply`, the Antigravity installer and
 // uninstaller): the same change as editing those files, so the same confirmation.
-const SENIOR_HOST_SETUP = /\b(senior|senioros)\s+(setup\b[^|;\n]*\s--apply\b|install\b[^|;\n]*--target[\s=]+antigravity\b|uninstall\b)/;
+// Also with a version (`npx senioros@0.8.0`) or through the entry point (`node dist/src/index.js`).
+const SENIOR_HOST_SETUP = /(\bsenior|\bsenioros(@\S*)?|\bindex\.js)\s+(setup\b[^|;\n]*\s--apply\b|install\b[^|;\n]*--target[\s=]+antigravity\b|uninstall\b)/;
 
 /** True when a single shell command changes one of the agent's own configuration files. */
 function changesAgentConfig(segment) {

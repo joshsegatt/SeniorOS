@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { detectHosts, type HostEnvironment, type HostId, type HostStatus } from '../src/core/hosts.js';
+import { detectHosts, trustedCodexHooks, type HostEnvironment, type HostId, type HostStatus } from '../src/core/hosts.js';
 import { setup } from '../src/core/setup.js';
 
 /** A fake home and project, and an environment whose PATH holds only `commands`. */
@@ -97,6 +97,41 @@ test('half-done and unreadable setups are reported as such, with the step that i
     assert.equal(agy.plugin.state, 'yes');
     assert.equal(agy.hooks?.state, 'no');
     assert.equal(agy.steps.length, 1);
+  } finally {
+    m.done();
+  }
+});
+
+test('review findings: hook trust, project-scope installs and configs setup cannot rewrite', async () => {
+  const m = machine(['claude', 'codex', 'opencode']);
+  try {
+    // Codex: one of three hooks trusted is not trusted; double-quoted keys and other keys first still count.
+    mkdirSync(path.join(m.home, '.codex', 'plugins', 'cache', 'senioros', 'senioros'), { recursive: true });
+    m.put('.codex/config.toml', `[hooks.state.'C:/x/senioros/hooks.json:stop:0:0']\ntrusted_hash = "a"\n`);
+    assert.equal(m.host('codex').hooks?.state, 'no');
+    assert.match(m.host('codex').hooks?.evidence ?? '', /1 of the 3/);
+    assert.equal(trustedCodexHooks([
+      `[hooks.state."C:\\\\x\\\\senioros\\\\hooks.json:stop:0:0"]`, 'enabled = true', 'trusted_hash = "a"',
+      `[hooks.state.'/x/senioros/hooks.json:pre:0:0']`, 'trusted_hash = "b"',
+      `[hooks.state.'/x/other/hooks.json:pre:0:0']`, 'trusted_hash = "c"',
+      `[mcp_servers.senioros]`, 'trusted_hash = "d"',
+    ].join('\n')), 2);
+
+    // Claude: a project-scope install for another repository does not load here.
+    m.put('.claude/plugins/installed_plugins.json', JSON.stringify({ plugins: { 'senioros@senioros': [{ scope: 'project', projectPath: path.join(m.base, 'other') }] } }));
+    assert.equal(m.host('claude').plugin.state, 'no');
+    assert.match(m.host('claude').plugin.evidence, /another project/);
+    m.put('.claude/plugins/installed_plugins.json', JSON.stringify({ plugins: { 'senioros@senioros': [{ scope: 'project', projectPath: m.root }] } }));
+    assert.equal(m.host('claude').plugin.state, 'yes');
+
+    // OpenCode: valid JSON that is not an object is never rewritten, and the step says so.
+    for (const text of ['null', '[]', '{ "plugin": "senioros-old" }']) {
+      m.put('.config/opencode/opencode.json', text);
+      assert.doesNotMatch(m.host('opencode').steps.join(' '), /setup --apply does it/, text);
+      const report = await setup(m.root, { apply: true }, m.e);
+      assert.deepEqual(report.applied.filter((a) => a.startsWith('OpenCode')), [], text);
+      assert.equal(readFileSync(path.join(m.home, '.config', 'opencode', 'opencode.json'), 'utf8'), text);
+    }
   } finally {
     m.done();
   }
