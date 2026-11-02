@@ -152,3 +152,17 @@ export function globToRegExp(glob: string): RegExp {
   }
   return new RegExp(`^${source}$`);
 }
+
+/** Test files and test-support paths, repository-relative with `/` separators. */
+export const DEFAULT_TEST_PATTERNS = [
+  '**/test/**', '**/tests/**', '**/__tests__/**', '**/spec/**', '**/specs/**', '**/e2e/**',
+  '**/__snapshots__/**', '**/fixtures/**', '**/testdata/**',
+  '**/*.test.*', '**/*.spec.*', '**/*_test.*', '**/*_spec.*', '**/test_*.py',
+  '**/*Test.java', '**/*Tests.java', '**/*Test.kt', '**/*Test.cs', '**/*Tests.cs'
+];
+const TEST_PATH_PATTERNS = DEFAULT_TEST_PATTERNS.map(globToRegExp);
+
+/** A test file or test-support path by DEFAULT_TEST_PATTERNS. */
+export function isTestPath(file: string): boolean {
+  return TEST_PATH_PATTERNS.some((pattern) => pattern.test(file));
+}

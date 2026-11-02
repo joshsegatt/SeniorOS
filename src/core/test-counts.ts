@@ -1,4 +1,5 @@
-import { isTestPath } from './regression.js';
+import { readFileSync, statSync } from 'node:fs';
+import { isTestPath } from './config.js';
 
 /**
  * Reads how many tests a test run executed from its output. A test command that exits 0 after running nothing looks
@@ -96,8 +97,36 @@ export interface TestsRanOptions {
  */
 function looksLikeTestFile(path: string): boolean {
   const p = path.replace(/\\/g, '/');
-  if (!/\.[cm]?[jt]sx?$/.test(p) || /(^|\/)node_modules\//.test(p)) return false;
+  // Test support (fixtures, snapshots, data) is not run by node --test, and build steps may list it.
+  if (!/\.[cm]?[jt]sx?$/.test(p) || /(^|\/)(?:node_modules|fixtures|__snapshots__|testdata)\//.test(p)) return false;
   return isTestPath(p) || /(?:^|\/)(?:test|test-[^/]+|[^/]+-test)\.[cm]?[jt]sx?$/.test(p);
+}
+
+/**
+ * Whether a file exists and has no code in it: nothing left once comments, single-line imports and `require`s,
+ * `export {}` and `'use strict'` are removed. That tells node:test's entry for a placeholder test file from a real
+ * test named after its file, whatever the test function is called. Any other code, or a file that cannot be read,
+ * is not empty: when unsure, nothing is subtracted.
+ */
+export function isEmptyTestFile(file: string): boolean {
+  const stat = statSync(file, { throwIfNoEntry: false });
+  if (!stat?.isFile() || stat.size > 100_000) return false;
+  let source: string;
+  try {
+    source = readFileSync(file, 'utf8');
+  } catch {
+    return false;
+  }
+  const code = source
+    .replace(/^#!.*/, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/^\s*import\s[^;\n]*?from\s*(['"])[^'"\n]+\1\s*;?\s*$/gm, '')
+    .replace(/^\s*import\s*(['"])[^'"\n]+\1\s*;?\s*$/gm, '')
+    .replace(/^\s*(?:(?:const|let|var)\s+[\w${}\s,:]+=\s*)?require\(\s*(['"])[^'"\n]+\1\s*\)\s*;?\s*$/gm, '')
+    .replace(/^\s*export\s*\{\s*\}\s*;?\s*$/gm, '')
+    .replace(/^\s*(['"])use strict\1\s*;?\s*$/gm, '');
+  return code.trim() === '';
 }
 
 /**
@@ -136,7 +165,8 @@ function emptyTestFileEntries(lines: string[], isEmptyTestFile: (path: string) =
     if (!closed) continue;
     const name = closed[1] ?? '';
     let suite = false;
-    for (let j = i + 1; j < Math.min(lines.length, i + 8) && !/^\s+\.\.\.\s*$/.test(lines[j] ?? ''); j++) {
+    // The entry's YAML block (`  ---` … `  ...`), if any, directly follows it.
+    for (let j = i + 1; j < Math.min(lines.length, i + 100) && /^\s/.test(lines[j] ?? '') && !/^\s+\.\.\.\s*$/.test(lines[j] ?? ''); j++) {
       if (/^\s+type: 'suite'/.test(lines[j] ?? '')) suite = true;
     }
     // TAP escapes backslashes and `#` in names (`test\\a.test.js`, `h\#1`).

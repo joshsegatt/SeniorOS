@@ -2,16 +2,11 @@ import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { globToRegExp } from './config.js';
+import { globToRegExp, isTestPath } from './config.js';
 import { getChangeSet, getRepositoryRoot, operationInProgress, readFileAtRevision, resolveCommit, type ChangedFile } from './git.js';
 
-/** Paths treated as tests: they stay in place while the fix is reverted. */
-export const DEFAULT_TEST_PATTERNS = [
-  '**/test/**', '**/tests/**', '**/__tests__/**', '**/spec/**', '**/specs/**', '**/e2e/**',
-  '**/__snapshots__/**', '**/fixtures/**', '**/testdata/**',
-  '**/*.test.*', '**/*.spec.*', '**/*_test.*', '**/*_spec.*', '**/test_*.py',
-  '**/*Test.java', '**/*Tests.java', '**/*Test.kt', '**/*Test.cs', '**/*Tests.cs'
-];
+// Paths treated as tests stay in place while the fix is reverted (DEFAULT_TEST_PATTERNS, in config.ts).
+export { DEFAULT_TEST_PATTERNS } from './config.js';
 
 const RUNTIME_DIR = '.senior/runtime';
 const ACTIVE_DIR = `${RUNTIME_DIR}/prove/active`;
@@ -88,10 +83,6 @@ interface BackupManifest {
 
 const sha256 = (data: Buffer) => createHash('sha256').update(data).digest('hex');
 
-/** A test file or test-support path by the default patterns above (repository-relative, `/` separators). */
-export function isTestPath(file: string): boolean {
-  return DEFAULT_TEST_PATTERNS.some((pattern) => globToRegExp(pattern).test(file));
-}
 
 function matchesAny(file: string, patterns: string[]): boolean {
   return patterns.some((pattern) => pattern === file || globToRegExp(pattern).test(file));

@@ -56,7 +56,7 @@ test('the number of tests that ran is read from each runner, and unknown output 
 // test/empty.test.js (no tests) and test/utils.test.js holding: describe('utils.ts', it 'adds'), test('index.js'),
 // test('loader.js') with subtest 'inner', and an empty describe('test/empty.test.js'). Five tests reported, four ran.
 // The proof engine's check reads each file; here, the files with no tests in them are listed.
-const emptyFiles = new Set(['test/empty.test.js', 'test\\empty.test.js', 'C:\\Users\\Jo Doe\\proj\\test\\empty.test.js',
+const emptyFiles = new Set(['test/empty.test.js', 'test\\empty.test.js', 'C:\\Users\\Jo Doe\\proj\\test\\empty.test.js', 'test/fixtures/empty.test.js',
   'C:\\proj\\test\\empty.test.js', 'h#1\\test\\e.test.js', 'a.spec.js', 'dist/index.js']);
 const isEmptyTestFile = (p: string) => emptyFiles.has(p);
 const nodeSamples: Array<[string, string, number | null]> = [
@@ -89,6 +89,11 @@ const nodeSamples: Array<[string, string, number | null]> = [
   // None of these is an empty test file, so they still count: a test named after its own file (which has tests in
   // it), a build line naming a file that is not a test file, a load failure, a file that does not exist.
   ['a test named after its own file', '✔ C:\\proj\\test\\real.test.js (0.3ms)\nℹ tests 1\nℹ skipped 0\n', 1],
+  ['a build step lists an empty fixture', '✔ test/fixtures/empty.test.js (12ms)\n✔ real (1ms)\nℹ tests 1\nℹ skipped 0\n', 1],
+  ['TAP: a suite whose YAML block is long', [
+    'TAP version 13', '# Subtest: test/empty.test.js', 'ok 1 - test/empty.test.js', '  ---',
+    ...Array.from({ length: 12 }, (_, k) => `  key${k}: ${k}`), "  type: 'suite'", '  ...', '1..1', '# tests 0', '# suites 1',
+  ].join('\n'), 0],
   ['a build step prints a line shaped like an entry', '✔ dist/index.js (12ms)\n✔ real (1ms)\nℹ tests 1\nℹ skipped 0\nℹ todo 0\n', 1],
   ['a test file that failed to load is a failure', '✖ test/empty.test.js (40ms)\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ skipped 0\nℹ todo 0\n', 1],
   ['a file-named entry for a file that does not exist', '✔ test/gone.test.js (1ms)\nℹ tests 1\nℹ skipped 0\nℹ todo 0\n', 1],
@@ -145,7 +150,7 @@ test('a test file with no tests in it is not a pass either (real node --test)', 
 });
 
 test('an empty test file is one with no code: comments and imports only (review finding)', async () => {
-  const { isEmptyTestFile } = (await import(pathToFileURL(path.join(root, 'dist', 'src', 'core', 'proof-engine.js')).href)) as {
+  const { isEmptyTestFile } = (await import(pathToFileURL(path.join(root, 'dist', 'src', 'core', 'test-counts.js')).href)) as {
     isEmptyTestFile: (file: string) => boolean;
   };
   const dir = mkdtempSync(path.join(os.tmpdir(), 'empty-'));
@@ -154,6 +159,7 @@ test('an empty test file is one with no code: comments and imports only (review 
     ['a comment that mentions a test call', "// TODO: test('adds', () => {}) and it(...) later\n", true],
     ['a block comment and imports', "/* tests to come */\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\n", true],
     ['a TypeScript placeholder', "'use strict';\nimport 'node:test';\nexport {};\n", true],
+    ['a CommonJS placeholder', "'use strict';\nconst test = require('node:test');\nconst { strict: assert } = require('node:assert');\n", true],
     ['a test through an alias', "import t from 'node:test';\nt('adds', () => {});\n", false],
     ['helper code, no tests', "export const fixture = { a: 1 };\n", false],
     ['a multi-line import (not read: unsure means not empty)', "import {\n  test,\n} from 'node:test';\n", false],

@@ -1,10 +1,10 @@
-import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawn, spawnSync, type StdioOptions } from 'node:child_process';
 import { exists, readJson } from './fs-utils.js';
 import { ecosystemPlan, environmentFailure, noTestsCollected, type EcosystemCheck } from './ecosystems.js';
-import { testsRan } from './test-counts.js';
+import { isEmptyTestFile, testsRan } from './test-counts.js';
 import type { ProofCheck, ProofReport } from '../types.js';
 import type { ProofCheckConfig } from './config.js';
 
@@ -16,31 +16,16 @@ const ORDER = ['typecheck', 'lint', 'test', 'build'] as const;
 const NO_TESTS = 'no tests ran';
 /** Checks whose output is read for the number of tests that ran. */
 const isTestCheck = (name: string) => /\btests?\b/i.test(name);
-/**
- * An existing file with no code in it: nothing left once comments, single-line imports, `export {}` and a
- * `'use strict'` are removed. That tells node:test's entry for a placeholder test file from a real test named after
- * its file, whatever the test function is called. Any other code, or a file that cannot be read, is not empty.
- */
-export function isEmptyTestFile(file: string): boolean {
-  const stat = statSync(file, { throwIfNoEntry: false });
-  if (!stat?.isFile() || stat.size > 100_000) return false;
-  let source: string;
-  try {
-    source = readFileSync(file, 'utf8');
-  } catch {
-    return false;
-  }
-  const code = source
-    .replace(/^#!.*/, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
-    .replace(/^\s*import\s[^;\n]*?from\s*(['"])[^'"\n]+\1\s*;?\s*$/gm, '')
-    .replace(/^\s*import\s*(['"])[^'"\n]+\1\s*;?\s*$/gm, '')
-    .replace(/^\s*export\s*\{\s*\}\s*;?\s*$/gm, '')
-    .replace(/^\s*(['"])use strict\1\s*;?\s*$/gm, '');
-  return code.trim() === '';
-}
 
+/** `isEmptyTestFile` for paths printed by a test command run in `cwd`, reading each file once. */
+function cachedEmptyTestFile(cwd: string): (file: string) => boolean {
+  const seen = new Map<string, boolean>();
+  return (file) => {
+    const full = path.resolve(cwd, file);
+    if (!seen.has(full)) seen.set(full, isEmptyTestFile(full));
+    return seen.get(full) ?? false;
+  };
+}
 function packageRunner(manager: string | null): string {
   if (manager === 'pnpm') return 'pnpm';
   if (manager === 'yarn') return 'yarn';
@@ -229,13 +214,7 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
-    const emptyChecked = new Map<string, boolean>();
-    const emptyFile = (file: string) => {
-      const full = path.resolve(cwd, file);
-      if (!emptyChecked.has(full)) emptyChecked.set(full, isEmptyTestFile(full));
-      return emptyChecked.get(full) ?? false;
-    };
-    const tests = isTestCheck(name) ? testsRan(log, { isEmptyTestFile: emptyFile }) : null;
+    const tests = isTestCheck(name) ? testsRan(log, { isEmptyTestFile: cachedEmptyTestFile(cwd) }) : null;
     if (noTestsCollected(name, result.status, log) || (result.status === 0 && tests === 0)) {
       // A test command that ran nothing is not a failure, and not a pass either: its silence proves nothing.
       availableChecks -= 1;
