@@ -23,6 +23,10 @@ All notable changes to SeniorOS will be documented here.
 
 - `senior risk` recognises payment and password/encryption code. Two path rules of 4 points each, so such a change is at least medium risk and gets the finish gate's review: `payments` (payment, billing, checkout, invoice, refund, chargeback, payout, Stripe, PayPal, Braintree, Adyen) and `crypto` (password, crypto, encrypt, decrypt, cipher, signing, signature, HMAC, bcrypt, argon2, scrypt, PBKDF2, KMS, AES, RSA). The path is split into words on separators, spaces, camelCase and acronyms, so `processPayment.ts`, `APIPayment.ts` and `lib/HMAC.ts` count and `rehashing.ts`, `discharge.ts` or `battery/charge.ts` do not. A password file the auth rule already counts is not counted twice. Before, a refund-permission change in `src/billing/` was rated low.
 
+### Fixed
+
+- Cursor, multi-root workspaces: the finish gate's risk review no longer goes out in the same follow-up as another repository's failing checks. Failures are sent alone; the review is kept for its change set and sent once no repository fails, without running the checks again. `loop_limit` goes from 2 to 3, so a review after two fix rounds still has a follow-up left. Cursor's cap is what ends a long run of failures, since each fix that changes the code starts a new change set, so an agent that keeps failing can now get a third follow-up.
+
 ## [0.8.0] - 2026-10-31
 
 SeniorOS as an OpenCode plugin, and a guard that also protects the settings, hooks and plugins of the host it runs in.
