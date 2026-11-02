@@ -6,8 +6,6 @@ All notable changes to SeniorOS will be documented here.
 
 ### Added
 
-- `senior risk` recognises payment and password/encryption code. Two path rules of 4 points each, so such a change is at least medium risk and gets the finish gate's review: `payments` (payment, billing, checkout, invoice, refund, chargeback, payout, Stripe, PayPal, Braintree, Adyen) and `crypto` (password, crypto, encrypt, decrypt, cipher, signing, signature, HMAC, bcrypt, argon2, scrypt, PBKDF2, KMS, AES, RSA). The path is split into words on separators, spaces, camelCase and acronyms, so `processPayment.ts`, `APIPayment.ts` and `lib/HMAC.ts` count and `rehashing.ts`, `discharge.ts` or `battery/charge.ts` do not. A password file the auth rule already counts is not counted twice. Before, a refund-permission change in `src/billing/` was rated low.
-
 - A test command that runs no tests is no longer a pass. `senior finish` and the finish gate read how many tests ran from node:test, Jest, Vitest, Mocha, pytest, unittest, `cargo test` and `go test` output; zero is `SKIP (no tests ran)`, and the count is shown next to the check and reported as `tests` in `--json`. Before, `npm test` with no test files, or `go test` with no test files, reported PASS. Output that is not recognised changes nothing.
 - Provenance: every proof report says when and on which code it ran (`provenance`: commit, uncommitted changes, time). `senior finish --record` keeps the report in `.senior/evidence/<commit>.json` as a durable record of what was verified; it stores no command output. Changes under `.senior/` no longer count as changes to a project.
 
@@ -17,6 +15,8 @@ All notable changes to SeniorOS will be documented here.
   - With uncommitted changes, only the projects the changes touch run; `senior finish --all` runs everything.
   - A missing tool or no collected tests is `SKIP`, never a pass. A Python run that fails only because declared dependencies are not installed is `SKIP` with that reason, not a failure blamed on the change; an undeclared or local module, or a test that ran and failed, stays `FAIL`.
   - `finish --json` reports `source: "standard"` when these checks are part of the baseline.
+
+- `senior risk` recognises payment and password/encryption code. Two path rules of 4 points each, so such a change is at least medium risk and gets the finish gate's review: `payments` (payment, billing, checkout, invoice, refund, chargeback, payout, Stripe, PayPal, Braintree, Adyen) and `crypto` (password, crypto, encrypt, decrypt, cipher, signing, signature, HMAC, bcrypt, argon2, scrypt, PBKDF2, KMS, AES, RSA). The path is split into words on separators, spaces, camelCase and acronyms, so `processPayment.ts`, `APIPayment.ts` and `lib/HMAC.ts` count and `rehashing.ts`, `discharge.ts` or `battery/charge.ts` do not. A password file the auth rule already counts is not counted twice. Before, a refund-permission change in `src/billing/` was rated low.
 
 ## [0.8.0] - 2026-10-31
 
