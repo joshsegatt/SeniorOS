@@ -1,3 +1,5 @@
+import { isTestPath } from './regression.js';
+
 /**
  * Reads how many tests a test run executed from its output. A test command that exits 0 after running nothing looks
  * exactly like a passing suite; the count tells them apart.
@@ -18,14 +20,18 @@ export function testsRan(log: string, options: TestsRanOptions = {}): number | n
   };
   const count = (line: string, re: RegExp) => Number(re.exec(line)?.[1] ?? 0);
 
-  let nodeSummary = false;
+  // The lines of the current node:test run, up to its summary (see emptyTestFileEntries).
+  let run: string[] = [];
 
   for (const line of lines) {
+    run.push(line);
     // node:test, spec reporter (`ℹ tests 3`) or TAP (`# tests 3`); its skipped and todo lines follow and are subtracted.
     let m = /^[ℹ#] tests (\d+)\s*$/.exec(line);
     if (m) {
-      add(Number(m[1]));
-      nodeSummary = true;
+      const reported = Number(m[1]);
+      const empty = options.isEmptyTestFile ? emptyTestFileEntries(run, options.isEmptyTestFile) : 0;
+      add(reported - Math.min(reported, empty));
+      run = [];
     }
     m = /^[ℹ#] (?:skip(?:ped)?|todo) (\d+)\s*$/.exec(line);
     if (m) total -= Number(m[1]);
@@ -73,8 +79,6 @@ export function testsRan(log: string, options: TestsRanOptions = {}): number | n
     add(0);
   }
 
-  if (nodeSummary && options.isEmptyTestFile) total = Math.max(0, total - emptyNodeTestFiles(lines, options.isEmptyTestFile));
-
   return found ? total : null;
 }
 
@@ -87,40 +91,23 @@ export interface TestsRanOptions {
 }
 
 /**
- * A test file by its name: what `node --test` picks up on its own (`*.test.js`, `*-test.js`, `*_test.js`, `test-*.js`,
- * `test.js`, `test/**`) and the usual explicit choices (`*.spec.js`, `tests/`, `spec/`, `__tests__/`).
+ * A JavaScript or TypeScript test file by its path: the project's test patterns (`test/`, `*.test.*`, `*.spec.*`…)
+ * and the names `node --test` also picks up on its own (`test.js`, `test-*.js`, `*-test.js`).
  */
 function looksLikeTestFile(path: string): boolean {
   const p = path.replace(/\\/g, '/');
   if (!/\.[cm]?[jt]sx?$/.test(p) || /(^|\/)node_modules\//.test(p)) return false;
-  const base = p.slice(p.lastIndexOf('/') + 1);
-  return /(^|\/)(?:test|tests|spec|__tests__)\//.test(p) || /^(?:.+[.\-_](?:test|spec)|test-.+|test)\.[cm]?[jt]sx?$/.test(base);
+  return isTestPath(p) || /(?:^|\/)(?:test|test-[^/]+|[^/]+-test)\.[cm]?[jt]sx?$/.test(p);
 }
 
 /**
- * node:test reports a test file with no tests in it as one passing top-level test named after the file: spec
+ * How many entries of one node:test run (its lines up to the `tests N` summary) are test files with no tests in
+ * them. node:test reports such a file as one passing top-level test named after the file: spec
  * `✔ test\a.test.js (38ms)`; TAP `# Subtest: test\\a.test.js` then `ok 1 - test\\a.test.js` (Node 20 prints the
- * absolute path). A file that has tests shows only their names. Counts those entries: a top-level leaf (not a
- * suite, no subtests) whose name is a test file that `isEmptyTestFile` confirms has no tests in it. A test or
- * `describe` merely named after a file, or another tool's output line, is not one.
- *
- * Each run (up to its `tests N` summary) is counted on its own, so a file that two runs both report is subtracted
- * from each; within a run, each file once.
+ * absolute path). A file that has tests shows only their names. An entry counts when it is a top-level leaf (not a
+ * suite, no subtests) naming a test file that `isEmptyTestFile` confirms is empty; each file once.
  */
-function emptyNodeTestFiles(lines: string[], isEmptyTestFile: (path: string) => boolean): number {
-  let total = 0;
-  let run: string[] = [];
-  for (const line of lines) {
-    run.push(line);
-    if (/^[ℹ#] tests \d+\s*$/.test(line)) {
-      total += emptyInRun(run, isEmptyTestFile);
-      run = [];
-    }
-  }
-  return total;
-}
-
-function emptyInRun(lines: string[], isEmptyTestFile: (path: string) => boolean): number {
+function emptyTestFileEntries(lines: string[], isEmptyTestFile: (path: string) => boolean): number {
   const empty = new Set<string>();
   const check = (name: string) => {
     if (looksLikeTestFile(name) && isEmptyTestFile(name)) empty.add(name.replace(/\\/g, '/'));

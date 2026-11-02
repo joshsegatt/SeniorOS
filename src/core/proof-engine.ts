@@ -17,18 +17,29 @@ const NO_TESTS = 'no tests ran';
 /** Checks whose output is read for the number of tests that ran. */
 const isTestCheck = (name: string) => /\btests?\b/i.test(name);
 /**
- * An existing file with no test call in it (`test(`, `it(`, `describe(`, `suite(`, `t.test(`, `it.skip(`…): how
- * node:test's entry for a test file is told from a test named after a file. When unsure, no.
+ * An existing file with no code in it: nothing left once comments, single-line imports, `export {}` and a
+ * `'use strict'` are removed. That tells node:test's entry for a placeholder test file from a real test named after
+ * its file, whatever the test function is called. Any other code, or a file that cannot be read, is not empty.
  */
-const isEmptyTestFile = (file: string) => {
+export function isEmptyTestFile(file: string): boolean {
   const stat = statSync(file, { throwIfNoEntry: false });
-  if (!stat?.isFile() || stat.size > 1_000_000) return false;
+  if (!stat?.isFile() || stat.size > 100_000) return false;
+  let source: string;
   try {
-    return !/\b(?:test|it|describe|suite)\s*(?:\.\s*\w+\s*)?\(/.test(readFileSync(file, 'utf8'));
+    source = readFileSync(file, 'utf8');
   } catch {
     return false;
   }
-};
+  const code = source
+    .replace(/^#!.*/, '')
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/^\s*\/\/.*$/gm, '')
+    .replace(/^\s*import\s[^;\n]*?from\s*(['"])[^'"\n]+\1\s*;?\s*$/gm, '')
+    .replace(/^\s*import\s*(['"])[^'"\n]+\1\s*;?\s*$/gm, '')
+    .replace(/^\s*export\s*\{\s*\}\s*;?\s*$/gm, '')
+    .replace(/^\s*(['"])use strict\1\s*;?\s*$/gm, '');
+  return code.trim() === '';
+}
 
 function packageRunner(manager: string | null): string {
   if (manager === 'pnpm') return 'pnpm';
@@ -218,7 +229,13 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
-    const tests = isTestCheck(name) ? testsRan(log, { isEmptyTestFile: (file) => isEmptyTestFile(path.resolve(cwd, file)) }) : null;
+    const emptyChecked = new Map<string, boolean>();
+    const emptyFile = (file: string) => {
+      const full = path.resolve(cwd, file);
+      if (!emptyChecked.has(full)) emptyChecked.set(full, isEmptyTestFile(full));
+      return emptyChecked.get(full) ?? false;
+    };
+    const tests = isTestCheck(name) ? testsRan(log, { isEmptyTestFile: emptyFile }) : null;
     if (noTestsCollected(name, result.status, log) || (result.status === 0 && tests === 0)) {
       // A test command that ran nothing is not a failure, and not a pass either: its silence proves nothing.
       availableChecks -= 1;

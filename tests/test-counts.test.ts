@@ -132,7 +132,7 @@ test('a test script that runs no tests is not a pass', () => {
 });
 
 test('a test file with no tests in it is not a pass either (real node --test)', () => {
-  const dir = nodeProject('// tests to come\n');
+  const dir = nodeProject("// TODO: test('adds', () => {})\nimport test from 'node:test';\n");
   try {
     const report = finish(dir);
     const check = report.checks.find((c) => c.name === 'test');
@@ -144,15 +144,43 @@ test('a test file with no tests in it is not a pass either (real node --test)', 
   }
 });
 
+test('an empty test file is one with no code: comments and imports only (review finding)', async () => {
+  const { isEmptyTestFile } = (await import(pathToFileURL(path.join(root, 'dist', 'src', 'core', 'proof-engine.js')).href)) as {
+    isEmptyTestFile: (file: string) => boolean;
+  };
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'empty-'));
+  const cases: Array<[string, string, boolean]> = [
+    ['nothing at all', '', true],
+    ['a comment that mentions a test call', "// TODO: test('adds', () => {}) and it(...) later\n", true],
+    ['a block comment and imports', "/* tests to come */\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\n", true],
+    ['a TypeScript placeholder', "'use strict';\nimport 'node:test';\nexport {};\n", true],
+    ['a test through an alias', "import t from 'node:test';\nt('adds', () => {});\n", false],
+    ['helper code, no tests', "export const fixture = { a: 1 };\n", false],
+    ['a multi-line import (not read: unsure means not empty)', "import {\n  test,\n} from 'node:test';\n", false],
+  ];
+  try {
+    for (const [label, source, expected] of cases) {
+      const file = path.join(dir, 'a.test.js');
+      writeFileSync(file, source);
+      assert.equal(isEmptyTestFile(file), expected, label);
+    }
+    assert.equal(isEmptyTestFile(path.join(dir, 'missing.test.js')), false, 'a missing file');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test('suites and tests named after files still count (real node --test, review finding)', () => {
   const dir = nodeProject([
     "import { describe, it, test } from 'node:test';",
     "describe('utils.ts', () => { it('adds', () => {}); });",
     "test('index.js', () => {});",
     "test('loader.js', async (t) => { await t.test('inner', () => {}); });",
-    // A test named after its own file, and an empty describe named after it: both look like the empty-file entry.
+    // A test named after its own file, through an alias, and an empty describe named after it: both look like the
+    // empty-file entry.
     "import { fileURLToPath } from 'node:url';",
-    'test(fileURLToPath(import.meta.url), () => {});',
+    "import t from 'node:test';",
+    't(fileURLToPath(import.meta.url), () => {});',
     "describe('test/a.test.js', () => {});",
   ].join('\n'));
   try {

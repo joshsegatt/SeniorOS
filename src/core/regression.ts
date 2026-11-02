@@ -88,7 +88,8 @@ interface BackupManifest {
 
 const sha256 = (data: Buffer) => createHash('sha256').update(data).digest('hex');
 
-function isTestPath(file: string): boolean {
+/** A test file or test-support path by the default patterns above (repository-relative, `/` separators). */
+export function isTestPath(file: string): boolean {
   return DEFAULT_TEST_PATTERNS.some((pattern) => globToRegExp(pattern).test(file));
 }
 
