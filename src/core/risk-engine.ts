@@ -9,7 +9,18 @@ interface Rule {
   pattern: RegExp;
 }
 
+/**
+ * Matches a path containing one of `words` as a whole word: between `/ . _ -`, the ends, or a camelCase boundary.
+ * So `src/billing/`, `refund-policy.ts` and `processPayment.ts` match, but `rehashing.ts` and `checkouts-ui` do not.
+ */
+function pathWord(words: string[]): RegExp {
+  const alternatives = words.map((w) => `[${w[0]!.toLowerCase()}${w[0]!.toUpperCase()}]${w.slice(1)}`).join('|');
+  return new RegExp(`(?:^|[/._-]|(?<=[a-z])(?=[A-Z]))(?:${alternatives})(?=$|[/._-]|[A-Z])`);
+}
+
 const RULES: Rule[] = [
+  { code: 'payments', points: 4, reason: 'Payment, billing or refund behavior changed.', pattern: pathWord(['payment', 'payments', 'billing', 'checkout', 'invoice', 'invoices', 'invoicing', 'refund', 'refunds', 'charge', 'charges', 'payout', 'payouts', 'stripe', 'paypal', 'braintree', 'adyen']) },
+  { code: 'crypto', points: 4, reason: 'Password, encryption or signing code changed.', pattern: pathWord(['password', 'passwords', 'passwd', 'crypto', 'cryptography', 'encrypt', 'encryption', 'decrypt', 'decryption', 'cipher', 'signing', 'hmac', 'bcrypt', 'argon2', 'scrypt', 'kms']) },
   { code: 'auth', points: 4, reason: 'Authentication or authorization behavior changed.', pattern: /(^|\/)(auth|middleware|permissions?|rbac|acl)(\/|\.|$)|session|oauth|jwt/i },
   { code: 'database', points: 3, reason: 'Database schema or migration surface changed.', pattern: /(^|\/)(migrations?|schema|drizzle|prisma)(\/|\.|$)|\.sql$/i },
   { code: 'secrets', points: 6, reason: 'Secret or environment configuration surface changed.', pattern: /(^|\/)(\.env|secrets?|credentials?)(\.|\/|$)/i },

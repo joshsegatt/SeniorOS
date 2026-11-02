@@ -6,6 +6,8 @@ All notable changes to SeniorOS will be documented here.
 
 ### Added
 
+- `senior risk` recognises payment and password/encryption code. Two path rules of 4 points each, so such a change is at least medium risk and gets the finish gate's review: `payments` (payment, billing, checkout, invoice, refund, charge, payout, Stripe, PayPal, Braintree, Adyen) and `crypto` (password, crypto, encrypt, decrypt, cipher, signing, HMAC, bcrypt, argon2, scrypt, KMS). Words match whole, between separators or at a camelCase boundary, so `processPayment.ts` counts and `rehashing.ts` or `discharge.ts` do not. Before, a refund-permission change in `src/billing/` was rated low.
+
 - A test command that runs no tests is no longer a pass. `senior finish` and the finish gate read how many tests ran from node:test, Jest, Vitest, Mocha, pytest, unittest, `cargo test` and `go test` output; zero is `SKIP (no tests ran)`, and the count is shown next to the check and reported as `tests` in `--json`. Before, `npm test` with no test files, or `go test` with no test files, reported PASS. Output that is not recognised changes nothing.
 - Provenance: every proof report says when and on which code it ran (`provenance`: commit, uncommitted changes, time). `senior finish --record` keeps the report in `.senior/evidence/<commit>.json` as a durable record of what was verified; it stores no command output. Changes under `.senior/` no longer count as changes to a project.
 
