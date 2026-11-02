@@ -48,8 +48,10 @@ Every host gets the guard and the finish gate, and every claim of support is tes
 - [x] Guard bypass corpus: a table-driven test of equivalent commands (`git push --mirror`, `find -delete`,
       `python -c "shutil.rmtree(...)"`, `Remove-Item` without `-Recurse` on folders, `git checkout -- <dir>`, …),
       each either flagged or documented as out of scope
-- [ ] `senior setup`: detects installed hosts and installs or prints the right step for each; `senior doctor` reports
-      every host (plugin present, hooks trusted, versions)
+- [x] `senior setup`: detects installed hosts and installs or prints the right step for each; `senior doctor` reports
+      every host (plugin present, hooks trusted)
+- [ ] `senior doctor` shows the installed plugin version of each host, and Cursor's plugin state once Cursor
+      documents where it records plugins
 - [ ] Tested in the host: Cursor and Antigravity (needs a person with the apps), Codex and OpenCode on macOS/Linux
 - [ ] GitHub Copilot CLI adapter
 - [ ] OpenCode 2.x plugin API

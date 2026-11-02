@@ -291,6 +291,8 @@ senior finish
 senior finish --json
 senior prove --regression --test "npm test -- cart"
 senior doctor
+senior setup
+senior setup --apply
 senior install --target claude --scope project
 senior install --target codex --scope project
 senior install --target generic --scope project
@@ -309,7 +311,8 @@ senior uninstall --target antigravity
 | `senior finish --record` | Also writes the report to `.senior/evidence/<commit>.json` (`-uncommitted` when the tree had changes): what was verified, on which commit, with which commands, exit codes and test counts. No command output is stored |
 | `senior prove --regression --test "<cmd>"` | Proves a regression test catches the bug: passes with the fix, fails with it reverted, passes again restored |
 | `senior prove --restore` | Puts the working tree back after a proof that was killed mid-run |
-| `senior doctor` | Diagnoses SeniorOS installation/configuration problems |
+| `senior doctor` | Diagnoses SeniorOS installation/configuration problems, and shows each host on this machine (Claude Code, Codex, Cursor, OpenCode, Antigravity): found or not, plugin set up (`yes`, `no` or `unknown` when the files that would say are missing), Codex hooks trusted, and the file each answer comes from |
+| `senior setup` | Prints the step left for each host found, without changing anything. With `--apply`, also does the steps the CLI owns: adds `senioros` to the user's `opencode.json` (backed up once; a JSONC file is left for you) and runs the Antigravity installer. Claude Code, Codex and Cursor plugins are installed in the app. The guard asks before an agent runs `--apply` |
 | `senior install` | Installs the skill pack into a supported host layout |
 
 ### Current proof order
