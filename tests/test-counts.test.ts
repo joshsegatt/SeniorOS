@@ -29,6 +29,10 @@ const samples: Array<[string, string, number | null]> = [
   ['pytest -q', '..F\n=== short test summary info ===\nFAILED test_y.py::test_f - assert 0\n2 passed, 1 failed, 1 skipped in 0.05s\n', 3],
   ['pytest, nothing', '\nno tests ran in 0.01s\n', 0],
   ['unittest', '..\n----------------------------------------------------------------------\nRan 2 tests in 0.000s\n\nOK\n', 2],
+  // Captured from a real run: `Ran` counts the skipped tests too (review finding on #29).
+  ['unittest, 1 run and 2 skipped', '..s\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK (skipped=2)\n', 1],
+  ['unittest, everything skipped', 's\n----------------------------------------------------------------------\nRan 1 test in 0.000s\n\nOK (skipped=1)\n', 0],
+  ['unittest, a failure and a skip', 'Fs.\nRan 3 tests in 0.001s\n\nFAILED (failures=1, skipped=1)\n', 2],
   ['unittest, nothing', '\n----------------------------------------------------------------------\nRan 0 tests in 0.000s\n\nNO TESTS RAN\n', 0],
   ['cargo, unit and doc-tests', 'running 2 tests\ntest result: ok. 2 passed; 0 failed; 0 ignored\n\nrunning 1 test\ntest result: ok. 1 passed; 0 failed; 0 ignored\n', 3],
   ['cargo, nothing', 'running 0 tests\ntest result: ok. 0 passed; 0 failed; 0 ignored\n\ntest result: ok. 0 passed; 0 failed; 0 ignored\n', 0],

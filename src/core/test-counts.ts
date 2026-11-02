@@ -44,9 +44,12 @@ export function testsRan(log: string): number | null {
     m = /^=*\s*((?:\d+ (?:passed|failed|errors?|xfailed|xpassed|skipped|deselected|warnings?)(?:, )?)+) in [\d.]+s/.exec(line);
     if (m?.[1]) add(['passed', 'failed', 'xfailed', 'xpassed', 'errors?'].reduce((s, k) => s + count(m?.[1] ?? '', new RegExp(`(\\d+) ${k}\\b`)), 0));
 
-    // unittest (`Ran 4 tests in 0.001s`).
+    // unittest (`Ran 4 tests in 0.001s`); the count includes skipped tests, given after it (`OK (skipped=2)`,
+    // `FAILED (failures=1, skipped=1)`), so a suite that skipped everything ran nothing.
     m = /^Ran (\d+) tests? in /.exec(line);
     if (m) add(Number(m[1]));
+    m = /^(?:OK|FAILED) \(.*\bskipped=(\d+)/.exec(line);
+    if (m) total -= Number(m[1]);
 
     // cargo test: one line per test binary and doc-tests.
     m = /^test result: \w+\. (\d+) passed; (\d+) failed/.exec(line);
