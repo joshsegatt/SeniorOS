@@ -109,8 +109,9 @@ have no model-alone calibration yet.
 `--backend claude` runs `claude -p` in each run's repository. Arms are flags (`--plugin-dir` for Superpowers or
 SeniorOS), so arms run in parallel; every arm loads only project settings and no MCP servers.
 
-Each run also gets an empty, throwaway config folder (`CLAUDE_CONFIG_DIR`), so the user's settings, history and
-memory stay out. It holds no login: isolated runs need `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) or
+Each run also gets its own empty config folder (`CLAUDE_CONFIG_DIR`), so the user's settings, history and memory
+stay out and runs in parallel do not share state. It is removed when the run ends; folders left by an interrupted bench
+are removed by the next one after 12 hours. It holds no login: isolated runs need `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) or
 `ANTHROPIC_API_KEY`. Never copy `.credentials.json` instead: a subscription login rotates its refresh token, so a copy
 that refreshes leaves the original login expired.
 
@@ -118,7 +119,8 @@ The user's global `CLAUDE.md` needs one more step. Claude Code finds `~/.claude/
 system's profile folder, whatever `CLAUDE_CONFIG_DIR`, `HOME` or `USERPROFILE` say (measured on Windows), and an
 instruction there such as "ask before changing payments" stops headless runs no one can answer. So `run` first asks
 one run whether user instructions reached it and refuses to start if they did (`node evals/bench/bench.mjs isolation`
-runs the same check alone). Move the file aside for the bench and put it back afterwards; a wrapper script that does
+runs the same check alone). The run leaks when its answer names a heading of that file, or a distinctive part of one; otherwise it must answer no
+(`NONE`, `None.`, `No, …`). Move the file aside for the bench and put it back afterwards; a wrapper script that does
 this in a `try`/`finally` is the safe way. `SENIOROS_BENCH_USER_CONFIG=1` measures with your own folder and
 `CLAUDE.md`, as earlier results did.
 
