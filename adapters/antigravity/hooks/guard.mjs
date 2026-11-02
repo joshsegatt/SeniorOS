@@ -6,16 +6,27 @@ import { log, runHook } from './lib.mjs';
 export const RULES = [
   // File deletion
   [/\brm\s+(-\w*[rR]\w*|--recursive)\b/, 'recursive file deletion'],
-  [/\bRemove-Item\b[^|;\n]*-Recurse/i, 'recursive file deletion'],
+  // PowerShell accepts any prefix of a parameter name (`-r`, `-rec`), and `ri`, `del`, `erase`, `rd` are its aliases.
+  [/\b(Remove-Item|ri|del|erase|rd|rmdir)\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
   [/\b(rd|rmdir)\s+\/s\b/i, 'recursive folder deletion'],
   [/\bdel\s+[^|;\n]*\/s\b/i, 'recursive file deletion'],
+  [/\b(rimraf|del-cli)\s+\S/, 'recursive file deletion'],
+  [/\bfind\b[^|;\n]*\s(-delete\b|-exec(dir)?\s+(rm|del|unlink|shred)\b)/, 'deleting the files find matches'],
+  [/\brsync\b[^|;\n]*\s--(delete(-\w+)?|remove-source-files)\b/, 'rsync deleting files at the destination'],
+  // An interpreter one-liner deletes through calls, not shell syntax.
+  [/\b(node|python3?|py|ruby|perl|php|deno|bun)\b[^|]*?\s-(e|c|-eval)\b.*(shutil\.rmtree|\b(rmSync|rm|rmdirSync|rmdir)\s*\([^)]*recursive\s*:\s*true|FileUtils\.rm_r|remove_dir_all)/i, 'recursive file deletion'],
   // Git history and uncommitted work
   [/\bgit\s+push\b[^|;\n]*(\s--force\b|\s-f\b|--force-with-lease|\s\+\S+)/, 'force push (rewrites remote history)'],
-  [/\bgit\s+push\b[^|;\n]*(\s--delete\b|\s-d\b|\s:\S+)/, 'deleting a remote branch or tag'],
+  [/\bgit\s+push\b[^|;\n]*\s--mirror\b/, 'mirror push (overwrites and deletes remote branches)'],
+  [/\bgit\s+push\b[^|;\n]*(\s--delete\b|\s-d\b|\s:\S+|\s--prune\b)/, 'deleting a remote branch or tag'],
   [/\bgit\s+reset\s+[^|;\n]*--hard\b/, 'git reset --hard (discards work)'],
   [/\bgit\s+clean\s+-\w*f/, 'git clean (deletes untracked files)'],
   [/\bgit\s+(checkout|restore)\s+(--\s+)?\.(\s|$)/, 'discarding all local changes'],
   [/\bgit\s+branch\s+[^|;\n]*-D\b/, 'deleting a branch without a merge check'],
+  [/\bgit\s+branch\b(?=[^|;\n]*\s(-\w*d\w*|--delete)\b)(?=[^|;\n]*\s(-\w*f\w*|--force)\b)/, 'deleting a branch without a merge check'],
+  [/\bgit\s+update-ref\s+[^|;\n]*-d\b/, 'deleting a git ref'],
+  [/\bgit\s+(reflog\s+(expire|delete)\b|gc\b[^|;\n]*--prune=(now|all)\b|prune\b)/, 'deleting the recovery points of lost commits'],
+  [/\bgit\s+worktree\s+remove\b[^|;\n]*(\s-f\b|\s--force\b)/, 'removing a worktree with uncommitted changes'],
   [/\bgit\s+stash\s+(drop|clear)\b/, 'deleting stashed work'],
   [/\bgit\s+(rebase|filter-branch|filter-repo)\b/, 'history rewrite'],
   // Databases
@@ -24,18 +35,28 @@ export const RULES = [
   [/\bprisma\s+migrate\s+reset\b|\bprisma\s+db\s+push\b[^|;\n]*--accept-data-loss/, 'Prisma reset / data loss'],
   [/\bdrizzle-kit\s+(push|drop)\b/, 'direct schema change via Drizzle'],
   [/\bsupabase\s+db\s+(reset|push)\b/, 'Supabase database reset/push'],
+  [/\bredis-cli\b[^|;\n]*\b(flushall|flushdb)\b/i, 'deleting database data'],
+  [/\b(mongo|mongosh)\b[^|\n]*(dropDatabase\s*\(|\.drop\s*\(\s*\)|deleteMany\s*\(\s*\{\s*\}\s*\))/, 'deleting database data'],
   // Publish / deploy / infra
-  [/\b(npm|pnpm|yarn)\s+publish\b/, 'publishing a package'],
+  [/\b(npm|pnpm|yarn)\s+(publish|unpublish|deprecate)\b(?![^|;\n]*--dry-run)/, 'publishing a package'],
+  [/\b(cargo\s+publish|twine\s+upload|gem\s+push|poetry\s+publish|uv\s+publish|flit\s+publish|dotnet\s+nuget\s+push)\b(?![^|;\n]*--dry-run)/, 'publishing a package'],
+  [/\b(docker|podman)\s+(image\s+)?push\b/, 'publishing a container image'],
   [/\bvercel\b(?!\s+(dev|env\s+pull|link|login|logout|whoami|logs|inspect|ls|list|pull|--version|-v|help)\b)/, 'Vercel deployment'],
   [/\b(firebase|netlify|fly|flyctl|railway)\s+deploy\b|\bwrangler\s+(deploy|publish)\b/, 'deployment'],
   [/\bgcloud\b[^|;\n]*\b(deploy|delete)\b/, 'Google Cloud deploy/delete'],
   [/\bkubectl\s+(apply|delete|replace)\b/, 'Kubernetes cluster change'],
   [/\bterraform\s+(apply|destroy)\b/, 'infrastructure change'],
   [/\bdocker\s+(system\s+prune|volume\s+(rm|prune))\b/, 'deleting Docker data'],
-  [/\bgh\s+(release\s+create|repo\s+delete|pr\s+merge)\b/, 'irreversible GitHub action'],
+  [/\bgh\s+(release\s+(create|delete)|repo\s+(delete|archive)|pr\s+merge|issue\s+delete|secret\s+delete|variable\s+delete)\b/, 'irreversible GitHub action'],
+  [/\bgh\s+api\b[^|;\n]*(-X|--method)[\s=]*["']?DELETE\b/i, 'irreversible GitHub action'],
+  [/\baws\s+s3\s+(rm\b[^|;\n]*--recursive|rb\b|sync\b[^|;\n]*\s--delete\b)|\baws\s+[\w-]+\s+(delete|terminate|remove|deregister)-[\w-]+/, 'deleting cloud resources'],
+  [/\bhelm\s+(uninstall|delete)\b|\bheroku\s+(apps:destroy|pg:reset)\b|\bpulumi\s+(up|destroy)\b|\b(az|doctl)\s+[^|;\n]*\bdelete\b/, 'infrastructure change'],
   // Remote code, system, secrets
   [/\b(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|\n]*\|\s*(sh|bash|zsh|iex|Invoke-Expression|pwsh|powershell)\b/i, 'running a script downloaded from the internet'],
   [/\b(Format-Volume|diskpart|bcdedit|Stop-Computer|Restart-Computer|Set-ExecutionPolicy)\b|\bformat\s+[a-z]:|\breg\s+delete\b|\bshutdown\s+[/-]/i, 'system change'],
+  [/\bdd\b[^|;\n]*\bof=\/dev\/(?!null\b)|\b(mkfs(\.\w+)?|wipefs)\s/, 'system change'],
+  [/^\s*(printenv|env|Get-ChildItem\s+env:|gci\s+env:|dir\s+env:|ls\s+env:)\s*$/i, 'printing environment variables (secrets) into the transcript'],
+  [/\b(echo|printf|Write-Output|Write-Host)\b[^|;\n]*\$(\{|env:)?\w*(SECRET|TOKEN|PASSWORD|PASSWD|_KEY|CREDENTIALS?)\b/i, 'printing a secret into the transcript'],
   [/\b(cat|type|more|less|Get-Content|gc)\s+[^|;\n]*\.env(?!\.(example|sample|template)\b)(\.\w+)?(\s|"|'|$)/i, 'printing .env secrets into the transcript'],
   [/\bgit\s+add\s+[^|;\n]*\.env(\s|$)/, 'committing a secrets file'],
 ];
@@ -104,7 +125,7 @@ function splitOutsideQuotes(command) {
 
 // Regenerable build/dependency folders: deleting only these is routine, not destructive.
 const REGENERABLE = /^(\.\/|\.\\)?(node_modules|dist|build|out|\.next|\.nuxt|\.turbo|\.cache|\.parcel-cache|\.vite|coverage|target|__pycache__|\.pytest_cache)[\\/]?$/i;
-const DELETE_CMD = /^\s*(rm|Remove-Item|ri|rd|rmdir|del)\b/i;
+const DELETE_CMD = /^\s*(rm|Remove-Item|ri|rd|rmdir|del|rimraf)\b/i;
 const CMD_STYLE = /^\s*(rd|rmdir|del)\b/i;
 
 /**
@@ -112,8 +133,10 @@ const CMD_STYLE = /^\s*(rd|rmdir|del)\b/i;
  * an option only for cmd-style commands, so a POSIX absolute path such as `/home/user/project` stays a target.
  * @param {string} command
  */
-function onlyRegenerableTargets(command) {
-  if (/[|;&\n]/.test(command)) return false;
+function onlyRegenerableTargets(segment) {
+  if (/[|;&\n]/.test(segment)) return false;
+  // `npx rimraf dist` is the same deletion as `rimraf dist`.
+  const command = segment.replace(/^\s*(npx|bunx|(pnpm|yarn)\s+dlx)\s+(-y\s+|--yes\s+)?/, '');
   if (/^\s*git\s+clean\b/.test(command)) return gitCleanOnlyRegenerable(command);
   if (!DELETE_CMD.test(command)) return false;
   const cmdStyle = CMD_STYLE.test(command);
@@ -140,6 +163,54 @@ function gitCleanOnlyRegenerable(command) {
   return paths.length > 0 && paths.every((p) => REGENERABLE.test(p));
 }
 
+// git's global options come before the subcommand (`git -C ../app push --force`); without them, every git rule sees
+// the subcommand where it expects it.
+const GIT_GLOBALS = /\bgit((?:\s+(?:-[Cc]\s+(?:"[^"]*"|'[^']*'|\S+)|--(?:git-dir|work-tree|namespace|exec-path|config-env)(?:=|\s+)(?:"[^"]*"|'[^']*'|\S+)|--no-pager|--paginate|-p|-P|--bare|--no-replace-objects|--literal-pathspecs|--glob-pathspecs|--noglob-pathspecs|--icase-pathspecs|--no-optional-locks))+)(?=\s)/g;
+const withoutGitGlobals = (segment) => segment.replace(GIT_GLOBALS, 'git');
+
+// A commit message, title or search pattern is text, not a command: `git commit -m "drop rimraf"` deletes nothing.
+// Only quoted values the shell cannot run are blanked: double quotes with `$(…)` or backticks still execute.
+const MESSAGE = /(\s(?:-m|--message|-t|--title|-b|--body|--grep|--notes?|--subject)(?:=|\s+))("(?:[^"$`\\]|\\[^$`])*"|'[^']*')/g;
+const withoutMessages = (segment) => segment.replace(MESSAGE, '$1""');
+
+/**
+ * A pathspec that reaches more than one file: `.`, a folder, a glob, or a name without an extension. The text cannot
+ * tell a folder from a file without an extension, so `git restore Makefile` also asks.
+ */
+function broadPathspec(spec) {
+  const p = spec.replace(/^["']|["']$/g, '');
+  if (p === '.' || p === './' || p === ':/' || /[*?[]/.test(p) || /[\\/]$/.test(p) || p.startsWith(':(')) return true;
+  return !/\.[\w-]+$/.test(p.split(/[\\/]/).pop() ?? '');
+}
+
+/**
+ * `git checkout`, `restore` and `switch` that throw away uncommitted changes beyond one file: `-f`, or a folder,
+ * `.` or a glob as the pathspec. One file (`git restore src/a.ts`) is routine. `git checkout name` without `--` is
+ * usually a branch switch, which git refuses when it would lose changes, so it is not flagged.
+ * @param {string} segment
+ */
+function discardsChanges(segment) {
+  const m = /\bgit\s+(checkout|restore|switch)\b(.*)$/.exec(segment);
+  if (!m) return false;
+  const [, sub, rest] = m;
+  const tokens = (rest ?? '').split(/[|;&]/)[0].trim().split(/\s+/).filter(Boolean);
+  if (tokens.some((t) => t === '-f' || t === '--force' || t === '--discard-changes')) return true;
+  if (sub === 'switch') return false;
+  const dash = tokens.indexOf('--');
+  if (sub === 'checkout') return dash >= 0 && tokens.slice(dash + 1).some(broadPathspec);
+  // restore: staging only (`--staged` without `--worktree`) keeps the files as they are.
+  if (tokens.some((t) => t === '--staged' || t === '-S') && !tokens.some((t) => t === '--worktree' || t === '-W')) return false;
+  const specs = [];
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i] ?? '';
+    if (i > dash && dash >= 0) { specs.push(t); continue; }
+    if (t === '--source' || t === '-s') { i++; continue; }
+    if (t.startsWith('-')) continue;
+    specs.push(t);
+  }
+  return specs.some(broadPathspec);
+}
+
 /**
  * Returns why a command needs human confirmation, or null when it may run.
  * @param {unknown} command
@@ -152,10 +223,12 @@ export function classify(command) {
   // Pipes stay inside a segment, so `curl … | sh` is still seen whole. Both splits are judged: the plain one, as
   // before, and one that keeps quoted arguments whole, so a `;` inside `node -e "…"` cannot cut a script in two.
   const segments = new Set([...command.split(/&&|\|\||;|\r?\n/), ...splitOutsideQuotes(command)]);
-  for (const segment of segments) {
+  for (const raw of segments) {
+    const segment = withoutMessages(withoutGitGlobals(raw));
     if (!segment.trim() || onlyRegenerableTargets(segment)) continue;
     if (changesAgentConfig(segment)) return AGENT_CONFIG_REASON;
     for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
+    if (discardsChanges(segment)) return 'discarding uncommitted changes';
   }
   return null;
 }

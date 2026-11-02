@@ -589,7 +589,9 @@ Read [`ARCHITECTURE.md`](ARCHITECTURE.md) for system boundaries.
 ```
 
 The plugin ships the skills plus two hooks: routing rules at session start and a guard that asks before destructive
-`Bash` commands. `senior install --target claude --scope project` installs the skills alone under `.claude/skills/`.
+`Bash` commands. The guard is a seatbelt against an agent's mistakes, not a sandbox: a command built at run time or
+decoded gets past it. [`tests/guard-bypass.test.ts`](tests/guard-bypass.test.ts) lists what it catches and what is out
+of scope, with the reason. `senior install --target claude --scope project` installs the skills alone under `.claude/skills/`.
 
 See [`adapters/claude-code/README.md`](adapters/claude-code/README.md).
 
