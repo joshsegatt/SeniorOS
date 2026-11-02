@@ -73,45 +73,64 @@ export function testsRan(log: string, options: TestsRanOptions = {}): number | n
     add(0);
   }
 
-  if (nodeSummary && options.fileExists) total = Math.max(0, total - emptyNodeTestFiles(lines, options.fileExists));
+  if (nodeSummary && options.isEmptyTestFile) total = Math.max(0, total - emptyNodeTestFiles(lines, options.isEmptyTestFile));
 
   return found ? total : null;
 }
 
 export interface TestsRanOptions {
   /**
-   * Whether a path, as the test runner printed it (relative to the working directory, or absolute), is an existing
-   * file. Without it, node:test entries for empty test files are not recognised and still count.
+   * Whether a path, as the test runner printed it (relative to the test command's directory, or absolute), is an
+   * existing file with no tests in it. Without it, node:test entries for empty test files still count.
    */
-  fileExists?: (path: string) => boolean;
+  isEmptyTestFile?: (path: string) => boolean;
 }
 
-/** A file `node --test` runs when given no paths: `*.test.js`, `*-test.js`, `*_test.js`, `test-*.js`, `test.js`, `test/**`. */
-function looksLikeNodeTestFile(path: string): boolean {
+/**
+ * A test file by its name: what `node --test` picks up on its own (`*.test.js`, `*-test.js`, `*_test.js`, `test-*.js`,
+ * `test.js`, `test/**`) and the usual explicit choices (`*.spec.js`, `tests/`, `spec/`, `__tests__/`).
+ */
+function looksLikeTestFile(path: string): boolean {
   const p = path.replace(/\\/g, '/');
-  if (!/\.[cm]?[jt]s$/.test(p) || /(^|\/)node_modules\//.test(p)) return false;
+  if (!/\.[cm]?[jt]sx?$/.test(p) || /(^|\/)node_modules\//.test(p)) return false;
   const base = p.slice(p.lastIndexOf('/') + 1);
-  return /(^|\/)test\//.test(p) || /^(?:.+[.\-_]test|test-.+|test)\.[cm]?[jt]s$/.test(base);
+  return /(^|\/)(?:test|tests|spec|__tests__)\//.test(p) || /^(?:.+[.\-_](?:test|spec)|test-.+|test)\.[cm]?[jt]sx?$/.test(base);
 }
 
 /**
  * node:test reports a test file with no tests in it as one passing top-level test named after the file: spec
- * `✔ test/a.test.js (38ms)`; TAP `# Subtest: test\\a.test.js` then `ok 1 - test\\a.test.js` (Node 20 prints the
- * absolute path). A file that has tests shows only their names. Counts those entries, and only those: a top-level
- * leaf (not a suite, no subtests) whose name is an existing file with a test-file name. A test or `describe` merely
- * named after a module (`utils.ts`), or another tool's output line, is not one.
+ * `✔ test\a.test.js (38ms)`; TAP `# Subtest: test\\a.test.js` then `ok 1 - test\\a.test.js` (Node 20 prints the
+ * absolute path). A file that has tests shows only their names. Counts those entries: a top-level leaf (not a
+ * suite, no subtests) whose name is a test file that `isEmptyTestFile` confirms has no tests in it. A test or
+ * `describe` merely named after a file, or another tool's output line, is not one.
+ *
+ * Each run (up to its `tests N` summary) is counted on its own, so a file that two runs both report is subtracted
+ * from each; within a run, each file once.
  */
-function emptyNodeTestFiles(lines: string[], fileExists: (path: string) => boolean): number {
-  const isEmptyFile = (name: string) => looksLikeNodeTestFile(name) && fileExists(name);
-  // Each file once: an empty describe named after a test file looks the same in spec output (fail-safe: count less).
-  const empty = new Set<string>();
-  const note = (name: string) => empty.add(name.replace(/\\/g, '/'));
+function emptyNodeTestFiles(lines: string[], isEmptyTestFile: (path: string) => boolean): number {
+  let total = 0;
+  let run: string[] = [];
+  for (const line of lines) {
+    run.push(line);
+    if (/^[ℹ#] tests \d+\s*$/.test(line)) {
+      total += emptyInRun(run, isEmptyTestFile);
+      run = [];
+    }
+  }
+  return total;
+}
 
-  // Spec: a suite opens with `▶ name` and, from Node 22, closes with `✔ name (1ms)` like a test.
+function emptyInRun(lines: string[], isEmptyTestFile: (path: string) => boolean): number {
+  const empty = new Set<string>();
+  const check = (name: string) => {
+    if (looksLikeTestFile(name) && isEmptyTestFile(name)) empty.add(name.replace(/\\/g, '/'));
+  };
+
+  // Spec: a suite with children opens with `▶ name` and closes with `✔ name (1ms)` like a test (Node 20, 22, 24).
   const suites = new Set(lines.map((l) => /^▶ (.+?)(?: \([\d.]+m?s\))?\s*$/.exec(l)?.[1]).filter((n): n is string => Boolean(n)));
   for (const line of lines) {
     const name = /^✔ (.+?) \([\d.]+m?s\)\s*$/.exec(line)?.[1];
-    if (name && !suites.has(name) && isEmptyFile(name)) note(name);
+    if (name && !suites.has(name)) check(name);
   }
 
   // TAP: `# Subtest: name`, its children indented, then `ok N - name` and a YAML block that may say `type: 'suite'`.
@@ -133,9 +152,8 @@ function emptyNodeTestFiles(lines: string[], fileExists: (path: string) => boole
     for (let j = i + 1; j < Math.min(lines.length, i + 8) && !/^\s+\.\.\.\s*$/.test(lines[j] ?? ''); j++) {
       if (/^\s+type: 'suite'/.test(lines[j] ?? '')) suite = true;
     }
-    // TAP doubles backslashes in names (`test\\a.test.js`).
-    const file = name.replace(/\\\\/g, '\\');
-    if (name === subtest && !children && !suite && isEmptyFile(file)) note(file);
+    // TAP escapes backslashes and `#` in names (`test\\a.test.js`, `h\#1`).
+    if (name === subtest && !children && !suite) check(name.replace(/\\([\\#])/g, '$1'));
     subtest = null;
   }
 

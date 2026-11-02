@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync, statSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawn, spawnSync, type StdioOptions } from 'node:child_process';
@@ -16,9 +16,15 @@ const ORDER = ['typecheck', 'lint', 'test', 'build'] as const;
 const NO_TESTS = 'no tests ran';
 /** Checks whose output is read for the number of tests that ran. */
 const isTestCheck = (name: string) => /\btests?\b/i.test(name);
-const isFile = (file: string) => {
+/**
+ * An existing file with no test call in it (`test(`, `it(`, `describe(`, `suite(`, `t.test(`, `it.skip(`…): how
+ * node:test's entry for a test file is told from a test named after a file. When unsure, no.
+ */
+const isEmptyTestFile = (file: string) => {
+  const stat = statSync(file, { throwIfNoEntry: false });
+  if (!stat?.isFile() || stat.size > 1_000_000) return false;
   try {
-    return statSync(file).isFile();
+    return !/\b(?:test|it|describe|suite)\s*(?:\.\s*\w+\s*)?\(/.test(readFileSync(file, 'utf8'));
   } catch {
     return false;
   }
@@ -212,7 +218,7 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
-    const tests = isTestCheck(name) ? testsRan(log, { fileExists: (file) => isFile(path.resolve(cwd, file)) }) : null;
+    const tests = isTestCheck(name) ? testsRan(log, { isEmptyTestFile: (file) => isEmptyTestFile(path.resolve(cwd, file)) }) : null;
     if (noTestsCollected(name, result.status, log) || (result.status === 0 && tests === 0)) {
       // A test command that ran nothing is not a failure, and not a pass either: its silence proves nothing.
       availableChecks -= 1;
