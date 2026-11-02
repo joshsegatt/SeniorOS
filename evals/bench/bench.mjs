@@ -17,11 +17,11 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
   probe                         One live harness check inside Antigravity (run this first)
   isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
-      --arms none,superpowers,senioros   (also: senioros-skills)
+      --arms none,superpowers,senioros   (also: senioros-skills, senioros-baseline)
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|claude|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills)
+      --backend agentapi|agy|claude|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills|senioros-baseline)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)

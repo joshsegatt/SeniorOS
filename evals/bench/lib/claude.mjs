@@ -39,6 +39,12 @@ export const CLAUDE_ARMS = {
   superpowers: ['--plugin-dir', SUPERPOWERS_DIR],
   senioros: ['--plugin-dir', REPO_ROOT],
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
+  // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
+  'senioros-baseline': () => {
+    const dir = process.env.SENIOROS_BENCH_BASELINE;
+    if (!dir) throw new Error('The senioros-baseline arm needs SENIOROS_BENCH_BASELINE: the path of the SeniorOS checkout to compare against.');
+    return ['--plugin-dir', dir];
+  },
 };
 let skillsOnlyDir;
 

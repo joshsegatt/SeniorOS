@@ -89,7 +89,8 @@ Each starts as a bench task the current skills fail; the skill ships only if it 
 
 - [ ] `senior-review-response`: answer review comments with evidence, fix what is real, push back on what is not
       (in practice, Codex review found real defects in #17, #18 and #22)
-- [ ] `senior-plan`: a written plan for multi-step work, checked against the result at finish
+- [ ] `senior-plan`: a written plan for multi-step work, checked against the result at finish (built with bench tasks
+      `h12`/`h13`; waiting on the measurement)
 - [ ] Parallel work: worktrees, file claims, handoffs and an independent reviewer
 - [ ] `senior review-pack`: a self-contained bundle for a fresh-context reviewer
 - [ ] Secret-safe evidence bundle and complexity budget

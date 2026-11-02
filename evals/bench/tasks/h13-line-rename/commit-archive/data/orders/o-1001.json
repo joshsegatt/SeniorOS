@@ -1,0 +1,12 @@
+{
+  "id": "o-1001",
+  "region": "CH",
+  "placedAt": "2026-10-03T09:12:00Z",
+  "lines": [
+    {
+      "sku": "tea",
+      "priceCents": 1000,
+      "qty": 2
+    }
+  ]
+}
