@@ -21,6 +21,8 @@ All notable changes to SeniorOS will be documented here.
   - A missing tool or no collected tests is `SKIP`, never a pass. A Python run that fails only because declared dependencies are not installed is `SKIP` with that reason, not a failure blamed on the change; an undeclared or local module, or a test that ran and failed, stays `FAIL`.
   - `finish --json` reports `source: "standard"` when these checks are part of the baseline.
 
+- `senior risk` recognises payment and password/encryption code. Two path rules of 4 points each, so such a change is at least medium risk and gets the finish gate's review: `payments` (payment, billing, checkout, invoice, refund, chargeback, payout, Stripe, PayPal, Braintree, Adyen) and `crypto` (password, crypto, encrypt, decrypt, cipher, signing, signature, HMAC, bcrypt, argon2, scrypt, PBKDF2, KMS, AES, RSA). The path is split into words on separators, spaces, camelCase and acronyms, so `processPayment.ts`, `APIPayment.ts` and `lib/HMAC.ts` count and `rehashing.ts`, `discharge.ts` or `battery/charge.ts` do not. A password file the auth rule already counts is not counted twice. Before, a refund-permission change in `src/billing/` was rated low.
+
 ## [0.8.0] - 2026-10-31
 
 SeniorOS as an OpenCode plugin, and a guard that also protects the settings, hooks and plugins of the host it runs in.

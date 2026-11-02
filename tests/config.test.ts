@@ -66,15 +66,16 @@ test('globToRegExp supports *, ** and ?', () => {
 test('project rules raise risk and ignored paths stop counting', () => {
   const report = assessRisk(
     [
-      { status: 'M', path: 'src/billing/charge.ts' },
+      // An area no built-in rule knows (billing now has one).
+      { status: 'M', path: 'src/shipping/rates.ts' },
       { status: 'M', path: 'docs/api/routes.md' }
     ],
     {
-      extraRules: [{ code: 'billing', points: 4, reason: 'Billing changed.', pattern: '^src/billing/' }],
+      extraRules: [{ code: 'shipping', points: 4, reason: 'Shipping rates changed.', pattern: '^src/shipping/' }],
       ignore: ['docs/**']
     }
   );
-  assert.deepEqual(report.signals.map((signal) => signal.code), ['billing']);
+  assert.deepEqual(report.signals.map((signal) => signal.code), ['shipping']);
   assert.deepEqual(report.ignored, ['docs/api/routes.md']);
   assert.equal(report.level, 'medium');
 });

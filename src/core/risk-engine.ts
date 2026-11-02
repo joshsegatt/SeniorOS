@@ -6,10 +6,34 @@ interface Rule {
   code: string;
   points: number;
   reason: string;
-  pattern: RegExp;
+  /** Tested against the whole repository-relative path. */
+  pattern?: RegExp;
+  /** Matched against the path's words instead (see `pathWords`). */
+  words?: Set<string>;
+}
+
+/**
+ * The lowercase words of a path: split on anything but letters and digits, and on camelCase and acronym
+ * boundaries. `src/APIPayment.ts` gives src, api, payment, ts; `lib/HMAC.ts` gives lib, hmac, ts.
+ */
+export function pathWords(path: string): Set<string> {
+  const spaced = path
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2');
+  return new Set(spaced.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean));
+}
+
+function matches(rule: Rule, path: string): boolean {
+  if (rule.words) {
+    for (const word of pathWords(path)) if (rule.words.has(word)) return true;
+    return false;
+  }
+  return rule.pattern?.test(path) ?? false;
 }
 
 const RULES: Rule[] = [
+  { code: 'payments', points: 4, reason: 'Payment, billing or refund behavior changed.', words: new Set(['payment', 'payments', 'billing', 'checkout', 'invoice', 'invoices', 'invoicing', 'invoiced', 'refund', 'refunds', 'refunded', 'refunding', 'chargeback', 'chargebacks', 'payout', 'payouts', 'stripe', 'paypal', 'braintree', 'adyen']) },
+  { code: 'crypto', points: 4, reason: 'Password, encryption or signing code changed.', words: new Set(['password', 'passwords', 'passwordless', 'passwd', 'crypto', 'crypt', 'cryptography', 'encrypt', 'encrypted', 'encryption', 'encryptor', 'decrypt', 'decrypted', 'decryption', 'cipher', 'ciphers', 'signing', 'signature', 'signatures', 'hmac', 'bcrypt', 'argon2', 'scrypt', 'pbkdf2', 'kms', 'aes', 'rsa']) },
   { code: 'auth', points: 4, reason: 'Authentication or authorization behavior changed.', pattern: /(^|\/)(auth|middleware|permissions?|rbac|acl)(\/|\.|$)|session|oauth|jwt/i },
   { code: 'database', points: 3, reason: 'Database schema or migration surface changed.', pattern: /(^|\/)(migrations?|schema|drizzle|prisma)(\/|\.|$)|\.sql$/i },
   { code: 'secrets', points: 6, reason: 'Secret or environment configuration surface changed.', pattern: /(^|\/)(\.env|secrets?|credentials?)(\.|\/|$)/i },
@@ -45,10 +69,15 @@ export function assessRisk(allFiles: ChangedFile[], options: RiskOptions = {}): 
     ...(options.extraRules ?? []).map((rule) => ({ ...rule, pattern: new RegExp(rule.pattern, 'i') }))
   ];
 
+  const authRule = RULES.find((r) => r.code === 'auth');
   for (const rule of rules) {
     // Secrets are checked against every changed file, ignored or not.
     const candidates = rule.code === 'secrets' ? allFiles : files;
-    const matched = candidates.filter((file) => rule.pattern.test(file.path)).map((file) => file.path);
+    const matched = candidates
+      .filter((file) => matches(rule, file.path))
+      // A password file under auth/ is the auth concern already counted, not a second one.
+      .filter((file) => rule.code !== 'crypto' || !authRule || !matches(authRule, file.path))
+      .map((file) => file.path);
     if (matched.length > 0) {
       signals.push({ code: rule.code, points: rule.points, reason: rule.reason, files: matched });
     }

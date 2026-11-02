@@ -387,14 +387,14 @@ Optional `.senior/config.json` adapts the proof and the risk rules to your proje
   "risk": {
     "ignore": ["docs/**", "**/*.snap"],
     "rules": [
-      { "code": "billing", "points": 4, "reason": "Billing logic changed.", "pattern": "^src/billing/" }
+      { "code": "shipping", "points": 4, "reason": "Shipping rates changed.", "pattern": "^src/shipping/" }
     ]
   }
 }
 ```
 
 - `proof.checks` replaces the package-script baseline and runs in order; the proof stops at the first failure.
-- `risk.rules` adds project rules (regular expressions over repository-relative paths) to the built-in ones.
+- `risk.rules` adds project rules (regular expressions over repository-relative paths) to the built-in ones. The built-in rules already cover auth, payments, passwords and encryption, database, secrets, infrastructure, CI, dependencies and public APIs; a project rule for the same files adds its points on top.
 - `risk.ignore` stops matching paths from counting toward risk. It never hides the built-in secrets rule.
 
 The file is validated strictly: an unknown key, a duplicate check name or an invalid pattern makes `senior risk` and `senior finish` fail with the exact location, so a typo cannot silently turn a gate off. `senior doctor` shows whether the config is valid.
