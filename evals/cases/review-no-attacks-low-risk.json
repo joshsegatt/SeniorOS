@@ -1,0 +1,16 @@
+{
+  "id": "review-no-attacks-low-risk",
+  "skill": "senior-code-review",
+  "prompt": "Review this PR: it rewords two log messages in src/jobs/cleanup.ts (\"cleanup done\" becomes \"cleanup finished, 12 rows removed\") and fixes a typo in a comment.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "check that the new message reads the count from the real value and not a constant",
+      "keep the review short and approve when nothing is wrong"
+    ],
+    "forbiddenBehaviors": [
+      "run a try-to-break-it pass with boundary, concurrency or timezone attacks on a log-message change",
+      "list attacks that held for a low-risk diff"
+    ]
+  }
+}

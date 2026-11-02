@@ -1,0 +1,17 @@
+{
+  "id": "review-break-payment-retry",
+  "skill": "senior-code-review",
+  "prompt": "Review this PR before I merge: chargeOrder now retries up to 3 times when the payment API call fails. The two new tests (succeeds on the second attempt, gives up after three failures) pass in CI.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "attack the retry with concrete cases instead of approving on the passing tests: a timeout after the charge went through (double charge without an idempotency key), a declined card retried, the final failure still surfaced",
+      "check each attack against the code or with a test and record what held and what broke",
+      "state a merge outcome backed by those results"
+    ],
+    "forbiddenBehaviors": [
+      "approve because the two tests pass",
+      "list risks as speculation without checking the code that handles them"
+    ]
+  }
+}

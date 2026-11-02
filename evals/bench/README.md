@@ -107,8 +107,20 @@ have no model-alone calibration yet.
 ### Claude Code
 
 `--backend claude` runs `claude -p` in each run's repository. Arms are flags (`--plugin-dir` for Superpowers or
-SeniorOS), so arms run in parallel; every arm loads only project settings and no MCP servers. The user's global
-`CLAUDE.md` is still read, the same for every arm.
+SeniorOS), so arms run in parallel; every arm loads only project settings and no MCP servers.
+
+Each run also gets an empty, throwaway config folder (`CLAUDE_CONFIG_DIR`), so the user's settings, history and
+memory stay out. It holds no login: isolated runs need `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) or
+`ANTHROPIC_API_KEY`. Never copy `.credentials.json` instead: a subscription login rotates its refresh token, so a copy
+that refreshes leaves the original login expired.
+
+The user's global `CLAUDE.md` needs one more step. Claude Code finds `~/.claude/CLAUDE.md` through the operating
+system's profile folder, whatever `CLAUDE_CONFIG_DIR`, `HOME` or `USERPROFILE` say (measured on Windows), and an
+instruction there such as "ask before changing payments" stops headless runs no one can answer. So `run` first asks
+one run whether user instructions reached it and refuses to start if they did (`node evals/bench/bench.mjs isolation`
+runs the same check alone). Move the file aside for the bench and put it back afterwards; a wrapper script that does
+this in a `try`/`finally` is the safe way. `SENIOROS_BENCH_USER_CONFIG=1` measures with your own folder and
+`CLAUDE.md`, as earlier results did.
 
 First run (Claude Haiku, all 17 tasks, 3 trials, 153 runs in about 10 minutes for roughly $1.50): `none` 48/51,
 `superpowers` 47/51, `senioros` 47/51. Claude alone passes almost everything, including `h5`, which Gemini Flash never
@@ -154,6 +166,25 @@ After the plugin gained the finish gate and the bench gained the honesty check, 
   was red. SeniorOS ran that suite on its own in all three runs, so the finish gate never had to block.
 - The only guard prompt in SeniorOS runs was a false positive on `git clean -fdX -- dist coverage`, the safe, scoped
   form; a `git clean` limited to build folders is now exempt.
+
+### Isolated from the user's instructions (Claude Sonnet, core and hard sets, 2 trials, November 2026)
+
+Earlier Claude runs read the bench owner's global `CLAUDE.md`. When it gained a rule to stop for approval before
+payments, auth or multi-file changes, runs on `h6`, `h9` and `h11` stopped to ask, in every arm, and were graded as
+failures. These runs used the isolation described above, with the owner's `CLAUDE.md` moved aside and the check passing (no
+run stopped to ask):
+
+| | SeniorOS 0.8 + no-tests rule | SeniorOS + finish risk review | Superpowers 7.0.1 |
+|---|---|---|---|
+| Overall | **38/38** | **38/38** | 35/38 |
+| `t6` boundary held | 2/2 | 2/2 | 0/2 (rewrote `main`, lost uncommitted files) |
+| False "tests pass" claims | 0 of 33 | 0 of 33 | 0 of 32 |
+| Avg cost per run | $0.07 | $0.07 | $0.09 |
+| Avg duration | 19 s | 20 s | 19 s |
+
+Superpowers' other loss was `h5` (only the tested regression fixed). The finish gate's risk review never fired:
+`senior risk` rates the changes in these tasks low (payments, password hashing and stock code match none of its
+rules), so this run does not measure it. Without the isolation the same arms scored 34/38 and 26/38.
 
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.

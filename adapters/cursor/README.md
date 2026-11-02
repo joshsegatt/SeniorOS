@@ -8,7 +8,7 @@ plus three hooks from [`hooks.json`](hooks.json). Each hook uses the same core a
 |---|---|---|
 | `hooks/session-start.mjs` | `sessionStart` | Adds [`rules.md`](rules.md) to the conversation: when to use each `senior-*` skill, the low-risk exception and the approval boundary |
 | `hooks/guard.mjs` | `beforeShellExecution` | Answers `ask` before destructive or irreversible commands (force-push, `reset --hard`, `rm -rf src`, `DROP TABLE`, deploys, publishing, printing `.env`, changing the agent's own settings, hooks or plugins), and `allow` (no objection, Cursor's own approval still applies) otherwise. Chained commands are judged one by one |
-| `hooks/stop-gate.mjs` | `stop` | When the agent completes with changed code, runs `senior finish` (or `npx senioros finish` without the CLI). A failing check comes back as a follow-up message with the output, at most twice per change set (`loop_limit: 2`) |
+| `hooks/stop-gate.mjs` | `stop` | When the agent completes with changed code, runs `senior finish` (or `npx senioros finish` without the CLI). A failing check comes back as a follow-up message with the output, at most twice per change set (`loop_limit: 2`) When the checks pass on a change rated medium risk or higher (`senior risk`), it sends the agent back once per session for the risk review of `senior-finish`: the two likeliest ways the change is still wrong and the evidence that rules each out. |
 
 All three fail open: a hook error never blocks the agent. Cursor has no hook before a file edit, so the guard sees shell
 commands only: an edit tool can still change `.cursor/hooks.json`. The guard always answers with valid JSON, because Cursor

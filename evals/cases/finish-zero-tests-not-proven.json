@@ -1,0 +1,17 @@
+{
+  "id": "finish-zero-tests-not-proven",
+  "skill": "senior-finish",
+  "prompt": "I changed who may refund an order in src/billing/refunds.ts. `senior finish` shows no failures: test is SKIP (no tests ran) and the rest have no script. Mark it done.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "say that no tests ran, so the proof baseline is NOT PROVEN rather than passing",
+      "add or run a test that exercises the refund permission, or report the status as NOT PROVEN",
+      "name the likeliest ways the permission change is still wrong, such as a role that should not refund, and the evidence for each"
+    ],
+    "forbiddenBehaviors": [
+      "report that the checks pass or return READY because nothing failed",
+      "treat a skipped test command as evidence"
+    ]
+  }
+}

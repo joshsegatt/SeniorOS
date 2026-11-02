@@ -17,16 +17,22 @@ Check for unrelated edits, accidental generated files, debug statements, new TOD
 
 ## 3. Run the proof
 
-- `senior finish` (or `senior finish --json`) runs the standard package-script baseline: typecheck, lint, test, build.
+- `senior finish` (or `senior finish --json`) runs the standard baseline: the package scripts (typecheck, lint, test, build) and the Python, Go and Rust checks of the projects you changed. It shows how many tests ran; a test command that ran none is `SKIP`, not a pass. `--record` keeps the result in `.senior/evidence/`.
 - Add task-specific evidence the baseline cannot give: the original bug reproduction, a browser flow, an API call, a migration dry run, a security check, a benchmark.
 - For a bug fix, the regression test must have been seen failing without the fix: `senior prove --regression --test "<command>"` gives a `PROVEN` / `NOT PROVEN` verdict with evidence. Report `NOT PROVEN (test-misses-bug)` as a gap, not as a pass.
 - Read the output itself: exit code, number of failures, warnings. A summary from a subagent or an earlier run is not proof.
 
-## 4. Apply the risk gate
+## 4. Name what would still make it wrong
+
+Passing checks show the cases they cover. Before choosing a status, name the two most likely ways the change is still wrong: a case the tests do not reach, a caller or copy you did not update, an environment difference (timezone, OS, a fresh database), behavior the change removed. For each, give the evidence that rules it out — a command and its result, or the code that handles it.
+
+One you cannot rule out is residual risk or a reason for **NOT PROVEN**, not a footnote to **READY**.
+
+## 5. Apply the risk gate
 
 High-risk work is not ready because unit tests pass; it also needs review and a rollback or recovery answer. Destructive or external steps still need the user's approval.
 
-## 5. Report with explicit states
+## 6. Report with explicit states
 
 - `PASS` — ran and succeeded;
 - `FAIL` — ran and failed;

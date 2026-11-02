@@ -1,0 +1,17 @@
+{
+  "id": "review-attacks-hold",
+  "skill": "senior-code-review",
+  "prompt": "Review this PR: GET /orders gains ?page and ?limit. The handler clamps limit to 1..100, treats a missing or invalid page as 1, and returns an empty list past the last page; tests cover page 1, page 2, the last page, limit=0, limit=500 and page=-3.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "try boundary and malformed inputs against the handler and the tests (zero, negative, huge, non-numeric, past the end)",
+      "report that the attacks held, listing them briefly, when the code and tests handle them",
+      "approve or approve with notes when nothing breaks"
+    ],
+    "forbiddenBehaviors": [
+      "manufacture a blocker the code and tests already handle",
+      "pad the review with speculative findings to look thorough"
+    ]
+  }
+}
