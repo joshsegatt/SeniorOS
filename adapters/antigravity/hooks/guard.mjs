@@ -5,16 +5,19 @@ import { log, runHook } from './lib.mjs';
 /** @type {Array<[RegExp, string]>} [pattern, reason]; patterns run against the whole command line. */
 export const RULES = [
   // File deletion
-  [/\brm\s+(-\w*[rR]\w*|--recursive)\b/, 'recursive file deletion'],
-  // PowerShell accepts any prefix of a parameter name (`-r`, `-rec`), and `ri`, `del`, `erase`, `rd` are its aliases.
-  [/\b(Remove-Item|ri|del|erase|rd|rmdir)\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
+  // GNU rm also takes its options after the operands (`rm src -rf`).
+  [/(?<!\bs3\s+)\brm\b(?=[^|;\n]*\s(-\w*[rR]\w*|--recursive)\b)/, 'recursive file deletion'],
+  // PowerShell accepts any prefix of a parameter name (`-r`, `-rec`). Its short aliases (`ri`, `rm`, `del`, `erase`,
+  // `rd`) count only where a command starts, so `grep del -r src` is a search.
+  [/\bRemove-Item\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
+  [/(^|[|"'{(&])\s*(ri|rm|del|erase|rd|rmdir)(?=\s)[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
   [/\b(rd|rmdir)\s+\/s\b/i, 'recursive folder deletion'],
   [/\bdel\s+[^|;\n]*\/s\b/i, 'recursive file deletion'],
   [/\b(rimraf|del-cli)\s+\S/, 'recursive file deletion'],
   [/\bfind\b[^|;\n]*\s(-delete\b|-exec(dir)?\s+(rm|del|unlink|shred)\b)/, 'deleting the files find matches'],
   [/\brsync\b[^|;\n]*\s--(delete(-\w+)?|remove-source-files)\b/, 'rsync deleting files at the destination'],
   // An interpreter one-liner deletes through calls, not shell syntax.
-  [/\b(node|python3?|py|ruby|perl|php|deno|bun)\b[^|]*?\s-(e|c|-eval)\b.*(shutil\.rmtree|\b(rmSync|rm|rmdirSync|rmdir)\s*\([^)]*recursive\s*:\s*true|FileUtils\.rm_r|remove_dir_all)/i, 'recursive file deletion'],
+  [/\b(node|python3?|py|ruby|perl|php|deno|bun)\b[^|]*?\s-(e|c|p|-eval|-print)\b.*(\brmtree\s*\(|\b(rmSync|rm|rmdirSync|rmdir)\s*\([^)]*recursive\s*:\s*true|FileUtils\.rm_r|remove_dir_all)/i, 'recursive file deletion'],
   // Git history and uncommitted work
   [/\bgit\s+push\b[^|;\n]*(\s--force\b|\s-f\b|--force-with-lease|\s\+\S+)/, 'force push (rewrites remote history)'],
   [/\bgit\s+push\b[^|;\n]*\s--mirror\b/, 'mirror push (overwrites and deletes remote branches)'],
@@ -25,7 +28,7 @@ export const RULES = [
   [/\bgit\s+branch\s+[^|;\n]*-D\b/, 'deleting a branch without a merge check'],
   [/\bgit\s+branch\b(?=[^|;\n]*\s(-\w*d\w*|--delete)\b)(?=[^|;\n]*\s(-\w*f\w*|--force)\b)/, 'deleting a branch without a merge check'],
   [/\bgit\s+update-ref\s+[^|;\n]*-d\b/, 'deleting a git ref'],
-  [/\bgit\s+(reflog\s+(expire|delete)\b|gc\b[^|;\n]*--prune=(now|all)\b|prune\b)/, 'deleting the recovery points of lost commits'],
+  [/\bgit\s+(reflog\s+(expire|delete)\b|gc\b[^|;\n]*--prune=(now|all)\b|prune(?![\w-]))/, 'deleting the recovery points of lost commits'],
   [/\bgit\s+worktree\s+remove\b[^|;\n]*(\s-f\b|\s--force\b)/, 'removing a worktree with uncommitted changes'],
   [/\bgit\s+stash\s+(drop|clear)\b/, 'deleting stashed work'],
   [/\bgit\s+(rebase|filter-branch|filter-repo)\b/, 'history rewrite'],
@@ -44,18 +47,20 @@ export const RULES = [
   [/\bvercel\b(?!\s+(dev|env\s+pull|link|login|logout|whoami|logs|inspect|ls|list|pull|--version|-v|help)\b)/, 'Vercel deployment'],
   [/\b(firebase|netlify|fly|flyctl|railway)\s+deploy\b|\bwrangler\s+(deploy|publish)\b/, 'deployment'],
   [/\bgcloud\b[^|;\n]*\b(deploy|delete)\b/, 'Google Cloud deploy/delete'],
-  [/\bkubectl\s+(apply|delete|replace)\b/, 'Kubernetes cluster change'],
+  [/\bkubectl\b[^|;\n]*\s(apply|delete|replace)\b/, 'Kubernetes cluster change'],
   [/\bterraform\s+(apply|destroy)\b/, 'infrastructure change'],
   [/\bdocker\s+(system\s+prune|volume\s+(rm|prune))\b/, 'deleting Docker data'],
   [/\bgh\s+(release\s+(create|delete)|repo\s+(delete|archive)|pr\s+merge|issue\s+delete|secret\s+delete|variable\s+delete)\b/, 'irreversible GitHub action'],
   [/\bgh\s+api\b[^|;\n]*(-X|--method)[\s=]*["']?DELETE\b/i, 'irreversible GitHub action'],
-  [/\baws\s+s3\s+(rm\b[^|;\n]*--recursive|rb\b|sync\b[^|;\n]*\s--delete\b)|\baws\s+[\w-]+\s+(delete|terminate|remove|deregister)-[\w-]+/, 'deleting cloud resources'],
+  // Global options may come before the service (`aws --profile prod s3 rm …`).
+  [/\baws\b[^|;\n]*\ss3\s+(rm\b[^|;\n]*--recursive|rb\b|sync\b[^|;\n]*\s--delete\b)|\baws\b[^|;\n]*\s(delete|terminate|remove|deregister)-[\w-]+(?=\s|$)/, 'deleting cloud resources'],
   [/\bhelm\s+(uninstall|delete)\b|\bheroku\s+(apps:destroy|pg:reset)\b|\bpulumi\s+(up|destroy)\b|\b(az|doctl)\s+[^|;\n]*\bdelete\b/, 'infrastructure change'],
   // Remote code, system, secrets
   [/\b(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|\n]*\|\s*(sh|bash|zsh|iex|Invoke-Expression|pwsh|powershell)\b/i, 'running a script downloaded from the internet'],
   [/\b(Format-Volume|diskpart|bcdedit|Stop-Computer|Restart-Computer|Set-ExecutionPolicy)\b|\bformat\s+[a-z]:|\breg\s+delete\b|\bshutdown\s+[/-]/i, 'system change'],
   [/\bdd\b[^|;\n]*\bof=\/dev\/(?!null\b)|\b(mkfs(\.\w+)?|wipefs)\s/, 'system change'],
-  [/^\s*(printenv|env|Get-ChildItem\s+env:|gci\s+env:|dir\s+env:|ls\s+env:)\s*$/i, 'printing environment variables (secrets) into the transcript'],
+  [/^\s*(printenv|env|Get-ChildItem\s+env:|gci\s+env:|dir\s+env:|ls\s+env:)\s*(\|.*)?$/i, 'printing environment variables (secrets) into the transcript'],
+  [/\bprintenv\s+\w*(SECRET|TOKEN|PASSWORD|PASSWD|_KEY|CREDENTIALS?)\b/i, 'printing a secret into the transcript'],
   [/\b(echo|printf|Write-Output|Write-Host)\b[^|;\n]*\$(\{|env:)?\w*(SECRET|TOKEN|PASSWORD|PASSWD|_KEY|CREDENTIALS?)\b/i, 'printing a secret into the transcript'],
   [/\b(cat|type|more|less|Get-Content|gc)\s+[^|;\n]*\.env(?!\.(example|sample|template)\b)(\.\w+)?(\s|"|'|$)/i, 'printing .env secrets into the transcript'],
   [/\bgit\s+add\s+[^|;\n]*\.env(\s|$)/, 'committing a secrets file'],
@@ -169,9 +174,12 @@ const GIT_GLOBALS = /\bgit((?:\s+(?:-[Cc]\s+(?:"[^"]*"|'[^']*'|\S+)|--(?:git-dir
 const withoutGitGlobals = (segment) => segment.replace(GIT_GLOBALS, 'git');
 
 // A commit message, title or search pattern is text, not a command: `git commit -m "drop rimraf"` deletes nothing.
-// Only quoted values the shell cannot run are blanked: double quotes with `$(…)` or backticks still execute.
+// Only in git, gh and glab, where these options take text: for `ssh host -t "…"`, `watch -t "…"` or `sudo -b "…"`
+// the quoted word is the command that runs. Only quoted values the shell cannot run are blanked: double quotes with
+// `$(…)` or backticks still execute.
 const MESSAGE = /(\s(?:-m|--message|-t|--title|-b|--body|--grep|--notes?|--subject)(?:=|\s+))("(?:[^"$`\\]|\\[^$`])*"|'[^']*')/g;
-const withoutMessages = (segment) => segment.replace(MESSAGE, '$1""');
+const TEXT_OPTIONS_TOOL = /^\s*(git|gh|glab)\s/;
+const withoutMessages = (segment) => (TEXT_OPTIONS_TOOL.test(segment) ? segment.replace(MESSAGE, '$1""') : segment);
 
 /**
  * A pathspec that reaches more than one file: `.`, a folder, a glob, or a name without an extension. The text cannot
@@ -180,8 +188,12 @@ const withoutMessages = (segment) => segment.replace(MESSAGE, '$1""');
 function broadPathspec(spec) {
   const p = spec.replace(/^["']|["']$/g, '');
   if (p === '.' || p === './' || p === ':/' || /[*?[]/.test(p) || /[\\/]$/.test(p) || p.startsWith(':(')) return true;
-  return !/\.[\w-]+$/.test(p.split(/[\\/]/).pop() ?? '');
+  const name = p.split(/[\\/]/).pop() ?? '';
+  // A dot-name with no other dot is a folder (`.github`, `.husky`) unless it is a common dotfile.
+  if (/^\.[^.]+$/.test(name)) return !DOTFILES.has(name.toLowerCase());
+  return !/\.[\w-]+$/.test(name);
 }
+const DOTFILES = new Set(['.env', '.gitignore', '.gitattributes', '.gitmodules', '.npmrc', '.nvmrc', '.editorconfig', '.prettierrc', '.eslintrc', '.babelrc', '.dockerignore', '.npmignore', '.prettierignore', '.eslintignore', '.mailmap', '.browserslistrc', '.yarnrc', '.tool-versions', '.python-version', '.node-version', '.ruby-version']);
 
 /**
  * `git checkout`, `restore` and `switch` that throw away uncommitted changes beyond one file: `-f`, or a folder,
@@ -194,7 +206,8 @@ function discardsChanges(segment) {
   if (!m) return false;
   const [, sub, rest] = m;
   const tokens = (rest ?? '').split(/[|;&]/)[0].trim().split(/\s+/).filter(Boolean);
-  if (tokens.some((t) => t === '-f' || t === '--force' || t === '--discard-changes')) return true;
+  // `-f` alone or among short flags (`-qf`).
+  if (tokens.some((t) => /^-[a-zA-Z]*f[a-zA-Z]*$/.test(t) || t === '--force' || t === '--discard-changes')) return true;
   if (sub === 'switch') return false;
   const dash = tokens.indexOf('--');
   if (sub === 'checkout') return dash >= 0 && tokens.slice(dash + 1).some(broadPathspec);
@@ -224,11 +237,18 @@ export function classify(command) {
   // before, and one that keeps quoted arguments whole, so a `;` inside `node -e "…"` cannot cut a script in two.
   const segments = new Set([...command.split(/&&|\|\||;|\r?\n/), ...splitOutsideQuotes(command)]);
   for (const raw of segments) {
-    const segment = withoutMessages(withoutGitGlobals(raw));
-    if (!segment.trim() || onlyRegenerableTargets(segment)) continue;
-    if (changesAgentConfig(segment)) return AGENT_CONFIG_REASON;
-    for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
-    if (discardsChanges(segment)) return 'discarding uncommitted changes';
+    if (!raw.trim() || onlyRegenerableTargets(raw)) continue;
+    // The agent's configuration is judged on the command as written: a path inside `git -C …` or a message is still
+    // a path it changes.
+    if (changesAgentConfig(raw)) return AGENT_CONFIG_REASON;
+    // The rules see two readings, and either one asks. Messages are text in both. The second reading also drops git's
+    // global options so the subcommand is where the rules expect it; the first keeps their values, which can run
+    // commands (`-c alias.x='!rm -rf src'`, `-C "$(…)"`).
+    const text = withoutMessages(raw);
+    for (const segment of new Set([text, withoutGitGlobals(text)])) {
+      for (const [pattern, reason] of RULES) if (pattern.test(segment)) return reason;
+      if (discardsChanges(segment)) return 'discarding uncommitted changes';
+    }
   }
   return null;
 }

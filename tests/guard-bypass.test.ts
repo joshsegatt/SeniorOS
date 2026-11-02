@@ -94,6 +94,34 @@ const asks: Array<[string, RegExp]> = [
   ['git commit -m "$(rm -rf src)"', /recursive file deletion/],
   ['git commit -m "`git push --force`"', /force push/],
   ['git commit -m "wip" && rimraf src', /recursive file deletion/],
+  // Review findings: dropping git's global options must not hide their values, which can run commands or name the
+  // agent's own configuration, and the message rule must not hide a command another tool runs.
+  ['git -c alias.x=\'!rm -rf src\' x', /recursive file deletion/],
+  ['git -c "alias.x=!git push --force" x', /force push/],
+  ['git -C "$(rm -rf src)" status', /recursive file deletion/],
+  ['git -C ~/.claude/plugins/seniorOS rm hooks/guard.mjs', /agent's own settings/],
+  ['git -C .codex/plugins/x mv a b', /agent's own settings/],
+  ['ssh deploy@prod -t "git push --force origin main"', /force push/],
+  ['ssh user@host -t "sudo rm -rf /var/www"', /recursive file deletion/],
+  ['watch -t "rm -rf src"', /recursive file deletion/],
+  ['sudo -u root -b \'rm -rf /srv\'', /recursive file deletion/],
+  ['foo -m \'Set-Content .claude/settings.json x\'', /agent's own settings/],
+  ['git checkout -- .github', /discarding/],
+  ['git restore .husky', /discarding/],
+  ['git checkout -qf main', /discarding/],
+  ['rm src -rf', /recursive file deletion/],
+  ['rm src -Recurse -Force', /recursive file deletion/],
+  ['pwsh -Command "Remove-Item src -Recurse"', /recursive file deletion/],
+  ['python -c "from shutil import rmtree; rmtree(\'src\')"', /recursive file deletion/],
+  ['node -p "require(\'fs\').rmSync(\'src\',{recursive:true})"', /recursive file deletion/],
+  ['aws --profile prod s3 rm s3://b --recursive', /cloud resources/],
+  ['aws --region us-east-1 ec2 terminate-instances --instance-ids i-1', /cloud resources/],
+  ['kubectl -n prod delete pod x', /Kubernetes/],
+  ['env | grep TOKEN', /environment variables/],
+  ['printenv | sort', /environment variables/],
+  ['printenv GITHUB_TOKEN', /secret/],
+  // Built at run time but still readable in the text: caught, though not guaranteed (see out of scope).
+  ['$(echo rm) -rf src', /recursive file deletion/],
 ];
 
 /** Routine work that must keep running without a prompt, next to the new rules. */
@@ -114,6 +142,10 @@ const passes = [
   // Dangerous words inside a commit message, title or search pattern are text.
   'git commit -m "remove rimraf dependency"', 'git commit -m "docs: explain git push --mirror"', "git commit -m 'drop rm -rf from the script'",
   'git log --grep="find -delete"', 'gh issue create --title "fix: aws s3 rb cleanup" --body "uses pulumi destroy"',
+  // Next to the review fixes.
+  'git prune-packed', 'grep "del" -r src', 'grep del -r src', 'git checkout -- .gitignore', 'git restore .env.example',
+  'git restore .nvmrc', 'aws s3 cp delete-me.txt s3://bucket/', 'kubectl -n prod get pods', 'ssh -t host uptime',
+  'docker build -t app .', 'git -c color.ui=always status', 'git -C ../app log -5',
 ];
 
 /**
@@ -122,7 +154,7 @@ const passes = [
  * would make it ask so often that people turn it off. Each stays out for the reason given.
  */
 const outOfScope: Array<[string, string]> = [
-  ['$(echo rm) -rf src', 'a command built at run time: only a sandbox sees what runs'],
+  ['r=rm; $r -rf src', 'a command built at run time: only a sandbox sees what runs'],
   ['echo cm0gLXJmIHNyYw== | base64 -d | sh', 'an encoded command: only a sandbox sees what runs'],
   ['rm src/a.ts', 'one file, tracked by git and recoverable'],
   ['rm src/*.ts', 'files in one folder without -r: everyday cleanup, tracked files are recoverable'],
