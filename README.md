@@ -306,6 +306,7 @@ senior uninstall --target antigravity
 | `senior risk --base <ref>` | Classifies a branch or PR: everything since the merge-base with `<ref>`, plus uncommitted work |
 | `senior finish` | Runs available verification and reports the proof baseline |
 | `senior finish --json` | Same, with a machine-readable report on stdout (script output goes to stderr) |
+| `senior finish --record` | Also writes the report to `.senior/evidence/<commit>.json` (`-uncommitted` when the tree had changes): what was verified, on which commit, with which commands, exit codes and test counts. No command output is stored |
 | `senior prove --regression --test "<cmd>"` | Proves a regression test catches the bug: passes with the fix, fails with it reverted, passes again restored |
 | `senior prove --restore` | Puts the working tree back after a proof that was killed mid-run |
 | `senior doctor` | Diagnoses SeniorOS installation/configuration problems |
@@ -328,7 +329,10 @@ to two folders below it (`backend/`, `services/api/`):
 
 - **Only what changed:** with uncommitted changes, `senior finish` runs the projects they touch and reports the others
   as `SKIP` (`no changes in this project`); `senior finish --all` runs everything. A clean tree runs everything.
-- **Never a false pass:** a tool that is not installed, or no tests collected, is `SKIP` with the reason.
+- **Never a false pass:** a tool that is not installed is `SKIP` with the reason. So is a test command that ran no
+  tests, in any language: the number of tests that ran is read from node:test, Jest, Vitest, Mocha, pytest, unittest,
+  `cargo test` and `go test` output, shown next to the check (`PASS test (npm run test — 42 tests)`) and reported as
+  `tests` in `--json`. Output SeniorOS does not recognise changes nothing.
 - **Environment or change:** a Python test run that fails only because modules the project **declares** are not
   installed is `SKIP` (`not verified: declared dependencies not installed`), not a failure the finish gate blames on
   the change. Declared means listed in a dependency declaration (`requirements*.txt`, `requirements/`, `[project]`

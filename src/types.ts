@@ -36,6 +36,8 @@ export interface ProofCheck {
   durationMs: number;
   /** Why a check was skipped or failed without a normal exit code. */
   reason?: string;
+  /** For test checks, the number of tests that ran, when the runner's output says so (see test-counts.ts). */
+  tests?: number;
 }
 
 export interface ProofReport {
@@ -45,6 +47,8 @@ export interface ProofReport {
    */
   source: 'package-scripts' | 'standard' | 'config';
   checks: ProofCheck[];
+  /** When and on which code the checks ran: the commit, and whether uncommitted changes were part of it. */
+  provenance: { ranAt: string; head: string | null; dirty: boolean | null };
   baselinePassed: boolean;
   availableChecks: number;
   totalChecks: number;
