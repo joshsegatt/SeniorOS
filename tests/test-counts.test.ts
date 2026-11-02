@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 const root = process.cwd();
 const CLI = path.join(root, 'dist', 'src', 'index.js');
 const { testsRan } = (await import(pathToFileURL(path.join(root, 'dist', 'src', 'core', 'test-counts.js')).href)) as {
-  testsRan: (log: string) => number | null;
+  testsRan: (log: string, options?: { isEmptyTestFile?: (path: string) => boolean }) => number | null;
 };
 // Without NODE_TEST_CONTEXT, which turns a nested `node --test` into a reporting child that always exits 0.
 const { NODE_TEST_CONTEXT: _parent, ...baseEnv } = process.env;
@@ -48,7 +48,62 @@ const samples: Array<[string, string, number | null]> = [
 ];
 
 test('the number of tests that ran is read from each runner, and unknown output says nothing', () => {
-  for (const [label, log, expected] of samples) assert.equal(testsRan(log), expected, label);
+  for (const [label, log, expected] of samples) assert.equal(testsRan(log, { isEmptyTestFile: () => false }), expected, label);
+});
+
+// node:test reports a test file with no tests in it as one passing test named after the file. Captured from real
+// runs (Node 24, 22 and 20 spec; Node 24 and 20 TAP; durations and YAML noise trimmed) of a project with
+// test/empty.test.js (no tests) and test/utils.test.js holding: describe('utils.ts', it 'adds'), test('index.js'),
+// test('loader.js') with subtest 'inner', and an empty describe('test/empty.test.js'). Five tests reported, four ran.
+// The proof engine's check reads each file; here, the files with no tests in them are listed.
+const emptyFiles = new Set(['test/empty.test.js', 'test\\empty.test.js', 'C:\\Users\\Jo Doe\\proj\\test\\empty.test.js', 'test/fixtures/empty.test.js',
+  'C:\\proj\\test\\empty.test.js', 'h#1\\test\\e.test.js', 'a.spec.js', 'dist/index.js']);
+const isEmptyTestFile = (p: string) => emptyFiles.has(p);
+const nodeSamples: Array<[string, string, number | null]> = [
+  ['Node 24 spec', [
+    '✔ test\\empty.test.js (1ms)', '▶ utils.ts', '  ✔ adds (1ms)', '✔ utils.ts (1ms)', '✔ index.js (1ms)', '▶ loader.js', '  ✔ inner (1ms)',
+    '✔ loader.js (1ms)', '✔ test/empty.test.js (1ms)', 'ℹ tests 5', 'ℹ suites 2', 'ℹ pass 5', 'ℹ fail 0', 'ℹ cancelled 0', 'ℹ skipped 0', 'ℹ todo 0',
+  ].join('\n'), 4],
+  ['Node 24 TAP', [
+    'TAP version 13', '# Subtest: test\\\\empty.test.js', 'ok 1 - test\\\\empty.test.js', '  ---', "  type: 'test'", '  ...',
+    '# Subtest: utils.ts', '    # Subtest: adds', '    ok 1 - adds', "      type: 'test'", '    1..1', 'ok 2 - utils.ts', '  ---', "  type: 'suite'", '  ...',
+    '# Subtest: index.js', 'ok 3 - index.js', '  ---', "  type: 'test'", '  ...',
+    '# Subtest: loader.js', '    # Subtest: inner', '    ok 1 - inner', '    1..1', 'ok 4 - loader.js', '  ---', "  type: 'test'", '  ...',
+    '# Subtest: test/empty.test.js', 'ok 5 - test/empty.test.js', '  ---', "  type: 'suite'", '  ...',
+    '1..5', '# tests 5', '# suites 2', '# pass 5', '# fail 0', '# cancelled 0', '# skipped 0', '# todo 0',
+  ].join('\n'), 4],
+  ['Node 20 TAP, absolute path with a space', [
+    'TAP version 13', '# Subtest: C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\empty.test.js', 'ok 1 - C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\empty.test.js',
+    '  ---', '  duration_ms: 39.77', '  ...', '# Subtest: real', 'ok 2 - real', '1..2', '# tests 2', '# pass 2', '# skipped 0', '# todo 0',
+  ].join('\n'), 1],
+  ['Node 20 spec, absolute path', [
+    '✔ C:\\proj\\test\\empty.test.js (1ms)', '▶ utils.ts', '  ✔ adds (1ms)', '✔ utils.ts (1ms)', '✔ index.js (1ms)',
+    'ℹ tests 3', 'ℹ suites 1', 'ℹ pass 3', 'ℹ fail 0',
+  ].join('\n'), 2],
+  ['Node 22 spec', ['✔ test\\empty.test.js (1ms)', '▶ utils.ts', '  ✔ adds (1ms)', '✔ utils.ts (1ms)', '✔ index.js (1ms)', 'ℹ tests 3', 'ℹ suites 1'].join('\n'), 2],
+  ['only an empty test file', '✔ test/empty.test.js (38ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ skipped 0\nℹ todo 0\n', 0],
+  // Review findings.
+  ['the same empty file in two runs is subtracted from each', '✔ test/empty.test.js (1ms)\nℹ tests 1\nℹ skipped 0\n✔ test/empty.test.js (1ms)\nℹ tests 1\nℹ skipped 0\n', 0],
+  ['an explicit *.spec.js file', '✔ a.spec.js (34ms)\nℹ tests 1\nℹ skipped 0\n', 0],
+  ['TAP escapes # in a path', 'TAP version 13\n# Subtest: h\\#1\\\\test\\\\e.test.js\nok 1 - h\\#1\\\\test\\\\e.test.js\n1..1\n# tests 1\n# skipped 0\n', 0],
+  // None of these is an empty test file, so they still count: a test named after its own file (which has tests in
+  // it), a build line naming a file that is not a test file, a load failure, a file that does not exist.
+  ['a test named after its own file', '✔ C:\\proj\\test\\real.test.js (0.3ms)\nℹ tests 1\nℹ skipped 0\n', 1],
+  ['a build step lists an empty fixture', '✔ test/fixtures/empty.test.js (12ms)\n✔ real (1ms)\nℹ tests 1\nℹ skipped 0\n', 1],
+  ['TAP: a suite whose YAML block is long', [
+    'TAP version 13', '# Subtest: test/empty.test.js', 'ok 1 - test/empty.test.js', '  ---',
+    ...Array.from({ length: 12 }, (_, k) => `  key${k}: ${k}`), "  type: 'suite'", '  ...', '1..1', '# tests 0', '# suites 1',
+  ].join('\n'), 0],
+  ['a build step prints a line shaped like an entry', '✔ dist/index.js (12ms)\n✔ real (1ms)\nℹ tests 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['a test file that failed to load is a failure', '✖ test/empty.test.js (40ms)\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['a file-named entry for a file that does not exist', '✔ test/gone.test.js (1ms)\nℹ tests 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['node-tap output has no node:test summary', 'TAP version 13\n# Subtest: test/empty.test.js\nok 1 - test/empty.test.js # time=12ms\n1..1\n# { total: 1, pass: 1 }\n', null],
+];
+
+test('a node:test file with no tests in it ran nothing; suites, tests named like files and other output still count', () => {
+  for (const [label, log, expected] of nodeSamples) assert.equal(testsRan(log, { isEmptyTestFile }), expected, label);
+  // Without a way to check files, nothing is subtracted: the count is what node:test printed.
+  assert.equal(testsRan(nodeSamples[0]![1]), 5);
 });
 
 function nodeProject(testFile: string | null) {
@@ -76,6 +131,69 @@ test('a test script that runs no tests is not a pass', () => {
     assert.equal(check?.status, 'skip', JSON.stringify(check));
     assert.equal(check?.reason, 'no tests ran');
     assert.equal(report.baselinePassed, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a test file with no tests in it is not a pass either (real node --test)', () => {
+  const dir = nodeProject("// TODO: test('adds', () => {})\nimport test from 'node:test';\n");
+  try {
+    const report = finish(dir);
+    const check = report.checks.find((c) => c.name === 'test');
+    assert.equal(check?.status, 'skip', JSON.stringify(check));
+    assert.equal(check?.reason, 'no tests ran');
+    assert.equal(report.baselinePassed, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('an empty test file is one with no code: comments and imports only (review finding)', async () => {
+  const { isEmptyTestFile } = (await import(pathToFileURL(path.join(root, 'dist', 'src', 'core', 'test-counts.js')).href)) as {
+    isEmptyTestFile: (file: string) => boolean;
+  };
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'empty-'));
+  const cases: Array<[string, string, boolean]> = [
+    ['nothing at all', '', true],
+    ['a comment that mentions a test call', "// TODO: test('adds', () => {}) and it(...) later\n", true],
+    ['a block comment and imports', "/* tests to come */\nimport test from 'node:test';\nimport assert from 'node:assert/strict';\n", true],
+    ['a TypeScript placeholder', "'use strict';\nimport 'node:test';\nexport {};\n", true],
+    ['a CommonJS placeholder', "'use strict';\nconst test = require('node:test');\nconst { strict: assert } = require('node:assert');\n", true],
+    ['a test through an alias', "import t from 'node:test';\nt('adds', () => {});\n", false],
+    ['helper code, no tests', "export const fixture = { a: 1 };\n", false],
+    ['a multi-line import (not read: unsure means not empty)', "import {\n  test,\n} from 'node:test';\n", false],
+  ];
+  try {
+    for (const [label, source, expected] of cases) {
+      const file = path.join(dir, 'a.test.js');
+      writeFileSync(file, source);
+      assert.equal(isEmptyTestFile(file), expected, label);
+    }
+    assert.equal(isEmptyTestFile(path.join(dir, 'missing.test.js')), false, 'a missing file');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('suites and tests named after files still count (real node --test, review finding)', () => {
+  const dir = nodeProject([
+    "import { describe, it, test } from 'node:test';",
+    "describe('utils.ts', () => { it('adds', () => {}); });",
+    "test('index.js', () => {});",
+    "test('loader.js', async (t) => { await t.test('inner', () => {}); });",
+    // A test named after its own file, through an alias, and an empty describe named after it: both look like the
+    // empty-file entry.
+    "import { fileURLToPath } from 'node:url';",
+    "import t from 'node:test';",
+    't(fileURLToPath(import.meta.url), () => {});',
+    "describe('test/a.test.js', () => {});",
+  ].join('\n'));
+  try {
+    writeFileSync(path.join(dir, 'index.js'), '');
+    const check = finish(dir).checks.find((c) => c.name === 'test');
+    assert.equal(check?.status, 'pass', JSON.stringify(check));
+    assert.equal(check?.tests, 5);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

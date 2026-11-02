@@ -4,7 +4,7 @@ import path from 'node:path';
 import { execFileSync, spawn, spawnSync, type StdioOptions } from 'node:child_process';
 import { exists, readJson } from './fs-utils.js';
 import { ecosystemPlan, environmentFailure, noTestsCollected, type EcosystemCheck } from './ecosystems.js';
-import { testsRan } from './test-counts.js';
+import { isEmptyTestFile, testsRan } from './test-counts.js';
 import type { ProofCheck, ProofReport } from '../types.js';
 import type { ProofCheckConfig } from './config.js';
 
@@ -17,6 +17,15 @@ const NO_TESTS = 'no tests ran';
 /** Checks whose output is read for the number of tests that ran. */
 const isTestCheck = (name: string) => /\btests?\b/i.test(name);
 
+/** `isEmptyTestFile` for paths printed by a test command run in `cwd`, reading each file once. */
+function cachedEmptyTestFile(cwd: string): (file: string) => boolean {
+  const seen = new Map<string, boolean>();
+  return (file) => {
+    const full = path.resolve(cwd, file);
+    if (!seen.has(full)) seen.set(full, isEmptyTestFile(full));
+    return seen.get(full) ?? false;
+  };
+}
 function packageRunner(manager: string | null): string {
   if (manager === 'pnpm') return 'pnpm';
   if (manager === 'yarn') return 'yarn';
@@ -205,7 +214,7 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
-    const tests = isTestCheck(name) ? testsRan(log) : null;
+    const tests = isTestCheck(name) ? testsRan(log, { isEmptyTestFile: cachedEmptyTestFile(cwd) }) : null;
     if (noTestsCollected(name, result.status, log) || (result.status === 0 && tests === 0)) {
       // A test command that ran nothing is not a failure, and not a pass either: its silence proves nothing.
       availableChecks -= 1;
