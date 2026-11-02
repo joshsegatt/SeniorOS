@@ -37,6 +37,8 @@ All notable changes to SeniorOS will be documented here.
 
 ### Fixed
 
+- Bench: each Claude run gets its own config folder, removed when the run ends and retried while Windows still holds its files; before, runs in parallel shared one folder, removed only at exit. The isolation check no longer refuses `None.` or `No, …` for not being exactly `NONE`, and names its reason: a leak is a run that quotes a heading of the user's `CLAUDE.md`.
+
 - Cursor, multi-root workspaces: the finish gate's risk review no longer goes out in the same follow-up as another repository's failing checks. Failures are sent alone; the review is kept for its change set and sent once no repository fails, without running the checks again. `loop_limit` goes from 2 to 3, so a review after two fix rounds still has a follow-up left. Cursor's cap is what ends a long run of failures, since each fix that changes the code starts a new change set, so an agent that keeps failing can now get a third follow-up.
 
 ## [0.8.0] - 2026-10-31
