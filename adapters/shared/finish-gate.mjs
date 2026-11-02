@@ -1,12 +1,13 @@
 // Host-neutral finish gate: when the agent tries to finish with changed code, run `senior finish`. On a failing check
 // it returns a reason to send the agent back, at most MAX_BLOCKS times per change set, so it cannot loop. Passing
-// results are cached per change set. Fails open: no git repository, no proof source, or no runnable CLI.
+// results are cached per change set. Once per session and repository, a medium-or-higher-risk change whose checks
+// pass is sent back for senior-finish's risk review. Fails open: no git repository, no proof source, or no runnable CLI.
 // Each host adapter (Claude Code, Cursor) maps its own Stop payload and response onto `evaluate`.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, finishGateNextStep, hasProofSource, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { finishGateNextStep, finishReviewMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -34,9 +35,7 @@ export function changeSet(root) {
 
 /** Runs `senior finish --json`, falling back to `npx senioros` when the CLI is not on PATH. */
 function runFinish(root) {
-  const local = sh(`${SENIOR} finish --json`, root, FINISH_TIMEOUT_MS);
-  const missing = !local.timedOut && local.code !== 0 && !local.out.trim() && /not (found|recognized)|ENOENT/i.test(local.err);
-  return missing ? sh('npx -y senioros finish --json', root, FINISH_TIMEOUT_MS) : local;
+  return runSenior('finish --json', root, FINISH_TIMEOUT_MS);
 }
 
 /**
@@ -68,14 +67,22 @@ export function evaluate({ cwd, sessionId, host }) {
   const failed = checks.filter((c) => c.status === 'fail');
   const save = (entry) => { state[key] = entry; try { mkdirSync(stateDir, { recursive: true }); writeFileSync(stateFile, JSON.stringify(state)); } catch {} };
 
+  // Once per session and repository, a medium-or-higher-risk change whose checks pass is sent back for the risk
+  // review of senior-finish: passing checks show only the cases they cover.
+  const reviewed = Boolean(prev?.reviewed);
+
   // A slow suite or an unreadable report never holds the agent hostage.
   if (run.timedOut || !report || failed.length === 0) {
-    save({ fingerprint: changes.fingerprint, result: 'pass' });
+    if (!reviewed && !run.timedOut && report && needsFinishReview(root)) {
+      save({ fingerprint: changes.fingerprint, result: 'pass', reviewed: true });
+      return finishReviewMessage();
+    }
+    save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });
     return null;
   }
 
   const blocks = prev?.fingerprint === changes.fingerprint ? (prev.blocks ?? 0) + 1 : 1;
-  save({ fingerprint: changes.fingerprint, result: 'fail', blocks });
+  save({ fingerprint: changes.fingerprint, result: 'fail', blocks, reviewed });
   const summary = checks.map((c) => `${c.status.toUpperCase()} ${c.name}${c.command ? ` (${c.command}${c.exitCode != null ? `, exit ${c.exitCode}` : ''})` : ''}`).join('\n');
   return [
     'SeniorOS finish gate: code changed and the project checks fail. Do not report the task as done yet.',

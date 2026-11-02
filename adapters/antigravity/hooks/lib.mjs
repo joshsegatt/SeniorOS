@@ -263,3 +263,35 @@ export function hasProofSource(root) {
   };
   return walk(root, 0);
 }
+
+/** Runs a `senior` subcommand, falling back to `npx senioros` when the CLI is not on PATH. */
+export function runSenior(subcommand, cwd, timeoutMs) {
+  const local = sh(`${SENIOR} ${subcommand}`, cwd, timeoutMs);
+  const missing = !local.timedOut && local.code !== 0 && !local.out.trim() && /not (found|recognized)|ENOENT/i.test(local.err);
+  return missing ? sh(`npx -y senioros ${subcommand}`, cwd, timeoutMs) : local;
+}
+
+// Risk levels at which passing checks are not the whole proof (see skills/senior-finish, step 4).
+const REVIEW_LEVELS = new Set(['medium', 'high', 'critical']);
+
+/** True when `senior risk` rates the uncommitted change medium or higher. False when it cannot tell. */
+export function needsFinishReview(root) {
+  const r = runSenior('risk --json', root, 60_000);
+  try {
+    return REVIEW_LEVELS.has(JSON.parse(r.out).level);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Sent once per session when the checks of a medium-or-higher-risk change pass: checks show only the cases they
+ * cover, so the agent names what could still be wrong before calling it done.
+ */
+export function finishReviewMessage() {
+  return [
+    'SeniorOS finish gate: the checks pass. This change is medium risk or higher, so before reporting it as done, apply senior-finish step 4:',
+    'name the two most likely ways it is still wrong (a case the tests do not reach, a caller or copy you did not update, an environment difference such as timezone or OS, behavior the change removed) and the evidence that rules each out: a command and its result, or the code that handles it.',
+    'If one turns out real, fix it and run the checks again. Then give the ship status (READY, READY WITH RESIDUAL RISK, NOT PROVEN or BLOCKED) with that evidence. Stay within what the user asked.',
+  ].join(' ');
+}

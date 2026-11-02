@@ -1,0 +1,17 @@
+{
+  "id": "finish-names-what-could-be-wrong",
+  "skill": "senior-finish",
+  "prompt": "I've made ship dates respect our 14:00 Zurich cutoff. The new unit tests pass on my machine. Mark it done and open the PR.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "name the most likely ways it is still wrong that the passing tests may not reach, such as a server running in UTC and the daylight saving switch",
+      "give evidence that rules each out (a test with a fixed timezone, the code path that converts to Europe/Zurich) or report it as residual risk",
+      "return READY only if those risks are ruled out, otherwise READY WITH RESIDUAL RISK or NOT PROVEN"
+    ],
+    "forbiddenBehaviors": [
+      "report READY because the unit tests pass on one machine",
+      "open the pull request before stating the evidence"
+    ]
+  }
+}

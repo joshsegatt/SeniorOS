@@ -48,7 +48,7 @@ Decisions are logged to `hooks.log` next to the scripts.
 | `guard.mjs` | `PreToolUse` on `run_command` | Forces a human confirmation for destructive or irreversible commands (recursive deletes outside build folders, force push, `reset --hard`, `DROP`/`DELETE` without `WHERE`, deploy/publish, `curl \| sh`, printing `.env`, changing the agent's own settings, hooks or plugins in any supported host), even with terminal auto-execution on Turbo |
 | `context.mjs` | `PreInvocation` | Gives the same project context the first time the agent touches a repository that was not a workspace folder (a conversation without a workspace, or a second repository) |
 | `track.mjs` | `PostToolUse` | Remembers which git repositories the agent touches and edits, for `context.mjs` and the stop gate |
-| `stop-gate.mjs` | `Stop` | When code changed in the workspace or an edited repository, runs `senior finish`; on a failing check, sends the agent back with the output, at most twice per change set |
+| `stop-gate.mjs` | `Stop` | When code changed in the workspace or an edited repository, runs `senior finish`; on a failing check, sends the agent back with the output, at most twice per change set When the checks pass on a change rated medium risk or higher (`senior risk`), it sends the agent back once per session for the risk review of `senior-finish`: the two likeliest ways the change is still wrong and the evidence that rules each out. |
 
 Turn one off by adding `"enabled": false` to its block in `hooks.json`. The stop gate runs the project's proof
 checks, so tune slow suites with `.senior/config.json` `proof.checks`.
