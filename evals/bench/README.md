@@ -119,7 +119,7 @@ The user's global `CLAUDE.md` needs one more step. Claude Code finds `~/.claude/
 system's profile folder, whatever `CLAUDE_CONFIG_DIR`, `HOME` or `USERPROFILE` say (measured on Windows), and an
 instruction there such as "ask before changing payments" stops headless runs no one can answer. So `run` first asks
 one run whether user instructions reached it and refuses to start if they did (`node evals/bench/bench.mjs isolation`
-runs the same check alone). The run leaks when its answer quotes a heading of that file; otherwise it must answer no
+runs the same check alone). The run leaks when its answer names a heading of that file, or a distinctive part of one; otherwise it must answer no
 (`NONE`, `None.`, `No, …`). Move the file aside for the bench and put it back afterwards; a wrapper script that does
 this in a `try`/`finally` is the safe way. `SENIOROS_BENCH_USER_CONFIG=1` measures with your own folder and
 `CLAUDE.md`, as earlier results did.
