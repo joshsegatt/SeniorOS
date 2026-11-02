@@ -238,6 +238,24 @@ export function finishGateNextStep(again) {
         'failure existed before your change, tell the user so with this evidence instead of claiming success.';
 }
 
+/** How long the finish gate waits for `senior finish`, under the hosts' 300 s hook limit (tests set it lower). */
+export const FINISH_TIMEOUT_MS = Math.min(270_000, Math.max(1_000, Number(process.env.SENIOROS_FINISH_TIMEOUT_MS) || 270_000));
+/** Below this much time left in the hook's budget, a run is not started: it could not finish. */
+export const MIN_RUN_MS = Math.min(5_000, FINISH_TIMEOUT_MS / 2);
+
+/**
+ * Sent once per change set when `senior finish` does not finish in time. Letting the agent finish in silence would let
+ * it report checks that never completed as passing.
+ * @param {string[]} [projects] the projects whose checks timed out, when there are several
+ */
+export function finishTimeoutMessage(projects = []) {
+  const where = projects.length ? ` (${projects.join(', ')})` : '';
+  return `SeniorOS finish gate: the checks did not finish within ${FINISH_TIMEOUT_MS / 1000} s${where}, so this change ` +
+    'is NOT VERIFIED. Do not say the checks pass. Run the tests that cover the change yourself (a narrower command is ' +
+    'fine) and report what ran and its result; if you cannot, report the status as NOT VERIFIED. A faster check in ' +
+    '.senior/config.json lets the gate verify a suite this slow.';
+}
+
 // Copies of PROJECT_MANIFESTS, IGNORED_DIRS and MAX_DEPTH in src/core/ecosystems.ts, which plans the checks of these
 // projects. The installed hooks run without that module; tests/proof-ecosystems.test.ts keeps the copies equal.
 export const PROJECT_MANIFESTS = ['pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'go.mod', 'Cargo.toml'];
@@ -267,7 +285,10 @@ export function hasProofSource(root) {
 /** Runs a `senior` subcommand, falling back to `npx senioros` when the CLI is not on PATH. */
 export function runSenior(subcommand, cwd, timeoutMs) {
   const local = sh(`${SENIOR} ${subcommand}`, cwd, timeoutMs);
-  const missing = !local.timedOut && local.code !== 0 && !local.out.trim() && /not (found|recognized)|ENOENT/i.test(local.err);
+  // Only the shell saying the `senior` command itself is missing: a run that failed with "file not found" in its own
+  // output is a result, not a reason to run the whole suite again through npx.
+  const missing = !local.timedOut && local.code !== 0 && !local.out.trim() &&
+    /(?:^|[\s'"])senior(?:\.cmd|\.exe)?['"]?(?::| is)\s+(?:command )?not (?:found|recognized)|\bspawn\b[^\n]*\bsenior\b[^\n]*ENOENT/im.test(local.err);
   return missing ? sh(`npx -y senioros ${subcommand}`, cwd, timeoutMs) : local;
 }
 
