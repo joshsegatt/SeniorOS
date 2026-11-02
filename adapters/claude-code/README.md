@@ -30,5 +30,6 @@ hooks from [`hooks/hooks.json`](../../hooks/hooks.json):
 | `hooks/stop-gate.mjs` | `Stop` | When code changed in the repository, runs `senior finish` (or `npx senioros finish` without the CLI) before the agent may stop; a failing check sends it back with the output, at most twice per change set. Passing change sets are not rerun. When the checks pass on a change rated medium risk or higher (`senior risk`), it sends the agent back once per session for the risk review of `senior-finish`: the two likeliest ways the change is still wrong and the evidence that rules each out. |
 
 All three fail open. The finish gate runs the project's proof checks, so declare slow or extra suites (an e2e folder
-that `npm test` skips, for example) in `.senior/config.json` `proof.checks`. Without the session-start rules, the bench showed that agents never loaded a SeniorOS skill on their
+that `npm test` skips, for example) in `.senior/config.json` `proof.checks`. Checks that do not finish within 270 s
+send the agent back once with NOT VERIFIED, so a slow suite is never read as a pass. Without the session-start rules, the bench showed that agents never loaded a SeniorOS skill on their
 own (0 of 51 runs on Claude Haiku), so the plugin behaved like no pack at all.
