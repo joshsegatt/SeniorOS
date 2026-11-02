@@ -9,7 +9,7 @@ import { pathToFileURL } from 'node:url';
 const root = process.cwd();
 const CLI = path.join(root, 'dist', 'src', 'index.js');
 const { testsRan } = (await import(pathToFileURL(path.join(root, 'dist', 'src', 'core', 'test-counts.js')).href)) as {
-  testsRan: (log: string) => number | null;
+  testsRan: (log: string, options?: { fileExists?: (path: string) => boolean }) => number | null;
 };
 // Without NODE_TEST_CONTEXT, which turns a nested `node --test` into a reporting child that always exits 0.
 const { NODE_TEST_CONTEXT: _parent, ...baseEnv } = process.env;
@@ -20,18 +20,6 @@ const samples: Array<[string, string, number | null]> = [
   ['node:test, no test files', 'ℹ tests 0\nℹ suites 0\nℹ pass 0\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\n', 0],
   ['node:test, 2 run and 1 skipped', 'ℹ tests 3\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 1\nℹ todo 0\n', 2],
   ['node:test TAP', 'TAP version 13\nok 1 - a\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# skipped 0\n# todo 0\n', 1],
-  // A test file with no tests in it is reported as one passing test named after the file. Captured from Node 24
-  // (spec, relative path), Node 22 (TAP, relative) and Node 20 (TAP, absolute Windows path).
-  ['node:test, an empty test file (Node 24 spec)', '✔ test\\a.test.js (38.0517ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\n', 0],
-  ['node:test, an empty test file next to a real test', '✔ test/a.test.js (38.0517ms)\n✔ real (0.353ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\n', 1],
-  ['node:test TAP, an empty test file (Node 22)', 'TAP version 13\n# Subtest: test\\\\a.test.js\nok 1 - test\\\\a.test.js\n  ---\n  duration_ms: 38.6967\n  type: \'test\'\n  ...\n# Subtest: real\nok 2 - real\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n', 1],
-  ['node:test TAP, an empty test file (Node 20, absolute path)', 'TAP version 13\n# Subtest: C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\a.test.mjs\nok 1 - C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\a.test.mjs\n  ---\n  duration_ms: 39.7728\n  ...\n1..1\n# tests 1\n# pass 1\n# skipped 0\n# todo 0\n', 0],
-  // Tests whose names merely mention a file still count, and so do indented subtests named like files.
-  ['node:test, tests named after files', '✔ parses index.js (0.4ms)\n▶ loader\n  ✔ src/a.ts (0.2ms)\n▶ loader (1ms)\nℹ tests 2\nℹ suites 1\nℹ skipped 0\nℹ todo 0\n', 2],
-  // A file that failed to load is a failure, not an empty file: it stays counted.
-  ['node:test, a test file that failed to load', '✖ test/a.test.js (40ms)\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ skipped 0\nℹ todo 0\n', 1],
-  // Other TAP producers are not node:test: no `# tests` summary, so nothing is read from them.
-  ['node-tap, file-named entries', 'TAP version 13\nok 1 - test/a.js # time=12ms\n1..1\n# { total: 1, pass: 1 }\n', null],
   ['Jest', 'PASS src/a.test.js\nTest Suites: 1 passed, 1 total\nTests:       1 skipped, 4 passed, 5 total\nSnapshots:   0 total\n', 4],
   ['Jest, no tests', 'No tests found, exiting with code 0\nRun with `--passWithNoTests` to exit with code 0\n', 0],
   ['Vitest', ' Test Files  2 passed (2)\n      Tests  1 failed | 6 passed (7)\n   Start at  10:00:00\n', 7],
@@ -60,7 +48,45 @@ const samples: Array<[string, string, number | null]> = [
 ];
 
 test('the number of tests that ran is read from each runner, and unknown output says nothing', () => {
-  for (const [label, log, expected] of samples) assert.equal(testsRan(log), expected, label);
+  for (const [label, log, expected] of samples) assert.equal(testsRan(log, { fileExists: () => false }), expected, label);
+});
+
+// node:test reports a test file with no tests in it as one passing test named after the file. Captured from real
+// runs (Node 24 spec, Node 24 and Node 20 TAP; durations and YAML noise trimmed) of a project with test/empty.test.js
+// (no tests) and test/utils.test.js holding: describe('utils.ts', it 'adds'), test('index.js'), test('loader.js')
+// with subtest 'inner', and an empty describe('test/empty.test.js'). Five tests reported, four ran.
+const existing = new Set(['test/empty.test.js', 'test\\empty.test.js', 'test/utils.test.js', 'index.js', 'loader.js', 'utils.ts', 'dist/index.js',
+  'C:\\Users\\Jo Doe\\proj\\test\\empty.test.js']);
+const fileExists = (p: string) => existing.has(p);
+const nodeSamples: Array<[string, string, number | null]> = [
+  ['Node 24 spec', [
+    '✔ test\\empty.test.js (1ms)', '▶ utils.ts', '  ✔ adds (1ms)', '✔ utils.ts (1ms)', '✔ index.js (1ms)', '▶ loader.js', '  ✔ inner (1ms)',
+    '✔ loader.js (1ms)', '✔ test/empty.test.js (1ms)', 'ℹ tests 5', 'ℹ suites 2', 'ℹ pass 5', 'ℹ fail 0', 'ℹ cancelled 0', 'ℹ skipped 0', 'ℹ todo 0',
+  ].join('\n'), 4],
+  ['Node 24 TAP', [
+    'TAP version 13', '# Subtest: test\\\\empty.test.js', 'ok 1 - test\\\\empty.test.js', '  ---', "  type: 'test'", '  ...',
+    '# Subtest: utils.ts', '    # Subtest: adds', '    ok 1 - adds', "      type: 'test'", '    1..1', 'ok 2 - utils.ts', '  ---', "  type: 'suite'", '  ...',
+    '# Subtest: index.js', 'ok 3 - index.js', '  ---', "  type: 'test'", '  ...',
+    '# Subtest: loader.js', '    # Subtest: inner', '    ok 1 - inner', '    1..1', 'ok 4 - loader.js', '  ---', "  type: 'test'", '  ...',
+    '# Subtest: test/empty.test.js', 'ok 5 - test/empty.test.js', '  ---', "  type: 'suite'", '  ...',
+    '1..5', '# tests 5', '# suites 2', '# pass 5', '# fail 0', '# cancelled 0', '# skipped 0', '# todo 0',
+  ].join('\n'), 4],
+  ['Node 20 TAP, absolute path with a space', [
+    'TAP version 13', '# Subtest: C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\empty.test.js', 'ok 1 - C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\empty.test.js',
+    '  ---', '  duration_ms: 39.77', '  ...', '# Subtest: real', 'ok 2 - real', '1..2', '# tests 2', '# pass 2', '# skipped 0', '# todo 0',
+  ].join('\n'), 1],
+  ['only an empty test file', '✔ test/empty.test.js (38ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ skipped 0\nℹ todo 0\n', 0],
+  // Review findings: none of these is an empty test file, so all of them still count.
+  ['a build step prints a line shaped like an entry', '✔ dist/index.js (12ms)\n✔ real (1ms)\nℹ tests 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['a test file that failed to load is a failure', '✖ test/empty.test.js (40ms)\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['a file-named entry for a file that does not exist', '✔ test/gone.test.js (1ms)\nℹ tests 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['node-tap output has no node:test summary', 'TAP version 13\n# Subtest: test/empty.test.js\nok 1 - test/empty.test.js # time=12ms\n1..1\n# { total: 1, pass: 1 }\n', null],
+];
+
+test('a node:test file with no tests in it ran nothing; suites, tests named like files and other output still count', () => {
+  for (const [label, log, expected] of nodeSamples) assert.equal(testsRan(log, { fileExists }), expected, label);
+  // Without a way to check files, nothing is subtracted: the count is what node:test printed.
+  assert.equal(testsRan(nodeSamples[0]![1]), 5);
 });
 
 function nodeProject(testFile: string | null) {
@@ -101,6 +127,23 @@ test('a test file with no tests in it is not a pass either (real node --test)', 
     assert.equal(check?.status, 'skip', JSON.stringify(check));
     assert.equal(check?.reason, 'no tests ran');
     assert.equal(report.baselinePassed, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('suites and tests named after files still count (real node --test, review finding)', () => {
+  const dir = nodeProject([
+    "import { describe, it, test } from 'node:test';",
+    "describe('utils.ts', () => { it('adds', () => {}); });",
+    "test('index.js', () => {});",
+    "test('loader.js', async (t) => { await t.test('inner', () => {}); });",
+  ].join('\n'));
+  try {
+    writeFileSync(path.join(dir, 'index.js'), '');
+    const check = finish(dir).checks.find((c) => c.name === 'test');
+    assert.equal(check?.status, 'pass', JSON.stringify(check));
+    assert.equal(check?.tests, 4);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

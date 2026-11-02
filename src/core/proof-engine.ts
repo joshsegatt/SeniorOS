@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { execFileSync, spawn, spawnSync, type StdioOptions } from 'node:child_process';
@@ -16,6 +16,13 @@ const ORDER = ['typecheck', 'lint', 'test', 'build'] as const;
 const NO_TESTS = 'no tests ran';
 /** Checks whose output is read for the number of tests that ran. */
 const isTestCheck = (name: string) => /\btests?\b/i.test(name);
+const isFile = (file: string) => {
+  try {
+    return statSync(file).isFile();
+  } catch {
+    return false;
+  }
+};
 
 function packageRunner(manager: string | null): string {
   if (manager === 'pnpm') return 'pnpm';
@@ -205,7 +212,7 @@ export async function runProof(root: string, packageManager: string | null, opti
       continue;
     }
 
-    const tests = isTestCheck(name) ? testsRan(log) : null;
+    const tests = isTestCheck(name) ? testsRan(log, { fileExists: (file) => isFile(path.resolve(cwd, file)) }) : null;
     if (noTestsCollected(name, result.status, log) || (result.status === 0 && tests === 0)) {
       // A test command that ran nothing is not a failure, and not a pass either: its silence proves nothing.
       availableChecks -= 1;
