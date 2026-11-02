@@ -285,6 +285,15 @@ export function needsFinishReview(root) {
 }
 
 /**
+ * True when a `senior finish --json` report proves the change: a passing baseline and no test command that ran
+ * nothing. The baseline alone passes on a typecheck when the tests ran none, which is no evidence for behavior.
+ * @param {{ baselinePassed?: boolean, checks?: Array<{ reason?: string }> } | null} report
+ */
+export function baselineProven(report) {
+  return report?.baselinePassed === true && !(report.checks ?? []).some((c) => c.reason === 'no tests ran');
+}
+
+/**
  * Sent once per session when no check of a medium-or-higher-risk change fails: checks show only the cases they
  * cover, so the agent names what could still be wrong before calling it done. `proven` is the report's
  * `baselinePassed`; without it (no tests ran, checks skipped) the message says NOT PROVEN, never that checks pass.

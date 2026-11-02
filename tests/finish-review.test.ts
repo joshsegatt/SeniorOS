@@ -146,3 +146,16 @@ test('a medium-risk change whose tests ran nothing is reviewed as NOT PROVEN, ne
     rmSync(log, { force: true });
   }
 });
+
+test('a passing typecheck does not make a run with no tests proven (review finding)', () => {
+  const dir = repoWith('src/auth/policy.js');
+  rmSync(path.join(dir, 'test'), { recursive: true, force: true });
+  writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type: 'module', scripts: { typecheck: 'node -e ""', test: 'node --test' } }));
+  try {
+    const reason = claudeStop(dir, `tc${process.pid}`)?.reason ?? '';
+    assert.match(reason, /proof baseline is NOT PROVEN/);
+    assert.doesNotMatch(reason, /finish gate: the checks pass/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});

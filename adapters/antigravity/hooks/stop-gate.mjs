@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, finishGateNextStep, finishReviewMessage, hasProofSource, log, needsFinishReview, runHook, sh, tail, workspaceRoots } from './lib.mjs';
+import { SENIOR, baselineProven, finishGateNextStep, finishReviewMessage, hasProofSource, log, needsFinishReview, runHook, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -83,7 +83,7 @@ await runHook('Stop', async (input) => {
       if (Boolean(report) && !reviewed && needsFinishReview(root)) {
         review.push(key);
         before.set(key, prev);
-        if (report.baselinePassed !== true) unproven = true;
+        if (!baselineProven(report)) unproven = true;
       }
       state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed };
       log('Stop', { root, result: report ? 'pass' : 'unparsed', ms, available: report?.availableChecks });

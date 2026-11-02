@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { finishGateNextStep, finishReviewMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { baselineProven, finishGateNextStep, finishReviewMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 const FINISH_TIMEOUT_MS = 270_000;
@@ -75,7 +75,7 @@ export function evaluate({ cwd, sessionId, host }) {
   if (run.timedOut || !report || failed.length === 0) {
     if (!reviewed && !run.timedOut && report && needsFinishReview(root)) {
       save({ fingerprint: changes.fingerprint, result: 'pass', reviewed: true });
-      return finishReviewMessage(report.baselinePassed === true);
+      return finishReviewMessage(baselineProven(report));
     }
     save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });
     return null;
