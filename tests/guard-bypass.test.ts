@@ -120,6 +120,13 @@ const asks: Array<[string, RegExp]> = [
   ['env | grep TOKEN', /environment variables/],
   ['printenv | sort', /environment variables/],
   ['printenv GITHUB_TOKEN', /secret/],
+  // SeniorOS's own commands that write a host's hooks or plugin list.
+  ['senior setup --apply', /agent's own settings/],
+  ['npx senioros install --target antigravity', /agent's own settings/],
+  ['npx senioros uninstall --target antigravity', /agent's own settings/],
+  ['npx senioros@0.8.0 install --target antigravity', /agent's own settings/],
+  ['npx senioros@latest setup --apply', /agent's own settings/],
+  ['node dist/src/index.js setup --apply', /agent's own settings/],
   // Built at run time but still readable in the text: caught, though not guaranteed (see out of scope).
   ['$(echo rm) -rf src', /recursive file deletion/],
 ];
@@ -146,6 +153,7 @@ const passes = [
   'git prune-packed', 'grep "del" -r src', 'grep del -r src', 'git checkout -- .gitignore', 'git restore .env.example',
   'git restore .nvmrc', 'aws s3 cp delete-me.txt s3://bucket/', 'kubectl -n prod get pods', 'ssh -t host uptime',
   'docker build -t app .', 'git -c color.ui=always status', 'git -C ../app log -5',
+  'senior setup', 'senior doctor --json', 'senior install --target claude --scope project',
 ];
 
 /**

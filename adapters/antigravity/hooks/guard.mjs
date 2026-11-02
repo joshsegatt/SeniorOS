@@ -90,6 +90,11 @@ const WRITES = /(^|[^<>=!-])>{1,2}|\b(rm|del|erase|rd|rmdir|mv|move|cp|copy|tee|
 const INTERPRETER = /\b(node|python3?|py|ruby|perl|php|deno|bun|pwsh|powershell)\b[^|]*?\s-(e|c|Command)\b/i;
 const INTERPRETER_WRITE = /write|append|unlink|\brm(Sync|tree|dir)?\b|rename|remove|delete|truncate|copy|move|Set-Content|Out-File|\bopen\([^)]*["'][wax]/i;
 
+// SeniorOS's own commands that write a host's hooks or plugin list (`setup --apply`, the Antigravity installer and
+// uninstaller): the same change as editing those files, so the same confirmation.
+// Also with a version (`npx senioros@0.8.0`) or through the entry point (`node dist/src/index.js`).
+const SENIOR_HOST_SETUP = /(\bsenior|\bsenioros(@\S*)?|\bindex\.js)\s+(setup\b[^|;\n]*\s--apply\b|install\b[^|;\n]*--target[\s=]+antigravity\b|uninstall\b)/;
+
 /** True when a single shell command changes one of the agent's own configuration files. */
 function changesAgentConfig(segment) {
   if (!isAgentConfigPath(segment)) return false;
@@ -240,7 +245,7 @@ export function classify(command) {
     if (!raw.trim() || onlyRegenerableTargets(raw)) continue;
     // The agent's configuration is judged on the command as written: a path inside `git -C …` or a message is still
     // a path it changes.
-    if (changesAgentConfig(raw)) return AGENT_CONFIG_REASON;
+    if (changesAgentConfig(raw) || SENIOR_HOST_SETUP.test(raw)) return AGENT_CONFIG_REASON;
     // The rules see two readings, and either one asks. Messages are text in both. The second reading also drops git's
     // global options so the subcommand is where the rules expect it; the first keeps their values, which can run
     // commands (`-c alias.x='!rm -rf src'`, `-C "$(…)"`).

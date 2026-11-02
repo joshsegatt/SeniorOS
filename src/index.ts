@@ -12,13 +12,15 @@ import { destinationFor, findLegacySkills, installSkills, type InstallScope, typ
 import { installAntigravity, uninstallAntigravity, type AntigravityReport } from './core/antigravity.js';
 import { spawnSync } from 'node:child_process';
 import { doctor } from './core/doctor.js';
+import { formatHosts } from './core/hosts.js';
+import { setup } from './core/setup.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
 import { proveRegression, restoreInterruptedProof, type ProofPhase, type RegressionReport } from './core/regression.js';
 
 const VERSION = '0.8.0';
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--record] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--record] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior setup [--apply] [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
 }
 
 /**
@@ -213,8 +215,28 @@ async function main(): Promise<void> {
       `SeniorOS state: ${result.seniorState ? 'yes' : 'no'}`,
       `Config: ${result.config}`,
       `Skills: claude=${result.hostSkills.claude ? 'yes' : 'no'} codex=${result.hostSkills.codex ? 'yes' : 'no'} generic=${result.hostSkills.generic ? 'yes' : 'no'}`,
-      formatStack(result.stack)
+      `senior CLI on PATH: ${result.cliOnPath ? 'yes' : 'no (the finish gate falls back to npx senioros)'}`,
+      formatStack(result.stack),
+      '',
+      'Hosts:',
+      formatHosts(result.hosts)
     ].join('\n'));
+    return;
+  }
+
+  if (command === 'setup') {
+    const apply = hasFlag(args, '--apply');
+    const report = await setup(root, { apply });
+    if (json) { console.log(JSON.stringify(report, null, 2)); if (report.skipped.length) process.exitCode = 1; return; }
+    const found = report.hosts.filter((h) => h.present.state === 'yes');
+    console.log(found.length ? formatHosts(report.hosts, { onlyPresent: true }) : 'No supported host found on this machine (Claude Code, Codex, Cursor, OpenCode, Antigravity).');
+    for (const line of report.applied) console.log(`applied: ${line}`);
+    for (const line of report.skipped) console.warn(`not applied: ${line}`);
+    // A step --apply could not do leaves setup incomplete: scripts must see it.
+    if (report.skipped.length) process.exitCode = 1;
+    if (!apply && found.some((h) => h.steps.some((s) => s.includes('senior setup --apply')))) {
+      console.log('\nRun senior setup --apply to do the OpenCode and Antigravity steps; the others happen in the app.');
+    }
     return;
   }
 
