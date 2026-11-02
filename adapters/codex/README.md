@@ -8,7 +8,7 @@ plus three hooks from [`hooks.json`](hooks.json). Each hook uses the same core a
 |---|---|---|
 | `hooks/session-start.mjs` | `SessionStart` | Adds [`rules.md`](rules.md) to the session: when to use each `senior-*` skill, the low-risk exception and the approval boundary |
 | `hooks/guard.mjs` | `PreToolUse` (`Bash`, `apply_patch`) | Denies destructive or irreversible commands (force-push, `reset --hard`, `rm -rf src`, `DROP TABLE`, deploys, publishing, printing `.env`), and any command or patch that changes the agent's own settings, hooks or plugins (`.codex/config.toml`, `.codex/hooks.json`, `.codex/plugins/`, and the other hosts' equivalents). A patch is judged by the files it writes, not by its text. The agent is told to show what would be lost and to ask the user to run the command themselves. Chained commands are judged one by one |
-| `hooks/stop-gate.mjs` | `Stop` | When the agent ends a turn with changed code, runs `senior finish` (or `npx senioros finish` without the CLI). A failing check sends the agent back with the output, at most twice per change set |
+| `hooks/stop-gate.mjs` | `Stop` | When the agent ends a turn with changed code, runs `senior finish` (or `npx senioros finish` without the CLI). A failing check sends the agent back with the output, at most twice per change set When the checks pass on a change rated medium risk or higher (`senior risk`), it sends the agent back once per session for the risk review of `senior-finish`: the two likeliest ways the change is still wrong and the evidence that rules each out. |
 
 All three fail open: a hook error never blocks the agent.
 

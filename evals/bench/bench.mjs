@@ -7,7 +7,7 @@ import { ARMS, applyArm, armState, restoreArms } from './lib/arms.mjs';
 import { gradeRun } from './lib/grade.mjs';
 import { prepareRun } from './lib/prepare.mjs';
 import { buildReport } from './lib/report.mjs';
-import { CLAUDE_ARMS } from './lib/claude.mjs';
+import { CLAUDE_ARMS, checkIsolation } from './lib/claude.mjs';
 import { runConversation } from './lib/runner.mjs';
 import { BENCH_HOME, BENCH_SRC, GEMINI_HOME, HOOK_LOG, git, loadTasks } from './lib/util.mjs';
 
@@ -15,6 +15,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
 
   selftest                      Grade the reference good/bad solutions (validates the grader; no model needed)
   probe                         One live harness check inside Antigravity (run this first)
+  isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
       --arms none,superpowers,senioros   (also: senioros-skills)
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
@@ -168,6 +169,11 @@ async function runBench(args) {
   const model = option(args, 'model', perProcessArms ? 'haiku' : 'flash');
   const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
   if (parallel > 1 && backend !== 'agentapi' && backend !== 'claude') throw new Error('--parallel needs the agentapi or claude backend.');
+  if (perProcessArms && process.env.SENIOROS_BENCH_USER_CONFIG !== '1') {
+    // A user's CLAUDE.md reaching the runs would skew every arm; check before spending any run (see lib/claude.mjs).
+    const { answer, clean } = checkIsolation(model);
+    if (!clean) throw new Error(`user instructions reach the runs (the check run answered: ${answer}). Move your ~/.claude/CLAUDE.md aside for the bench, or set SENIOROS_BENCH_USER_CONFIG=1 to measure with it.`);
+  }
   const resultsDir = join(BENCH_HOME, 'results', new Date().toISOString().replace(/[:.]/g, '-'));
   mkdirSync(resultsDir, { recursive: true });
   const total = trials * tasks.length * arms.length;
@@ -244,6 +250,11 @@ const [command, ...args] = process.argv.slice(2);
 try {
   if (command === 'selftest') await selftest();
   else if (command === 'probe') await probe();
+  else if (command === 'isolation') {
+    const { answer, clean } = checkIsolation(option(args, 'model', 'sonnet'));
+    console.log(clean ? 'Isolation OK: no user-level instructions reached the run.' : `Isolation FAILED, the run answered: ${answer}`);
+    if (!clean) process.exitCode = 1;
+  }
   else if (command === 'run') await runBench(args);
   else if (command === 'report' && args[0]) console.log(buildReport(args[0]));
   else if (command === 'arm' && args[0] === 'restore') console.log(restoreArms() ? 'Restored your Antigravity config.' : 'Nothing to restore.');
