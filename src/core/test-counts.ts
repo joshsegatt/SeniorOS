@@ -18,12 +18,23 @@ export function testsRan(log: string): number | null {
   };
   const count = (line: string, re: RegExp) => Number(re.exec(line)?.[1] ?? 0);
 
+  // node:test reports a test file with no tests in it as one passing top-level test named after the file
+  // (`✔ test/a.test.js (38ms)`, or `ok 1 - test\\a.test.js` in TAP; Node 20 prints the absolute path). A file that
+  // has tests shows only their names, so these entries ran nothing.
+  let nodeSummary = false;
+  let emptyFiles = 0;
+
   for (const line of lines) {
     // node:test, spec reporter (`ℹ tests 3`) or TAP (`# tests 3`); its skipped and todo lines follow and are subtracted.
     let m = /^[ℹ#] tests (\d+)\s*$/.exec(line);
-    if (m) add(Number(m[1]));
+    if (m) {
+      add(Number(m[1]));
+      nodeSummary = true;
+    }
     m = /^[ℹ#] (?:skip(?:ped)?|todo) (\d+)\s*$/.exec(line);
     if (m) total -= Number(m[1]);
+    m = /^(?:✔ (.+?) \([\d.]+m?s\)|ok \d+ - (.+?))\s*$/.exec(line);
+    if (m && isTestFileName(m[1] ?? m[2] ?? '')) emptyFiles += 1;
 
     // Jest (`Tests:       1 skipped, 4 passed, 5 total`).
     m = /^Tests:\s+.*?(\d+) total/.exec(line);
@@ -68,5 +79,16 @@ export function testsRan(log: string): number | null {
     add(0);
   }
 
+  // Only node:test output: other TAP producers (node-tap, tape) name their entries differently and have no `# tests`.
+  if (nodeSummary) total = Math.max(0, total - emptyFiles);
+
   return found ? total : null;
+}
+
+/**
+ * True for a JavaScript or TypeScript file path, as node:test names a test file that ran no tests. A path has a
+ * separator or no spaces, so a test named "parses index.js" is not one.
+ */
+function isTestFileName(name: string): boolean {
+  return /\.[cm]?[jt]sx?$/.test(name) && (/[\\/]/.test(name) || !/\s/.test(name));
 }

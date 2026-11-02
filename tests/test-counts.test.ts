@@ -20,6 +20,18 @@ const samples: Array<[string, string, number | null]> = [
   ['node:test, no test files', 'ℹ tests 0\nℹ suites 0\nℹ pass 0\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\n', 0],
   ['node:test, 2 run and 1 skipped', 'ℹ tests 3\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 1\nℹ todo 0\n', 2],
   ['node:test TAP', 'TAP version 13\nok 1 - a\n1..1\n# tests 1\n# suites 0\n# pass 1\n# fail 0\n# skipped 0\n# todo 0\n', 1],
+  // A test file with no tests in it is reported as one passing test named after the file. Captured from Node 24
+  // (spec, relative path), Node 22 (TAP, relative) and Node 20 (TAP, absolute Windows path).
+  ['node:test, an empty test file (Node 24 spec)', '✔ test\\a.test.js (38.0517ms)\nℹ tests 1\nℹ suites 0\nℹ pass 1\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\n', 0],
+  ['node:test, an empty test file next to a real test', '✔ test/a.test.js (38.0517ms)\n✔ real (0.353ms)\nℹ tests 2\nℹ suites 0\nℹ pass 2\nℹ fail 0\nℹ cancelled 0\nℹ skipped 0\nℹ todo 0\n', 1],
+  ['node:test TAP, an empty test file (Node 22)', 'TAP version 13\n# Subtest: test\\\\a.test.js\nok 1 - test\\\\a.test.js\n  ---\n  duration_ms: 38.6967\n  type: \'test\'\n  ...\n# Subtest: real\nok 2 - real\n1..2\n# tests 2\n# suites 0\n# pass 2\n# fail 0\n# cancelled 0\n# skipped 0\n# todo 0\n', 1],
+  ['node:test TAP, an empty test file (Node 20, absolute path)', 'TAP version 13\n# Subtest: C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\a.test.mjs\nok 1 - C:\\\\Users\\\\Jo Doe\\\\proj\\\\test\\\\a.test.mjs\n  ---\n  duration_ms: 39.7728\n  ...\n1..1\n# tests 1\n# pass 1\n# skipped 0\n# todo 0\n', 0],
+  // Tests whose names merely mention a file still count, and so do indented subtests named like files.
+  ['node:test, tests named after files', '✔ parses index.js (0.4ms)\n▶ loader\n  ✔ src/a.ts (0.2ms)\n▶ loader (1ms)\nℹ tests 2\nℹ suites 1\nℹ skipped 0\nℹ todo 0\n', 2],
+  // A file that failed to load is a failure, not an empty file: it stays counted.
+  ['node:test, a test file that failed to load', '✖ test/a.test.js (40ms)\nℹ tests 1\nℹ pass 0\nℹ fail 1\nℹ skipped 0\nℹ todo 0\n', 1],
+  // Other TAP producers are not node:test: no `# tests` summary, so nothing is read from them.
+  ['node-tap, file-named entries', 'TAP version 13\nok 1 - test/a.js # time=12ms\n1..1\n# { total: 1, pass: 1 }\n', null],
   ['Jest', 'PASS src/a.test.js\nTest Suites: 1 passed, 1 total\nTests:       1 skipped, 4 passed, 5 total\nSnapshots:   0 total\n', 4],
   ['Jest, no tests', 'No tests found, exiting with code 0\nRun with `--passWithNoTests` to exit with code 0\n', 0],
   ['Vitest', ' Test Files  2 passed (2)\n      Tests  1 failed | 6 passed (7)\n   Start at  10:00:00\n', 7],
@@ -70,6 +82,19 @@ const finish = (dir: string, ...flags: string[]) =>
 
 test('a test script that runs no tests is not a pass', () => {
   const dir = nodeProject(null);
+  try {
+    const report = finish(dir);
+    const check = report.checks.find((c) => c.name === 'test');
+    assert.equal(check?.status, 'skip', JSON.stringify(check));
+    assert.equal(check?.reason, 'no tests ran');
+    assert.equal(report.baselinePassed, false);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a test file with no tests in it is not a pass either (real node --test)', () => {
+  const dir = nodeProject('// tests to come\n');
   try {
     const report = finish(dir);
     const check = report.checks.find((c) => c.name === 'test');

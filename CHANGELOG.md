@@ -7,6 +7,7 @@ All notable changes to SeniorOS will be documented here.
 ### Added
 
 - A test command that runs no tests is no longer a pass. `senior finish` and the finish gate read how many tests ran from node:test, Jest, Vitest, Mocha, pytest, unittest, `cargo test` and `go test` output; zero is `SKIP (no tests ran)`, and the count is shown next to the check and reported as `tests` in `--json`. Before, `npm test` with no test files, or `go test` with no test files, reported PASS. Output that is not recognised changes nothing.
+  - A node:test file with no tests in it is not counted either. node:test reports such a file as one passing test named after the file (Node 20, 22 and 24, spec and TAP), so a suite of placeholder files read as `PASS (1 test)`.
 - Provenance: every proof report says when and on which code it ran (`provenance`: commit, uncommitted changes, time). `senior finish --record` keeps the report in `.senior/evidence/<commit>.json` as a durable record of what was verified; it stores no command output. Changes under `.senior/` no longer count as changes to a project.
 
 - Proof beyond Node: `senior finish` and the finish gate now check Python, Go and Rust projects. Before, the finish gate stayed silent on any repository without `package.json` or `.senior/config.json`.
