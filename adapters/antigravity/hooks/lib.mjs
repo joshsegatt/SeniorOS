@@ -238,6 +238,22 @@ export function finishGateNextStep(again) {
         'failure existed before your change, tell the user so with this evidence instead of claiming success.';
 }
 
+/** How long the finish gate waits for `senior finish`, under the hosts' 300 s hook limit (tests set it lower). */
+export const FINISH_TIMEOUT_MS = Number(process.env.SENIOROS_FINISH_TIMEOUT_MS) > 0 ? Number(process.env.SENIOROS_FINISH_TIMEOUT_MS) : 270_000;
+
+/**
+ * Sent once per change set when `senior finish` does not finish in time. Letting the agent finish in silence would let
+ * it report checks that never completed as passing.
+ * @param {string[]} [projects] the projects whose checks timed out, when there are several
+ */
+export function finishTimeoutMessage(projects = []) {
+  const where = projects.length ? ` (${projects.join(', ')})` : '';
+  return `SeniorOS finish gate: the checks did not finish within ${FINISH_TIMEOUT_MS / 1000} s${where}, so this change ` +
+    'is NOT VERIFIED. Do not say the checks pass. Run the tests that cover the change yourself (a narrower command is ' +
+    'fine) and report what ran and its result; if you cannot, report the status as NOT VERIFIED. A faster check in ' +
+    '.senior/config.json lets the gate verify a suite this slow.';
+}
+
 // Copies of PROJECT_MANIFESTS, IGNORED_DIRS and MAX_DEPTH in src/core/ecosystems.ts, which plans the checks of these
 // projects. The installed hooks run without that module; tests/proof-ecosystems.test.ts keeps the copies equal.
 export const PROJECT_MANIFESTS = ['pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'go.mod', 'Cargo.toml'];

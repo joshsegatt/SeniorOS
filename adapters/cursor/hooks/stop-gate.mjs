@@ -29,7 +29,8 @@ export function decide(input) {
   const results = repos
     .map((cwd) => ({ cwd, result: assess({ cwd, sessionId: input.conversation_id, host: 'cursor' }) }))
     .filter((r) => r.result);
-  const failures = results.filter((r) => r.result.kind === 'fail');
+  // Failing and timed-out checks go first; a review waits for them.
+  const failures = results.filter((r) => r.result.kind !== 'review');
   // Reviews go out, and count as sent, only when nothing fails; otherwise they stay due for their change set.
   const found = failures.length > 0 ? failures : results;
   if (found.length === 0) return {};

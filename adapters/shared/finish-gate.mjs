@@ -7,10 +7,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { baselineProven, finishGateNextStep, finishReviewMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { FINISH_TIMEOUT_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
-const FINISH_TIMEOUT_MS = 270_000;
 /** Identity of a repository path: Windows paths are case-insensitive, POSIX paths are not. */
 export const pathKey = (p) => (process.platform === 'win32' ? p.toLowerCase() : p);
 
@@ -50,12 +49,12 @@ export function evaluate(input) {
 }
 
 /**
- * Like `evaluate`, but says what kind of request it is: `fail` (the checks fail) or `review` (the checks pass on a
- * medium-or-higher-risk change). A review counts as sent only once `accept()` is called; until then it stays due for
+ * Like `evaluate`, but says what kind of request it is: `fail` (the checks fail), `timeout` (they did not finish in
+ * time, so nothing is verified) or `review` (the checks pass on a medium-or-higher-risk change). A review counts as sent only once `accept()` is called; until then it stays due for
  * this change set and the next call returns it again from the saved result, without running the checks. A host
  * checking several repositories uses this to send failures first and the review only when none fails.
  * @param {{ cwd?: string, sessionId?: string, host: string }} input
- * @returns {{ kind: 'fail' | 'review', reason: string, accept?: () => void } | null}
+ * @returns {{ kind: 'fail' | 'timeout' | 'review', reason: string, accept?: () => void } | null}
  */
 export function assess({ cwd, sessionId, host }) {
   const top = sh('git rev-parse --show-toplevel', cwd ?? process.cwd(), 10_000);
@@ -79,7 +78,8 @@ export function assess({ cwd, sessionId, host }) {
     save({ fingerprint, result: 'pass', reviewed: false, pendingReview: proven });
     return { kind: 'review', reason: finishReviewMessage(proven), accept: () => save({ fingerprint, result: 'pass', reviewed: true }) };
   };
-  if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) {
+  // A timeout is reported once per change set: running a suite that slow again on every stop would hold the agent.
+  if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.result === 'timeout' || prev.blocks >= MAX_BLOCKS)) {
     return prev.result === 'pass' && typeof prev.pendingReview === 'boolean' ? review(prev.fingerprint, prev.pendingReview) : null;
   }
 
@@ -93,9 +93,16 @@ export function assess({ cwd, sessionId, host }) {
   // review of senior-finish: passing checks show only the cases they cover.
   const reviewed = Boolean(prev?.reviewed);
 
-  // A slow suite or an unreadable report never holds the agent hostage.
-  if (run.timedOut || !report || failed.length === 0) {
-    if (!reviewed && !run.timedOut && report && needsFinishReview(root)) {
+  // A slow suite never holds the agent hostage, but its silence is not a pass: the agent is told, once, that nothing
+  // was verified.
+  if (run.timedOut) {
+    save({ fingerprint: changes.fingerprint, result: 'timeout', reviewed });
+    return { kind: 'timeout', reason: finishTimeoutMessage() };
+  }
+
+  // An unreadable report never holds the agent hostage either.
+  if (!report || failed.length === 0) {
+    if (!reviewed && report && needsFinishReview(root)) {
       return review(changes.fingerprint, baselineProven(report));
     }
     save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });

@@ -6,10 +6,9 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { SENIOR, baselineProven, finishGateNextStep, finishReviewMessage, hasProofSource, log, needsFinishReview, runHook, sh, tail, workspaceRoots } from './lib.mjs';
+import { FINISH_TIMEOUT_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, log, needsFinishReview, runHook, runSenior, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
-const FINISH_TIMEOUT_MS = 270_000;
 // Changes to these paths alone never trigger the gate.
 const NON_CODE = /(\.(md|mdx|txt|png|jpe?g|gif|svg|webp|ico|pdf|lock|log)$)|(^|\/)\.senior\/|(^|\/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$/i;
 
@@ -45,6 +44,8 @@ await runHook('Stop', async (input) => {
   const conversationId = String(input.conversationId ?? 'unknown').replace(/[^\w-]/g, '');
   const state = loadState(conversationId);
   const failures = [];
+  /** Projects whose checks did not finish in time: nothing there is verified. */
+  const timedOut = [];
   const review = [];
   /** State of each review candidate before this stop, restored when its review has to wait for a failure elsewhere. */
   const before = new Map();
@@ -60,17 +61,21 @@ await runHook('Stop', async (input) => {
     const key = root.toLowerCase();
     const prev = state[key];
     const reviewed = Boolean(prev?.reviewed);
-    if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) continue;
+    // A timeout is reported once per change set (see below).
+    if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.result === 'timeout' || prev.blocks >= MAX_BLOCKS)) continue;
 
     const started = Date.now();
-    const run = sh(`${SENIOR} finish --json`, root, FINISH_TIMEOUT_MS);
+    // Falls back to `npx senioros` when the CLI is not on PATH, as the other hosts' gate does.
+    const run = runSenior('finish --json', root, FINISH_TIMEOUT_MS);
     const ms = Date.now() - started;
     let report = null;
     try { report = JSON.parse(run.out); } catch {}
 
     if (run.timedOut) {
       log('Stop', { root, result: 'timeout', ms });
-      state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed }; // never hold the agent hostage to a slow suite
+      // Never hold the agent hostage to a slow suite, but say once that nothing was verified.
+      state[key] = { fingerprint: changes.fingerprint, result: 'timeout', reviewed };
+      timedOut.push(root);
       continue;
     }
     /** @type {Array<{name: string, status: string, command: string | null, exitCode: number | null}>} */
@@ -98,7 +103,7 @@ await runHook('Stop', async (input) => {
     log('Stop', { root, result: 'fail', blocks, ms, failed: failed.map((c) => c.name) });
   }
 
-  const sendReview = failures.length === 0 && review.length > 0;
+  const sendReview = failures.length === 0 && timedOut.length === 0 && review.length > 0;
   for (const key of review) {
     if (sendReview) state[key].reviewed = true;
     // Not cached as passed, so the next stop checks it again and asks for its review then.
@@ -110,13 +115,9 @@ await runHook('Stop', async (input) => {
     log('Stop', { result: 'review', roots: review });
     return { decision: 'continue', reason: finishReviewMessage(!unproven) };
   }
-  if (failures.length === 0) return {};
-  return {
-    decision: 'continue',
-    reason: [
-      'SeniorOS finish gate: code changed and `senior finish` failed. Do not finish yet.',
-      ...failures,
-      finishGateNextStep(repeated)
-    ].join('\n\n')
-  };
+  if (failures.length === 0 && timedOut.length === 0) return {};
+  const failed = failures.length
+    ? ['SeniorOS finish gate: code changed and `senior finish` failed. Do not finish yet.', ...failures, finishGateNextStep(repeated)]
+    : [];
+  return { decision: 'continue', reason: [...failed, ...(timedOut.length ? [finishTimeoutMessage(timedOut)] : [])].join('\n\n') };
 });

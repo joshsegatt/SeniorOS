@@ -106,6 +106,34 @@ function changesAgentConfig(segment) {
   return INTERPRETER.test(s) && INTERPRETER_WRITE.test(s);
 }
 
+const CD = /^\s*(?:cd|pushd|chdir|Set-Location|sl)\s+(?:-\w+\s+)*("[^"]*"|'[^']*'|\S+)\s*$/i;
+const ABSOLUTE = /^([\\/~]|[a-z]:)/i;
+
+/**
+ * A chain that moves into the agent's configuration first (`cd ~/.claude/plugins/x && git rm hooks/guard.mjs`): the
+ * later commands name their files relative to that folder, so each argument is also read joined to it.
+ * @param {string} command
+ */
+function changesConfigAfterCd(command) {
+  let cwd = null;
+  for (const segment of splitOutsideQuotes(command)) {
+    const cd = CD.exec(segment);
+    if (cd) {
+      const dir = (cd[1] ?? '').replace(/^["']|["']$/g, '');
+      cwd = cwd && !ABSOLUTE.test(dir) ? `${cwd}/${dir}` : dir;
+      continue;
+    }
+    if (!cwd) continue;
+    // Arguments, and the string literals inside a script (`node -e "fs.writeFileSync('settings.json', …)"`).
+    const words = segment.trim().split(/\s+/).filter((t) => t && !t.startsWith('-')).map((t) => t.replace(/^["']|["']$/g, ''));
+    // A lookahead, so each closing quote can open the next literal.
+    const literals = [...segment.matchAll(/["'`](?=([^"'`\s]+)["'`])/g)].map((m) => m[1] ?? '');
+    const joined = [...words, ...literals].map((t) => `${cwd}/${t}`);
+    if (changesAgentConfig(`${segment} ${joined.join(' ')}`)) return true;
+  }
+  return false;
+}
+
 /**
  * Splits a command line into the commands it chains (`&&`, `||`, `;`, newlines), leaving quoted arguments whole:
  * `node -e "a(); b()"` is one command.
@@ -241,6 +269,7 @@ export function classify(command) {
   // Pipes stay inside a segment, so `curl … | sh` is still seen whole. Both splits are judged: the plain one, as
   // before, and one that keeps quoted arguments whole, so a `;` inside `node -e "…"` cannot cut a script in two.
   const segments = new Set([...command.split(/&&|\|\||;|\r?\n/), ...splitOutsideQuotes(command)]);
+  if (changesConfigAfterCd(command)) return AGENT_CONFIG_REASON;
   for (const raw of segments) {
     if (!raw.trim() || onlyRegenerableTargets(raw)) continue;
     // The agent's configuration is judged on the command as written: a path inside `git -C …` or a message is still
