@@ -43,7 +43,21 @@ function runFinish(root) {
  * @param {{ cwd?: string, sessionId?: string, host: string }} input
  * @returns {string | null} why the agent must go back, or null to let it finish
  */
-export function evaluate({ cwd, sessionId, host }) {
+export function evaluate(input) {
+  const result = assess(input);
+  result?.accept?.();
+  return result?.reason ?? null;
+}
+
+/**
+ * Like `evaluate`, but says what kind of request it is: `fail` (the checks fail) or `review` (the checks pass on a
+ * medium-or-higher-risk change). A review counts as sent only once `accept()` is called; until then it stays due for
+ * this change set and the next call returns it again from the saved result, without running the checks. A host
+ * checking several repositories uses this to send failures first and the review only when none fails.
+ * @param {{ cwd?: string, sessionId?: string, host: string }} input
+ * @returns {{ kind: 'fail' | 'review', reason: string, accept?: () => void } | null}
+ */
+export function assess({ cwd, sessionId, host }) {
   const top = sh('git rev-parse --show-toplevel', cwd ?? process.cwd(), 10_000);
   if (top.code !== 0) return null;
   const root = top.out.trim();
@@ -54,18 +68,26 @@ export function evaluate({ cwd, sessionId, host }) {
   const stateDir = join(tmpdir(), `senioros-${host}`);
   const session = String(sessionId ?? 'unknown').replace(/[^\w-]/g, '');
   const stateFile = join(stateDir, `${session}.json`);
-  let state = {};
-  try { state = JSON.parse(readFileSync(stateFile, 'utf8')); } catch {}
+  const load = () => { try { return JSON.parse(readFileSync(stateFile, 'utf8')); } catch { return {}; } };
   const key = pathKey(root);
-  const prev = state[key];
-  if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) return null;
+  const prev = load()[key];
+  // The file holds every repository of the session, and `accept` may run after other repositories saved: read it again
+  // so this entry is the only one written.
+  const save = (entry) => { const state = load(); state[key] = entry; try { mkdirSync(stateDir, { recursive: true }); writeFileSync(stateFile, JSON.stringify(state)); } catch {} };
+  /** The risk review, due on this change set until accepted. */
+  const review = (fingerprint, proven) => {
+    save({ fingerprint, result: 'pass', reviewed: false, pendingReview: proven });
+    return { kind: 'review', reason: finishReviewMessage(proven), accept: () => save({ fingerprint, result: 'pass', reviewed: true }) };
+  };
+  if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.blocks >= MAX_BLOCKS)) {
+    return prev.result === 'pass' && typeof prev.pendingReview === 'boolean' ? review(prev.fingerprint, prev.pendingReview) : null;
+  }
 
   const run = runFinish(root);
   let report = null;
   try { report = JSON.parse(run.out); } catch {}
   const checks = report?.checks ?? [];
   const failed = checks.filter((c) => c.status === 'fail');
-  const save = (entry) => { state[key] = entry; try { mkdirSync(stateDir, { recursive: true }); writeFileSync(stateFile, JSON.stringify(state)); } catch {} };
 
   // Once per session and repository, a medium-or-higher-risk change whose checks pass is sent back for the risk
   // review of senior-finish: passing checks show only the cases they cover.
@@ -74,8 +96,7 @@ export function evaluate({ cwd, sessionId, host }) {
   // A slow suite or an unreadable report never holds the agent hostage.
   if (run.timedOut || !report || failed.length === 0) {
     if (!reviewed && !run.timedOut && report && needsFinishReview(root)) {
-      save({ fingerprint: changes.fingerprint, result: 'pass', reviewed: true });
-      return finishReviewMessage(baselineProven(report));
+      return review(changes.fingerprint, baselineProven(report));
     }
     save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });
     return null;
@@ -84,10 +105,10 @@ export function evaluate({ cwd, sessionId, host }) {
   const blocks = prev?.fingerprint === changes.fingerprint ? (prev.blocks ?? 0) + 1 : 1;
   save({ fingerprint: changes.fingerprint, result: 'fail', blocks, reviewed });
   const summary = checks.map((c) => `${c.status.toUpperCase()} ${c.name}${c.command ? ` (${c.command}${c.exitCode != null ? `, exit ${c.exitCode}` : ''})` : ''}`).join('\n');
-  return [
+  return { kind: 'fail', reason: [
     'SeniorOS finish gate: code changed and the project checks fail. Do not report the task as done yet.',
     summary,
     `Last output lines:\n${tail(run.err || run.out, 40, 3500)}`,
     finishGateNextStep(blocks > 1)
-  ].join('\n\n');
+  ].join('\n\n') };
 }

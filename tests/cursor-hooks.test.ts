@@ -42,7 +42,7 @@ test('Cursor guard asks before destructive commands and answers allow otherwise'
 
 test('Cursor hooks.json commands load the hooks from the plugin root, whatever the working folder', () => {
   assert.equal(hooksJson.version, 1);
-  assert.equal(hooksJson.hooks.stop?.[0]?.loop_limit, 2);
+  assert.equal(hooksJson.hooks.stop?.[0]?.loop_limit, 3);
   const elsewhere = mkdtempSync(path.join(os.tmpdir(), 'cur-'));
   try {
     assert.match(runHook('sessionStart', { session_id: 's' }, elsewhere).additional_context ?? '', /Approval boundary/);
@@ -86,6 +86,60 @@ test('Cursor stop gate sends the agent back on failing checks and ignores aborte
   } finally {
     rmSync(repo, { recursive: true, force: true });
     rmSync(clean, { recursive: true, force: true });
+  }
+});
+
+test('Cursor multi-root: a risk review waits for another repository\'s failure, then goes out alone (review finding)', () => {
+  const cli = { SENIOROS_CLI: `"${process.execPath}" "${path.join(root, 'dist', 'src', 'index.js')}"` };
+  /** A committed repository with a passing test, then `file` edited. */
+  const repoWith = (file: string) => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'curr-'));
+    writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type: 'module', scripts: { test: 'node --test' } }));
+    mkdirSync(path.join(dir, path.dirname(file)), { recursive: true });
+    writeFileSync(path.join(dir, file), 'export const allowed = (user) => user.role === "admin";\n');
+    mkdirSync(path.join(dir, 'test'));
+    writeFileSync(path.join(dir, 'test', 'a.test.js'), "import t from 'node:test'; t('ok', () => {});\n");
+    for (const args of [['init', '-q', '-b', 'main'], ['config', 'user.email', 't@t'], ['config', 'user.name', 't'], ['add', '-A'], ['commit', '-q', '-m', 'init']]) {
+      assert.equal(spawnSync('git', args, { cwd: dir }).status, 0);
+    }
+    writeFileSync(path.join(dir, file), 'export const allowed = (user) => user.role === "admin" || user.role === "owner";\n');
+    return dir;
+  };
+  const risky = repoWith('src/auth/policy.js');
+  const broken = repoWith('src/format.js');
+  writeFileSync(path.join(broken, 'test', 'a.test.js'), "import t from 'node:test'; import x from 'node:assert'; t('bad', () => x.fail('boom'));\n");
+  const stop = { conversation_id: `mr${process.pid}`, status: 'completed', workspace_roots: [risky, broken] };
+  try {
+    const first = runHook('stop', stop, risky, cli).followup_message ?? '';
+    assert.match(first, /checks fail/);
+    assert.doesNotMatch(first, /senior-finish step 4/, 'the review does not share a message with a failure');
+    assert.equal(first.match(/^Repository /gm)?.length, 1, first);
+
+    writeFileSync(path.join(broken, 'test', 'a.test.js'), "import t from 'node:test'; t('ok', () => {});\n");
+    const second = runHook('stop', stop, risky, cli).followup_message ?? '';
+    assert.match(second, /senior-finish step 4/, 'then the review that waited');
+    assert.doesNotMatch(second, /checks fail/);
+    assert.equal(second.match(/^Repository /gm)?.length, 1, second);
+    // git may print the temp folder's long form (Windows short names), so compare the folder's own name.
+    assert.ok(second.includes(path.basename(risky)) && !second.includes(path.basename(broken)), second);
+
+    assert.deepEqual(runHook('stop', stop, risky, cli), {}, 'and only once');
+
+    // Two reviews due at once go out together, and both count as sent: one repository's state does not overwrite the
+    // other's in the shared session file.
+    const other = repoWith('src/auth/session.js');
+    const both = { conversation_id: `mr2${process.pid}`, status: 'completed', workspace_roots: [risky, other] };
+    try {
+      assert.equal(runHook('stop', both, risky, cli).followup_message?.match(/senior-finish step 4/g)?.length, 2);
+      assert.deepEqual(runHook('stop', both, risky, cli), {});
+    } finally {
+      rmSync(other, { recursive: true, force: true });
+      rmSync(path.join(os.tmpdir(), 'senioros-cursor', `mr2${process.pid}.json`), { force: true });
+    }
+  } finally {
+    rmSync(risky, { recursive: true, force: true });
+    rmSync(broken, { recursive: true, force: true });
+    rmSync(path.join(os.tmpdir(), 'senioros-cursor', `mr${process.pid}.json`), { force: true });
   }
 });
 

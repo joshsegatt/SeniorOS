@@ -17,7 +17,7 @@
       {
         "command": "node -e \"import(require('node:url').pathToFileURL(require('node:path').resolve(process.env.CURSOR_PLUGIN_ROOT||'.','adapters/cursor/hooks/stop-gate.mjs')).href).then((m)=>m.main())\"",
         "timeout": 300,
-        "loop_limit": 2
+        "loop_limit": 3
       }
     ]
   }

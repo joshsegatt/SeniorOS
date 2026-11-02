@@ -1,9 +1,12 @@
 // Cursor stop hook: runs the shared finish gate (../../shared/finish-gate.mjs) when the agent completes with changed
-// code. On a failing check it answers a `followup_message`, which Cursor sends as the next user message, so the agent
-// goes back to fix it. Cursor's `loop_limit` and the gate's own per-change-set cap both stop it looping. Fails open.
+// code, in every git repository of the workspace. Its answer is a `followup_message`, which Cursor sends as the next
+// user message: the failing checks, so the agent goes back to fix them, or, once nothing fails, the risk review of a
+// medium-or-higher-risk change. A review never shares a message with another repository's failure; it stays due until
+// no repository fails. Cursor's `loop_limit` caps the follow-ups in a row (a fix that changes the code starts a new
+// change set, so the gate's own per-change-set cap does not end a long run of failures on its own). Fails open.
 import { readFileSync } from 'node:fs';
 import { sh } from '../../antigravity/hooks/lib.mjs';
-import { evaluate, pathKey } from '../../shared/finish-gate.mjs';
+import { assess, pathKey } from '../../shared/finish-gate.mjs';
 
 /** Distinct git repositories behind the workspace folders: a multi-root workspace can hold several. */
 function repositories(folders) {
@@ -23,13 +26,17 @@ export function decide(input) {
   if (input.status && input.status !== 'completed') return {};
   const folders = input.workspace_roots?.length ? input.workspace_roots : [process.env.CURSOR_PROJECT_DIR || process.cwd()];
   const repos = repositories(folders);
-  const failures = repos
-    .map((cwd) => ({ cwd, reason: evaluate({ cwd, sessionId: input.conversation_id, host: 'cursor' }) }))
-    .filter((r) => r.reason);
-  if (failures.length === 0) return {};
-  const message = failures.length === 1 && repos.length === 1
-    ? failures[0].reason
-    : failures.map((f) => `Repository ${f.cwd}:\n\n${f.reason}`).join('\n\n---\n\n');
+  const results = repos
+    .map((cwd) => ({ cwd, result: assess({ cwd, sessionId: input.conversation_id, host: 'cursor' }) }))
+    .filter((r) => r.result);
+  const failures = results.filter((r) => r.result.kind === 'fail');
+  // Reviews go out, and count as sent, only when nothing fails; otherwise they stay due for their change set.
+  const found = failures.length > 0 ? failures : results;
+  if (found.length === 0) return {};
+  if (failures.length === 0) for (const r of found) r.result.accept?.();
+  const message = found.length === 1 && repos.length === 1
+    ? found[0].result.reason
+    : found.map((f) => `Repository ${f.cwd}:\n\n${f.result.reason}`).join('\n\n---\n\n');
   return { followup_message: message };
 }
 
