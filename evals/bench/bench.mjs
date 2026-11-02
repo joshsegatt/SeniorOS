@@ -173,8 +173,8 @@ async function runBench(args) {
   if (parallel > 1 && backend !== 'agentapi' && backend !== 'claude') throw new Error('--parallel needs the agentapi or claude backend.');
   if (perProcessArms && process.env.SENIOROS_BENCH_USER_CONFIG !== '1') {
     // A user's CLAUDE.md reaching the runs would skew every arm; check before spending any run (see lib/claude.mjs).
-    const { answer, clean } = checkIsolation(model);
-    if (!clean) throw new Error(`user instructions reach the runs (the check run answered: ${answer}). Move your ~/.claude/CLAUDE.md aside for the bench, or set SENIOROS_BENCH_USER_CONFIG=1 to measure with it.`);
+    const { answer, clean, why } = checkIsolation(model);
+    if (!clean) throw new Error(`user instructions may reach the runs: ${why}. The check run answered: ${answer}. Move your ~/.claude/CLAUDE.md aside for the bench, or set SENIOROS_BENCH_USER_CONFIG=1 to measure with it.`);
   }
   const resultsDir = join(BENCH_HOME, 'results', new Date().toISOString().replace(/[:.]/g, '-'));
   mkdirSync(resultsDir, { recursive: true });
@@ -253,8 +253,8 @@ try {
   if (command === 'selftest') await selftest();
   else if (command === 'probe') await probe();
   else if (command === 'isolation') {
-    const { answer, clean } = checkIsolation(option(args, 'model', 'sonnet'));
-    console.log(clean ? 'Isolation OK: no user-level instructions reached the run.' : `Isolation FAILED, the run answered: ${answer}`);
+    const { answer, clean, why } = checkIsolation(option(args, 'model', 'sonnet'));
+    console.log(clean ? 'Isolation OK: no user-level instructions reached the run.' : `Isolation FAILED: ${why}. The run answered: ${answer}`);
     if (!clean) process.exitCode = 1;
   }
   else if (command === 'run') await runBench(args);
