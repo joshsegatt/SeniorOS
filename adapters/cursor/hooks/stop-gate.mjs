@@ -5,7 +5,7 @@
 // no repository fails. Cursor's `loop_limit` caps the follow-ups in a row (a fix that changes the code starts a new
 // change set, so the gate's own per-change-set cap does not end a long run of failures on its own). Fails open.
 import { readFileSync } from 'node:fs';
-import { sh } from '../../antigravity/hooks/lib.mjs';
+import { FINISH_TIMEOUT_MS, sh } from '../../antigravity/hooks/lib.mjs';
 import { assess, pathKey } from '../../shared/finish-gate.mjs';
 
 /** Distinct git repositories behind the workspace folders: a multi-root workspace can hold several. */
@@ -26,15 +26,18 @@ export function decide(input) {
   if (input.status && input.status !== 'completed') return {};
   const folders = input.workspace_roots?.length ? input.workspace_roots : [process.env.CURSOR_PROJECT_DIR || process.cwd()];
   const repos = repositories(folders);
+  // One budget for every repository, under Cursor's 300 s hook limit.
+  const deadline = Date.now() + FINISH_TIMEOUT_MS;
   const results = repos
-    .map((cwd) => ({ cwd, result: assess({ cwd, sessionId: input.conversation_id, host: 'cursor' }) }))
+    .map((cwd) => ({ cwd, result: assess({ cwd, sessionId: input.conversation_id, host: 'cursor', deadline }) }))
     .filter((r) => r.result);
   // Failing and timed-out checks go first; a review waits for them.
   const failures = results.filter((r) => r.result.kind !== 'review');
   // Reviews go out, and count as sent, only when nothing fails; otherwise they stay due for their change set.
   const found = failures.length > 0 ? failures : results;
   if (found.length === 0) return {};
-  if (failures.length === 0) for (const r of found) r.result.accept?.();
+  // Everything in the message counts as sent: a timeout, or the reviews once nothing fails.
+  for (const r of found) r.result.accept?.();
   const message = found.length === 1 && repos.length === 1
     ? found[0].result.reason
     : found.map((f) => `Repository ${f.cwd}:\n\n${f.result.reason}`).join('\n\n---\n\n');

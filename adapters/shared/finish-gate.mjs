@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FINISH_TIMEOUT_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { FINISH_TIMEOUT_MS, MIN_RUN_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 /** Identity of a repository path: Windows paths are case-insensitive, POSIX paths are not. */
@@ -32,9 +32,13 @@ export function changeSet(root) {
   return { files, fingerprint: hash.digest('hex') };
 }
 
-/** Runs `senior finish --json`, falling back to `npx senioros` when the CLI is not on PATH. */
-function runFinish(root) {
-  return runSenior('finish --json', root, FINISH_TIMEOUT_MS);
+/**
+ * Runs `senior finish --json`, falling back to `npx senioros` when the CLI is not on PATH. With a `deadline` (a host
+ * checking several repositories in one hook), it gets only the time left, and does not start with less than 5 s.
+ */
+function runFinish(root, deadline) {
+  const budget = deadline ? Math.min(FINISH_TIMEOUT_MS, deadline - Date.now()) : FINISH_TIMEOUT_MS;
+  return budget >= MIN_RUN_MS ? runSenior('finish --json', root, budget) : { timedOut: true, out: '', err: '', code: null };
 }
 
 /**
@@ -50,13 +54,14 @@ export function evaluate(input) {
 
 /**
  * Like `evaluate`, but says what kind of request it is: `fail` (the checks fail), `timeout` (they did not finish in
- * time, so nothing is verified) or `review` (the checks pass on a medium-or-higher-risk change). A review counts as sent only once `accept()` is called; until then it stays due for
- * this change set and the next call returns it again from the saved result, without running the checks. A host
- * checking several repositories uses this to send failures first and the review only when none fails.
- * @param {{ cwd?: string, sessionId?: string, host: string }} input
+ * time, so nothing is verified) or `review` (the checks pass on a medium-or-higher-risk change). A review or a
+ * timeout counts as sent only once `accept()` is called; until then it stays due for this change set and the next
+ * call returns it again from the saved result, without running the checks. A host checking several repositories uses
+ * this to send failures first and the review only when none fails, with one `deadline` for all of them.
+ * @param {{ cwd?: string, sessionId?: string, host: string, deadline?: number }} input
  * @returns {{ kind: 'fail' | 'timeout' | 'review', reason: string, accept?: () => void } | null}
  */
-export function assess({ cwd, sessionId, host }) {
+export function assess({ cwd, sessionId, host, deadline }) {
   const top = sh('git rev-parse --show-toplevel', cwd ?? process.cwd(), 10_000);
   if (top.code !== 0) return null;
   const root = top.out.trim();
@@ -78,12 +83,19 @@ export function assess({ cwd, sessionId, host }) {
     save({ fingerprint, result: 'pass', reviewed: false, pendingReview: proven });
     return { kind: 'review', reason: finishReviewMessage(proven), accept: () => save({ fingerprint, result: 'pass', reviewed: true }) };
   };
+  /** Nothing verified: due until accepted, so a hook killed before it answers still tells the agent next time. */
+  const timeout = (entry) => {
+    save({ ...entry, notified: false });
+    return { kind: 'timeout', reason: finishTimeoutMessage(), accept: () => save({ ...entry, notified: true }) };
+  };
   // A timeout is reported once per change set: running a suite that slow again on every stop would hold the agent.
   if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.result === 'timeout' || prev.blocks >= MAX_BLOCKS)) {
-    return prev.result === 'pass' && typeof prev.pendingReview === 'boolean' ? review(prev.fingerprint, prev.pendingReview) : null;
+    if (prev.result === 'timeout' && !prev.notified) return timeout({ fingerprint: prev.fingerprint, result: 'timeout', reviewed: Boolean(prev.reviewed), ...(typeof prev.pendingReview === 'boolean' ? { pendingReview: prev.pendingReview } : {}) });
+    // A review kept back (by a failure elsewhere, or behind a timeout message) goes out now.
+    return prev.result !== 'fail' && typeof prev.pendingReview === 'boolean' && !prev.reviewed ? review(prev.fingerprint, prev.pendingReview) : null;
   }
 
-  const run = runFinish(root);
+  const run = runFinish(root, deadline);
   let report = null;
   try { report = JSON.parse(run.out); } catch {}
   const checks = report?.checks ?? [];
@@ -95,9 +107,10 @@ export function assess({ cwd, sessionId, host }) {
 
   // A slow suite never holds the agent hostage, but its silence is not a pass: the agent is told, once, that nothing
   // was verified.
+  // A risk review that is due follows on a later stop, as NOT PROVEN since nothing ran to the end.
   if (run.timedOut) {
-    save({ fingerprint: changes.fingerprint, result: 'timeout', reviewed });
-    return { kind: 'timeout', reason: finishTimeoutMessage() };
+    const due = !reviewed && needsFinishReview(root);
+    return timeout({ fingerprint: changes.fingerprint, result: 'timeout', reviewed, ...(due ? { pendingReview: false } : {}) });
   }
 
   // An unreadable report never holds the agent hostage either.

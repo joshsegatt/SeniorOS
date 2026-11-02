@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FINISH_TIMEOUT_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, log, needsFinishReview, runHook, runSenior, sh, tail, workspaceRoots } from './lib.mjs';
+import { FINISH_TIMEOUT_MS, MIN_RUN_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, log, needsFinishReview, runHook, runSenior, sh, tail, workspaceRoots } from './lib.mjs';
 
 const MAX_BLOCKS = 2;
 // Changes to these paths alone never trigger the gate.
@@ -44,14 +44,14 @@ await runHook('Stop', async (input) => {
   const conversationId = String(input.conversationId ?? 'unknown').replace(/[^\w-]/g, '');
   const state = loadState(conversationId);
   const failures = [];
-  /** Projects whose checks did not finish in time: nothing there is verified. */
+  /** Projects whose checks did not finish in time and the agent was not told yet: nothing there is verified. */
   const timedOut = [];
   const review = [];
-  /** State of each review candidate before this stop, restored when its review has to wait for a failure elsewhere. */
-  const before = new Map();
   let repeated = true;
   // Set when a project sent for review has no passing proof baseline: the review then says NOT PROVEN.
   let unproven = false;
+  // One budget for every project, under the host's 300 s hook limit: a second slow project gets what is left.
+  const deadline = Date.now() + FINISH_TIMEOUT_MS;
 
   for (const { root, git } of workspaceRoots(input)) {
     if (!git || !hasProofSource(root)) continue;
@@ -61,21 +61,33 @@ await runHook('Stop', async (input) => {
     const key = root.toLowerCase();
     const prev = state[key];
     const reviewed = Boolean(prev?.reviewed);
-    // A timeout is reported once per change set (see below).
-    if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.result === 'timeout' || prev.blocks >= MAX_BLOCKS)) continue;
+    if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.result === 'timeout' || prev.blocks >= MAX_BLOCKS)) {
+      // Saved results that still owe the agent a message: a timeout it was not told about, or a review that had to
+      // wait (for a failure elsewhere, or for the timeout message to go first).
+      if (prev.result === 'timeout' && !prev.notified) timedOut.push(root);
+      else if (prev.result !== 'fail' && typeof prev.pendingReview === 'boolean' && !reviewed) {
+        review.push(key);
+        if (!prev.pendingReview) unproven = true;
+      }
+      continue;
+    }
 
     const started = Date.now();
+    const budget = deadline - started;
     // Falls back to `npx senioros` when the CLI is not on PATH, as the other hosts' gate does.
-    const run = runSenior('finish --json', root, FINISH_TIMEOUT_MS);
+    const run = budget >= MIN_RUN_MS ? runSenior('finish --json', root, budget) : { timedOut: true, out: '', err: '', code: null };
     const ms = Date.now() - started;
     let report = null;
     try { report = JSON.parse(run.out); } catch {}
 
     if (run.timedOut) {
       log('Stop', { root, result: 'timeout', ms });
-      // Never hold the agent hostage to a slow suite, but say once that nothing was verified.
-      state[key] = { fingerprint: changes.fingerprint, result: 'timeout', reviewed };
+      // Never hold the agent hostage to a slow suite, but say once that nothing was verified; its risk review, if
+      // due, follows on a later stop.
+      const due = !reviewed && needsFinishReview(root);
+      state[key] = { fingerprint: changes.fingerprint, result: 'timeout', reviewed, notified: false, ...(due ? { pendingReview: false } : {}) };
       timedOut.push(root);
+      saveState(conversationId, state);
       continue;
     }
     /** @type {Array<{name: string, status: string, command: string | null, exitCode: number | null}>} */
@@ -83,15 +95,18 @@ await runHook('Stop', async (input) => {
     const failed = checks.filter((c) => c.status === 'fail');
     if (!report || failed.length === 0) {
       // Once per conversation and project, a medium-or-higher-risk change whose checks pass goes back for the risk
-      // review of senior-finish (see finishReviewMessage).
-      // Marked reviewed only once the review is actually sent (below): a failure elsewhere takes precedence this turn.
+      // review of senior-finish (see finishReviewMessage). Kept as pending until it is actually sent (below), so a
+      // failure elsewhere, or a hook killed later, does not lose it.
       if (Boolean(report) && !reviewed && needsFinishReview(root)) {
+        const proven = baselineProven(report);
         review.push(key);
-        before.set(key, prev);
-        if (!baselineProven(report)) unproven = true;
+        if (!proven) unproven = true;
+        state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed, pendingReview: proven };
+      } else {
+        state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed };
       }
-      state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed };
       log('Stop', { root, result: report ? 'pass' : 'unparsed', ms, available: report?.availableChecks });
+      saveState(conversationId, state);
       continue;
     }
 
@@ -101,15 +116,18 @@ await runHook('Stop', async (input) => {
     const summary = checks.map((c) => `${c.status.toUpperCase()} ${c.name}${c.command ? ` (${c.command}${c.exitCode != null ? `, exit ${c.exitCode}` : ''})` : ''}`).join('\n');
     failures.push(`Project ${root}\n${summary}\nLast output lines:\n${tail(run.err, 40, 3500)}`);
     log('Stop', { root, result: 'fail', blocks, ms, failed: failed.map((c) => c.name) });
+    saveState(conversationId, state);
   }
 
+  // A review goes out alone, once nothing failed or timed out; until then it stays pending in the state.
   const sendReview = failures.length === 0 && timedOut.length === 0 && review.length > 0;
-  for (const key of review) {
-    if (sendReview) state[key].reviewed = true;
-    // Not cached as passed, so the next stop checks it again and asks for its review then.
-    else if (before.get(key)) state[key] = before.get(key);
-    else delete state[key];
+  if (sendReview) {
+    for (const key of review) {
+      state[key].reviewed = true;
+      delete state[key].pendingReview;
+    }
   }
+  for (const root of timedOut) state[root.toLowerCase()].notified = true;
   saveState(conversationId, state);
   if (sendReview) {
     log('Stop', { result: 'review', roots: review });

@@ -128,6 +128,14 @@ const asks: Array<[string, RegExp]> = [
   ["cd '.claude/plugins/x' && mv hooks off", /agent's own settings/],
   ['cd ~/.claude/plugins/x/hooks && cd .. && rm guard.mjs', /agent's own settings/],
   ['cd ~/.claude && node -e "require(\'fs\').writeFileSync(\'settings.json\', \'{}\')"', /agent's own settings/],
+  // Review findings: `./` and `..`, subshells, redirections, `--`, cmd's /d and Push-Location.
+  ['cd ~/.claude && rm ./settings.json', /agent's own settings/],
+  ['cd ~/.claude/skills && rm ../settings.json', /agent's own settings/],
+  ['(cd ~/.claude && rm settings.json)', /agent's own settings/],
+  ['cd ~/.claude 2>/dev/null && rm settings.json', /agent's own settings/],
+  ['cd -- ~/.claude && rm settings.json', /agent's own settings/],
+  ['cd /d C:\\Users\\me\\.claude && del settings.json', /agent's own settings/],
+  ['Push-Location ~/.claude; Remove-Item settings.json', /agent's own settings/],
   // SeniorOS's own commands that write a host's hooks or plugin list.
   ['senior setup --apply', /agent's own settings/],
   ['npx senioros install --target antigravity', /agent's own settings/],
@@ -164,6 +172,8 @@ const passes = [
   'senior setup', 'senior doctor --json', 'senior install --target claude --scope project',
   'cd ~/.claude && cat settings.json', 'cd ~/.claude/plugins && ls', 'cd ~/.claude && echo hi > notes.txt',
   'cd ~/.claude/plugins/seniorOS && git log -3', 'cd src && rm a.ts', 'cd ~/.codex && cat config.toml',
+  // After popd, or after leaving the folder, a write is judged where it happens.
+  'pushd ~/.cursor; popd; rm hooks.json', 'cd ~/.claude/plugins && cd ../.. && rm -f notes.txt',
 ];
 
 /**

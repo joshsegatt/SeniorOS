@@ -1,5 +1,6 @@
 // PreToolUse (run_command): force a human confirmation for destructive or irreversible commands,
 // even when terminal auto-execution is set to Turbo. Everything else passes through unchanged.
+import path from 'node:path';
 import { log, runHook } from './lib.mjs';
 
 /** @type {Array<[RegExp, string]>} [pattern, reason]; patterns run against the whole command line. */
@@ -106,29 +107,40 @@ function changesAgentConfig(segment) {
   return INTERPRETER.test(s) && INTERPRETER_WRITE.test(s);
 }
 
-const CD = /^\s*(?:cd|pushd|chdir|Set-Location|sl)\s+(?:-\w+\s+)*("[^"]*"|'[^']*'|\S+)\s*$/i;
+// A change of directory: `cd`, `pushd`, `Set-Location`/`Push-Location` and aliases, also inside a subshell
+// (`(cd x && …)`), after `--` or cmd's `/d`, and with a redirection (`cd x 2>/dev/null`).
+const CD = /^\s*\(?\s*(cd|pushd|chdir|Set-Location|sl|Push-Location)\s+(?:(?:-\w+|--|\/d)\s+)*("[^"]*"|'[^']*'|[^\s()<>]+)(?:\s*\d?>+\s*\S+)*\s*\)?\s*$/i;
+const POPD = /^\s*\(?\s*(popd|Pop-Location)\b/i;
 const ABSOLUTE = /^([\\/~]|[a-z]:)/i;
+/** `a/./b/../c` → `a/c`, with `\` read as `/`; a leading `~` or drive stays as it is. */
+const normalize = (p) => path.posix.normalize(p.replace(/\\/g, '/'));
 
 /**
  * A chain that moves into the agent's configuration first (`cd ~/.claude/plugins/x && git rm hooks/guard.mjs`): the
- * later commands name their files relative to that folder, so each argument is also read joined to it.
+ * later commands name their files relative to that folder, so each relative argument is also read joined to it.
+ * Every path under a plugin folder counts as configuration, so any write made from inside one asks: the price of not
+ * parsing which argument each command writes.
  * @param {string} command
  */
 function changesConfigAfterCd(command) {
   let cwd = null;
+  /** Folders saved by `pushd`, restored by `popd`. */
+  const stack = [];
   for (const segment of splitOutsideQuotes(command)) {
     const cd = CD.exec(segment);
     if (cd) {
-      const dir = (cd[1] ?? '').replace(/^["']|["']$/g, '');
-      cwd = cwd && !ABSOLUTE.test(dir) ? `${cwd}/${dir}` : dir;
+      const dir = (cd[2] ?? '').replace(/^["']|["']$/g, '');
+      if (/^(pushd|Push-Location)$/i.test(cd[1] ?? '')) stack.push(cwd);
+      cwd = normalize(cwd && !ABSOLUTE.test(dir) ? `${cwd}/${dir}` : dir);
       continue;
     }
+    if (POPD.test(segment)) { cwd = stack.pop() ?? null; continue; }
     if (!cwd) continue;
-    // Arguments, and the string literals inside a script (`node -e "fs.writeFileSync('settings.json', …)"`).
-    const words = segment.trim().split(/\s+/).filter((t) => t && !t.startsWith('-')).map((t) => t.replace(/^["']|["']$/g, ''));
-    // A lookahead, so each closing quote can open the next literal.
+    // Arguments, and the string literals inside a script (`node -e "fs.writeFileSync('settings.json', …)"`); a
+    // lookahead, so each closing quote can open the next literal. Absolute paths are judged as written.
+    const words = segment.trim().split(/\s+/).filter((t) => t && !t.startsWith('-')).map((t) => t.replace(/^[("']+|[)"']+$/g, ''));
     const literals = [...segment.matchAll(/["'`](?=([^"'`\s]+)["'`])/g)].map((m) => m[1] ?? '');
-    const joined = [...words, ...literals].map((t) => `${cwd}/${t}`);
+    const joined = [...words, ...literals].filter((t) => t && !ABSOLUTE.test(t)).map((t) => normalize(`${cwd}/${t}`));
     if (changesAgentConfig(`${segment} ${joined.join(' ')}`)) return true;
   }
   return false;

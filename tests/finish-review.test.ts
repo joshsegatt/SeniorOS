@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const root = process.cwd();
 // Without NODE_TEST_CONTEXT, which turns a nested `node --test` into a reporting child that always exits 0.
@@ -189,6 +190,49 @@ test('checks that do not finish in time are reported once as NOT VERIFIED, never
       }
     }
     rmSync(log, { force: true });
+  }
+});
+
+test('after a timeout, a due risk review still follows, and an unsent timeout is sent again (review findings)', async () => {
+  const dir = repoWith('src/auth/policy.js');
+  writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ type: 'module', scripts: { test: 'node -e "setTimeout(() => {}, 6000)"' } }));
+  const slow = { ...env, SENIOROS_FINISH_TIMEOUT_MS: '2000' };
+  try {
+    const stop = (session: string) => {
+      const r = spawnSync(process.execPath, [path.join(root, 'adapters', 'claude-code', 'hooks', 'stop-gate.mjs')], {
+        input: JSON.stringify({ cwd: dir, session_id: session }), encoding: 'utf8', env: slow, timeout: 60_000,
+      });
+      assert.equal(r.status, 0, r.stderr);
+      return r.stdout ? (JSON.parse(r.stdout) as { decision: string; reason: string }) : null;
+    };
+    const session = `tr${process.pid}`;
+    assert.match(stop(session)?.reason ?? '', /NOT VERIFIED/);
+    const second = stop(session)?.reason ?? '';
+    assert.match(second, /senior-finish step 4/, 'the risk review is not dropped');
+    assert.match(second, /proof baseline is NOT PROVEN/, 'and it does not say the checks pass');
+    assert.equal(stop(session), null);
+
+    // A timeout the host never delivered (the hook was killed before answering) is sent on the next stop.
+    process.env.SENIOROS_FINISH_TIMEOUT_MS = '2000';
+    process.env.SENIOROS_CLI = env.SENIOROS_CLI;
+    const { assess } = (await import(`${pathToFileURL(path.join(root, 'adapters', 'shared', 'finish-gate.mjs')).href}?t=${Date.now()}`)) as {
+      assess: (input: object) => { kind: string; accept?: () => void } | null;
+    };
+    const input = { cwd: dir, sessionId: `tk${process.pid}`, host: 'test' };
+    assert.equal(assess(input)?.kind, 'timeout');
+    const again = assess(input);
+    assert.equal(again?.kind, 'timeout', 'not accepted, so still due');
+    again?.accept?.();
+    assert.equal(assess(input)?.kind, 'review');
+  } finally {
+    delete process.env.SENIOROS_FINISH_TIMEOUT_MS;
+    delete process.env.SENIOROS_CLI;
+    for (let i = 0; ; i++) {
+      try { rmSync(dir, { recursive: true, force: true }); break; } catch (error) {
+        if (i >= 30) throw error;
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 500);
+      }
+    }
   }
 });
 

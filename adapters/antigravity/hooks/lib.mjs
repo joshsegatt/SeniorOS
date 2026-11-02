@@ -239,7 +239,9 @@ export function finishGateNextStep(again) {
 }
 
 /** How long the finish gate waits for `senior finish`, under the hosts' 300 s hook limit (tests set it lower). */
-export const FINISH_TIMEOUT_MS = Number(process.env.SENIOROS_FINISH_TIMEOUT_MS) > 0 ? Number(process.env.SENIOROS_FINISH_TIMEOUT_MS) : 270_000;
+export const FINISH_TIMEOUT_MS = Math.min(270_000, Math.max(1_000, Number(process.env.SENIOROS_FINISH_TIMEOUT_MS) || 270_000));
+/** Below this much time left in the hook's budget, a run is not started: it could not finish. */
+export const MIN_RUN_MS = Math.min(5_000, FINISH_TIMEOUT_MS / 2);
 
 /**
  * Sent once per change set when `senior finish` does not finish in time. Letting the agent finish in silence would let
@@ -283,7 +285,10 @@ export function hasProofSource(root) {
 /** Runs a `senior` subcommand, falling back to `npx senioros` when the CLI is not on PATH. */
 export function runSenior(subcommand, cwd, timeoutMs) {
   const local = sh(`${SENIOR} ${subcommand}`, cwd, timeoutMs);
-  const missing = !local.timedOut && local.code !== 0 && !local.out.trim() && /not (found|recognized)|ENOENT/i.test(local.err);
+  // Only the shell saying the `senior` command itself is missing: a run that failed with "file not found" in its own
+  // output is a result, not a reason to run the whole suite again through npx.
+  const missing = !local.timedOut && local.code !== 0 && !local.out.trim() &&
+    /(?:^|[\s'"])senior(?:\.cmd|\.exe)?['"]?(?::| is)\s+(?:command )?not (?:found|recognized)|\bspawn\b[^\n]*\bsenior\b[^\n]*ENOENT/im.test(local.err);
   return missing ? sh(`npx -y senioros ${subcommand}`, cwd, timeoutMs) : local;
 }
 
