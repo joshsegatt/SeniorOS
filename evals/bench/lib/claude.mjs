@@ -16,8 +16,8 @@
 // `claude setup-token`) or ANTHROPIC_API_KEY instead. SENIOROS_BENCH_USER_CONFIG=1 keeps the user's own folder and
 // skips the check, as runs before November 2026 did.
 import { spawn, spawnSync } from 'node:child_process';
-import { cpSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
 import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
 
 /**
@@ -41,8 +41,11 @@ export const CLAUDE_ARMS = {
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
   // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
   'senioros-baseline': () => {
-    const dir = process.env.SENIOROS_BENCH_BASELINE;
-    if (!dir) throw new Error('The senioros-baseline arm needs SENIOROS_BENCH_BASELINE: the path of the SeniorOS checkout to compare against.');
+    const dir = process.env.SENIOROS_BENCH_BASELINE && resolve(process.env.SENIOROS_BENCH_BASELINE);
+    // Runs start in their own repository, so a relative path would point nowhere; a wrong one would measure no pack.
+    if (!dir || !existsSync(join(dir, '.claude-plugin', 'plugin.json'))) {
+      throw new Error('The senioros-baseline arm needs SENIOROS_BENCH_BASELINE: the path of a SeniorOS checkout (with .claude-plugin/plugin.json) to compare against.');
+    }
     return ['--plugin-dir', dir];
   },
 };

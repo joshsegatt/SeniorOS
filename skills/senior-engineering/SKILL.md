@@ -38,7 +38,7 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 |---|---|---|
 | Low | copy, comments, isolated UI tweak, obvious local fix | Do it, verify proportionately, report briefly |
 | Medium | local feature logic, contained endpoint, refactor with tests | Short plan (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), targeted tests, diff review |
-| High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | `senior-plan`, explicit acceptance criteria, full relevant verification, independent review, rollback/recovery check |
+| High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | Explicit acceptance criteria (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), full relevant verification, independent review, rollback/recovery check |
 | Critical | irreversible data operations, credentials, deploys, history rewrites, destructive infrastructure | Prepare and verify, then stop: the external or destructive step needs the user's explicit approval |
 
 ## 4. Implement the minimum coherent change

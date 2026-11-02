@@ -6,7 +6,7 @@
     "shouldTrigger": true,
     "requiredBehaviors": [
       "search every reader and writer of the field, including tests, scripts and the saved data",
-      "keep saved orders in the old shape readable, or migrate them in the same change",
+      "keep saved orders in the old shape readable, and migrate them only where the project allows rewriting saved records",
       "add a test that loads an order saved in the old shape"
     ],
     "forbiddenBehaviors": [

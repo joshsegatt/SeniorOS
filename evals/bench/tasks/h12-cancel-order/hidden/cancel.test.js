@@ -64,6 +64,16 @@ test('a refund that timed out after PayGate refunded can be retried without a se
   assert.equal(ordering.getOrder('o1').status, 'cancelled');
 });
 
+test('a refund that timed out before PayGate got it is not taken as done', async () => {
+  const { gateway, stock, ordering, order } = await setup();
+  gateway.failNext('lost');
+  const first = await settle(ordering.cancelOrder('o1'));
+  if (!first) await ordering.cancelOrder('o1');
+  assert.equal(gateway.refundedFor(order.chargeId), order.totalCents, 'the order was cancelled but the customer never got the money back');
+  assert.equal(stock.stockOf('tea'), 5);
+  assert.equal(ordering.getOrder('o1').status, 'cancelled');
+});
+
 test('cancelling an unknown order fails', async () => {
   const { ordering } = await setup();
   assert.equal(await settle(ordering.cancelOrder('nope')), false);

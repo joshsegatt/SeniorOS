@@ -4,12 +4,13 @@
 // refund(chargeId, cents, options?)      -> { refundId }
 //
 // A refund moves real money back to the customer. PayGate does not stop a second refund of the same charge: each
-// call refunds again, up to the charged amount.
+// call refunds again.
 //
-// Network calls can fail after PayGate already did the work: a timeout (PayGateTimeout) means the refund may or may
-// not have happened. Pass `{ idempotencyKey }` to refund: PayGate performs a refund at most once per key and answers
-// a retry with the same key with the first result. A retry of a refund that timed out must use the same key:
-// without it PayGate sees a second refund of the same charge.
+// A timeout (PayGateTimeout) means the refund may or may not have happened: the call can fail before PayGate gets it
+// or after PayGate already refunded. Pass `{ idempotencyKey }` to refund: PayGate performs at most one refund per key,
+// and a retry with the key of a refund that went through returns that refund instead of refunding again. A declined
+// refund is not recorded, so it can be retried with the same key. A retry of a refund that timed out must use the
+// same key, or the customer may be refunded twice.
 //
 // Production code gets a client from `connect(apiKey)`. Tests use `createFakeGateway()`, with the same behavior.
 
@@ -23,8 +24,9 @@ export class PayGateTimeout extends Error {}
  */
 
 /**
- * In-process gateway for tests. `failNext(kind)` makes the next refund fail: 'declined' (nothing refunded) or
- * 'timeout' (refunded on PayGate's side, but the caller gets a PayGateTimeout).
+ * In-process gateway for tests. `failNext(kind)` makes the next refund fail: 'declined' (nothing refunded),
+ * 'lost' (timed out before PayGate got it: nothing refunded, the caller gets a PayGateTimeout) or 'timeout'
+ * (refunded on PayGate's side, but the caller gets a PayGateTimeout).
  */
 export function createFakeGateway() {
   const charges = new Map();
@@ -48,14 +50,14 @@ export function createFakeGateway() {
       const kind = failure;
       failure = null;
       if (kind === 'declined') throw new Error('PayGate: refund declined');
-      if (charge.refunded + cents > charge.cents) throw new Error('PayGate: refund exceeds the charge');
+      if (kind === 'lost') throw new PayGateTimeout('PayGate: timed out');
       charge.refunded += cents;
       const result = { refundId: `re_${++seq}` };
       if (key) byKey.set(key, result);
       if (kind === 'timeout') throw new PayGateTimeout('PayGate: timed out');
       return result;
     },
-    /** @param {'declined' | 'timeout'} kind */
+    /** @param {'declined' | 'lost' | 'timeout'} kind */
     failNext(kind) {
       failure = kind;
     },

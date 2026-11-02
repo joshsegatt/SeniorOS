@@ -38,7 +38,7 @@ Look for the two likeliest ways the design is wrong. Ask, for this change:
 |---|---|
 | A later step fails: is the earlier one already done? | Do the step that can fail first, or undo the earlier one, so state stays consistent |
 | The same call arrives twice (retry, double click, a second run)? | Make it idempotent: record that it happened, and check before acting |
-| Old records or callers still use the previous shape? | Read both shapes, or migrate them in the same change; never strand existing data |
+| Old records or callers still use the previous shape? | Read both shapes; migrate stored records only where the project allows rewriting them, and in the same change. Never strand existing data |
 | Two requests at once? | Use the store's atomic operation instead of read-then-write |
 | A step is destructive or external (deploy, migration, real money)? | Prepare and verify it, then stop for the user's approval |
 
@@ -50,7 +50,7 @@ Proceed without waiting when the plan only implements what was asked. Stop and s
 
 ## 5. Build to the plan
 
-- Implement in the plan's order and add the proof from point 4 as you go.
+- Implement in the plan's order and add the plan's proof as you go, including the tests for the failure cases.
 - When the code shows the plan was wrong, change the plan and say why; do not drift from it silently.
 - Do not add steps the goal does not need.
 

@@ -166,6 +166,8 @@ async function runBench(args) {
   const perProcessArms = backend === 'claude';
   const known = perProcessArms ? CLAUDE_ARMS : ARMS;
   for (const a of arms) if (!known[a]) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
+  // An arm that cannot start (a missing baseline checkout) must stop the bench, not grade every run as a failure.
+  if (perProcessArms) for (const a of arms) if (typeof known[a] === 'function') known[a]();
   const model = option(args, 'model', perProcessArms ? 'haiku' : 'flash');
   const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
   if (parallel > 1 && backend !== 'agentapi' && backend !== 'claude') throw new Error('--parallel needs the agentapi or claude backend.');
