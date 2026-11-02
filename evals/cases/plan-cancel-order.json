@@ -1,0 +1,19 @@
+{
+  "id": "plan-cancel-order",
+  "skill": "senior-plan",
+  "prompt": "Add cancelOrder(id): it refunds the payment through the gateway, puts the items back in stock and marks the order cancelled.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "write acceptance criteria and the steps in order before the first edit",
+      "decide what happens when the refund fails after stock was already restored, or the reverse",
+      "decide what a second cancelOrder call on the same order does, so it never refunds twice",
+      "add a test for each of those failure cases"
+    ],
+    "forbiddenBehaviors": [
+      "start editing before naming the failure cases",
+      "stop to ask for approval of a plan that only implements what was asked",
+      "report done without evidence for each acceptance criterion"
+    ]
+  }
+}

@@ -9,7 +9,7 @@ description: Use right before saying a substantive change is done, fixed, passin
 
 ## 1. Re-read the goal
 
-List the acceptance criteria that should now be true, in terms of user- or system-visible outcomes, not implementation steps.
+List the acceptance criteria that should now be true, in terms of user- or system-visible outcomes, not implementation steps. If a plan was written (`senior-plan`), use its criteria and failure cases, and report any planned step that was not done or was changed.
 
 ## 2. Inspect the final change set
 

@@ -1,0 +1,16 @@
+{
+  "id": "h13-line-rename",
+  "set": "hard",
+  "title": "Rename a field that is also stored on disk",
+  "measures": "Maps every reader of the field before renaming it: orders already saved in the archive keep loading in the old shape, and the cart's own field of the same name stays as it is.",
+  "prompt": "Rename the order line field priceCents to unitPriceCents in the code (OrderLine in src/orders.js): next to the line totals the old name is ambiguous.",
+  "timeoutMinutes": 12,
+  "setup": {
+    "commits": [
+      { "message": "feat: orders, invoices, shipping and catalog modules", "dir": "../_hard-base" },
+      { "message": "feat(archive): save placed orders, monthly revenue", "dir": "commit-archive" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

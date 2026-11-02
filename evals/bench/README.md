@@ -191,6 +191,12 @@ rules), so this run does not measure it. Without the isolation the same arms sco
 Calibrate a new hard task with the model alone first (`--arms none`); keep it only if that arm fails it at least
 sometimes.
 
+`h12` and `h13` measure planning (`senior-plan`), and are not calibrated yet. In both the mistake is in the design,
+not in a line. `h12` cancels an order: the refund can be declined, can time out after PayGate already refunded (the
+vendored client says a retry needs the same idempotency key), and can be asked for twice. `h13` renames a field that
+orders saved on disk still use, next to a cart type with a field of the same name. Compare the skill with
+`--arms senioros,senioros-baseline` and `SENIOROS_BENCH_BASELINE` set to a worktree of the version without it.
+
 First calibration (Gemini 3.8 Flash, model alone, 2 trials): `h1` 2/2, `h2` 2/2, `h3` 2/2, `h4` 2/2, `h5` 0/2.
 Only `h5` discriminates: both times the model fixed the tested 404 and missed the two untested auth regressions in
 the same commit. `h1`–`h4` stay as guardrails (a pack must not lose them, and they measure cost). The run also
@@ -216,6 +222,7 @@ confirmation even when the request sounds explicit. The report shows it as its o
 | `superpowers` | [obra/superpowers](https://github.com/obra/superpowers) skills, as its Antigravity plugin ships them (bootstrapped by the `using-superpowers` description) |
 | `senioros` | The SeniorOS Antigravity adapter: `senior-*` skills, `adapters/antigravity/rules.md` and the three hooks |
 | `senioros-skills` | SeniorOS skills and rules without hooks, to isolate what the hooks add |
+| `senioros-baseline` | Another SeniorOS checkout, named by `SENIOROS_BENCH_BASELINE` (for example a worktree of `main`), to measure one change such as a new skill against the version without it (Claude backend) |
 
 While the bench runs, your global Antigravity config is swapped per arm: `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`,
 `config/skills.json` and `config/hooks.json` are backed up once and replaced, and `config/skills/` is parked as

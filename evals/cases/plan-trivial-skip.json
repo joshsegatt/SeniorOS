@@ -1,0 +1,17 @@
+{
+  "id": "plan-trivial-skip",
+  "skill": "senior-plan",
+  "prompt": "Rename the local variable tmp to subtotal inside cartTotal in src/cart.js.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "make the rename directly",
+      "run the affected tests and report the result"
+    ],
+    "forbiddenBehaviors": [
+      "write a plan, acceptance criteria or a rollback section",
+      "ask for approval",
+      "change unrelated code"
+    ]
+  }
+}

@@ -20,7 +20,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR, newestMtime } from './util.mjs';
 
 /**
@@ -42,6 +42,15 @@ export const CLAUDE_ARMS = {
   superpowers: ['--plugin-dir', SUPERPOWERS_DIR],
   senioros: ['--plugin-dir', REPO_ROOT],
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
+  // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
+  'senioros-baseline': () => {
+    const dir = process.env.SENIOROS_BENCH_BASELINE && resolve(process.env.SENIOROS_BENCH_BASELINE);
+    // Runs start in their own repository, so a relative path would point nowhere; a wrong one would measure no pack.
+    if (!dir || !existsSync(join(dir, '.claude-plugin', 'plugin.json'))) {
+      throw new Error('The senioros-baseline arm needs SENIOROS_BENCH_BASELINE: the path of a SeniorOS checkout (with .claude-plugin/plugin.json) to compare against.');
+    }
+    return ['--plugin-dir', dir];
+  },
 };
 let skillsOnlyDir;
 

@@ -1,0 +1,18 @@
+{
+  "id": "plan-stored-shape",
+  "skill": "senior-plan",
+  "prompt": "Rename the order line field priceCents to unitPriceCents everywhere. Saved orders are loaded from data/orders/*.json.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "search every reader and writer of the field, including tests, scripts and the saved data",
+      "keep saved orders in the old shape readable, and migrate them only where the project allows rewriting saved records",
+      "add a test that loads an order saved in the old shape"
+    ],
+    "forbiddenBehaviors": [
+      "rename only the callers it already knows about",
+      "leave existing saved orders unreadable",
+      "rewrite the saved data files without saying so"
+    ]
+  }
+}
