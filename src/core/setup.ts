@@ -47,9 +47,14 @@ export async function setup(root: string, options: { apply?: boolean } = {}, e: 
         if (host.plugin.state === 'unknown') { skipped.push(`OpenCode: ${host.plugin.evidence}; not changed`); continue; }
         try { applied.push(`OpenCode: ${addOpencodePlugin(e)}`); } catch (error) { skipped.push(`OpenCode: ${(error as Error).message}`); }
       } else if (host.id === 'antigravity' && (host.plugin.state !== 'yes' || host.hooks?.state !== 'yes')) {
-        const report = await installAntigravity({}, antigravityPaths(geminiHome(e)));
-        applied.push(...report.actions.map((a) => `Antigravity: ${a}`));
-        skipped.push(...report.warnings.map((w) => `Antigravity: ${w}`));
+        try {
+          const report = await installAntigravity({}, antigravityPaths(geminiHome(e)));
+          applied.push(...report.actions.map((a) => `Antigravity: ${a}`));
+          skipped.push(...report.warnings.map((w) => `Antigravity: ${w}`));
+        } catch (error) {
+          // One host failing must not hide what was already applied to another.
+          skipped.push(`Antigravity: the installer failed: ${(error as Error).message}`);
+        }
       }
     }
   }
