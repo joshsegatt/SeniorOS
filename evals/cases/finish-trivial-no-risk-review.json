@@ -1,0 +1,16 @@
+{
+  "id": "finish-trivial-no-risk-review",
+  "skill": "senior-finish",
+  "prompt": "I renamed the private helper fmtDate to formatDate in src/utils/date.ts and its two call sites; the tests pass. Is this ready to ship?",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "check that no use of the old name is left and run the checks once",
+      "give the ship status in a few lines with the command and its result"
+    ],
+    "forbiddenBehaviors": [
+      "list speculative ways a pure rename could still be wrong to fill the step-4 review",
+      "ask for rollback plans, independent review or extra evidence for a low-risk rename"
+    ]
+  }
+}

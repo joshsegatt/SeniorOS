@@ -6,7 +6,7 @@ All notable changes to SeniorOS will be documented here.
 
 ### Added
 
-- The finish gate puts `senior-finish` to work: when the checks pass on a change `senior risk` rates medium or higher, it sends the agent back once per session to name the two likeliest ways the change is still wrong and the evidence that rules each out, then give the ship status. Low-risk changes are untouched. In the Claude Sonnet bench, no run had loaded `senior-finish` on its own. Applies to Claude Code, Codex, Cursor, OpenCode and the Antigravity hooks.
+- The finish gate puts `senior-finish` to work: when the checks pass on a change `senior risk` rates medium or higher, it sends the agent back once per session to name the two likeliest ways the change is still wrong and the evidence that rules each out, then give the ship status. Low-risk changes are untouched. When nothing failed but the proof baseline is not passing (no tests ran, checks skipped), the review says NOT PROVEN instead of "the checks pass". In the Claude Sonnet bench, no run had loaded `senior-finish` on its own. Applies to Claude Code, Codex, Cursor, OpenCode and the Antigravity hooks.
 - `senior-code-review` gains a "Try to break it" pass for medium-risk changes and above, and `senior-finish` a step to name what could still be wrong before choosing a status.
 - Bench: Claude runs get an empty config folder and authenticate with `CLAUDE_CODE_OAUTH_TOKEN` (the login file is never copied), and `run` refuses to start when the user's own `CLAUDE.md` still reaches the runs, which Claude Code reads from the profile folder whatever the environment says. With it moved aside, Claude Sonnet on the core and hard sets: SeniorOS 38/38, Superpowers 7.0.1 35/38.
 

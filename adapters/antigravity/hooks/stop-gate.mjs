@@ -49,6 +49,8 @@ await runHook('Stop', async (input) => {
   /** State of each review candidate before this stop, restored when its review has to wait for a failure elsewhere. */
   const before = new Map();
   let repeated = true;
+  // Set when a project sent for review has no passing proof baseline: the review then says NOT PROVEN.
+  let unproven = false;
 
   for (const { root, git } of workspaceRoots(input)) {
     if (!git || !hasProofSource(root)) continue;
@@ -81,6 +83,7 @@ await runHook('Stop', async (input) => {
       if (Boolean(report) && !reviewed && needsFinishReview(root)) {
         review.push(key);
         before.set(key, prev);
+        if (report.baselinePassed !== true) unproven = true;
       }
       state[key] = { fingerprint: changes.fingerprint, result: 'pass', reviewed };
       log('Stop', { root, result: report ? 'pass' : 'unparsed', ms, available: report?.availableChecks });
@@ -105,7 +108,7 @@ await runHook('Stop', async (input) => {
   saveState(conversationId, state);
   if (sendReview) {
     log('Stop', { result: 'review', roots: review });
-    return { decision: 'continue', reason: finishReviewMessage() };
+    return { decision: 'continue', reason: finishReviewMessage(!unproven) };
   }
   if (failures.length === 0) return {};
   return {

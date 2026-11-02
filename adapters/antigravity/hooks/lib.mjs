@@ -285,12 +285,17 @@ export function needsFinishReview(root) {
 }
 
 /**
- * Sent once per session when the checks of a medium-or-higher-risk change pass: checks show only the cases they
- * cover, so the agent names what could still be wrong before calling it done.
+ * Sent once per session when no check of a medium-or-higher-risk change fails: checks show only the cases they
+ * cover, so the agent names what could still be wrong before calling it done. `proven` is the report's
+ * `baselinePassed`; without it (no tests ran, checks skipped) the message says NOT PROVEN, never that checks pass.
+ * @param {boolean} [proven]
  */
-export function finishReviewMessage() {
+export function finishReviewMessage(proven = true) {
+  const status = proven
+    ? 'SeniorOS finish gate: the checks pass.'
+    : 'SeniorOS finish gate: no check failed, but the proof baseline is NOT PROVEN (no tests ran or checks were skipped), so do not say the checks pass. Add or run a check that exercises this change, or report the status as NOT PROVEN.';
   return [
-    'SeniorOS finish gate: the checks pass. This change is medium risk or higher, so before reporting it as done, apply senior-finish step 4:',
+    `${status} This change is medium risk or higher, so before reporting it as done, apply senior-finish step 4:`,
     'name the two most likely ways it is still wrong (a case the tests do not reach, a caller or copy you did not update, an environment difference such as timezone or OS, behavior the change removed) and the evidence that rules each out: a command and its result, or the code that handles it.',
     'If one turns out real, fix it and run the checks again. Then give the ship status (READY, READY WITH RESIDUAL RISK, NOT PROVEN or BLOCKED) with that evidence. Stay within what the user asked.',
   ].join(' ');

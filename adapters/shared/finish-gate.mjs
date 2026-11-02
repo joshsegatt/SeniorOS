@@ -75,7 +75,7 @@ export function evaluate({ cwd, sessionId, host }) {
   if (run.timedOut || !report || failed.length === 0) {
     if (!reviewed && !run.timedOut && report && needsFinishReview(root)) {
       save({ fingerprint: changes.fingerprint, result: 'pass', reviewed: true });
-      return finishReviewMessage();
+      return finishReviewMessage(report.baselinePassed === true);
     }
     save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });
     return null;

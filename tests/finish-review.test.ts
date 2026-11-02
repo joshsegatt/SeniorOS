@@ -115,3 +115,34 @@ test('the Antigravity stop gate asks for the same review, once', () => {
     rmSync(log, { force: true });
   }
 });
+
+test('a medium-risk change whose tests ran nothing is reviewed as NOT PROVEN, never as passing (review finding)', () => {
+  const dir = repoWith('src/auth/policy.js');
+  // No test file at all, so `node --test` reports 0 tests. (A file with no tests in it counts as one passing test.)
+  rmSync(path.join(dir, 'test'), { recursive: true, force: true });
+  const log = path.join(os.tmpdir(), `rev3-${process.pid}.log`);
+  try {
+    const claude = claudeStop(dir, `np${process.pid}`);
+    assert.equal(claude?.decision, 'block');
+    // Both phrases also appear in the message's later text, so match the opening sentence only.
+    assert.match(claude?.reason ?? '', /proof baseline is NOT PROVEN/);
+    assert.doesNotMatch(claude?.reason ?? '', /finish gate: the checks pass/);
+
+    const conversationId = `agy3${process.pid}`;
+    const hook = (script: string, input: object) => {
+      const r = spawnSync(process.execPath, [path.join(root, 'adapters', 'antigravity', 'hooks', script)], {
+        input: JSON.stringify(input), encoding: 'utf8', env: { ...env, SENIOROS_HOOK_LOG: log }, timeout: 240_000,
+      });
+      assert.equal(r.status, 0, r.stderr);
+      return JSON.parse(r.stdout || '{}') as { decision?: string; reason?: string };
+    };
+    hook('track.mjs', { conversationId, workspacePaths: [], toolCall: { name: 'replace_file_content', args: { Path: path.join(dir, 'src', 'auth', 'policy.js') } } });
+    const agy = hook('stop-gate.mjs', { conversationId, workspacePaths: [], terminationReason: 'NO_TOOL_CALL' });
+    assert.equal(agy.decision, 'continue');
+    assert.match(agy.reason ?? '', /proof baseline is NOT PROVEN/);
+    assert.doesNotMatch(agy.reason ?? '', /finish gate: the checks pass/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+    rmSync(log, { force: true });
+  }
+});
