@@ -42,8 +42,17 @@ function runFinish(root, deadline) {
 }
 
 /**
+ * True when a final reply already does what the risk review asks: names residual risk and gives a ship status.
+ * @param {string | undefined} text
+ */
+export function reportCoversReview(text) {
+  if (typeof text !== 'string') return false;
+  return /\b(READY WITH RESIDUAL RISK|READY|NOT PROVEN|BLOCKED)\b/.test(text) && /\brisks?\b/i.test(text);
+}
+
+/**
  * Decides whether the agent may finish.
- * @param {{ cwd?: string, sessionId?: string, host: string }} input
+ * @param {{ cwd?: string, sessionId?: string, host: string, lastMessage?: string }} input
  * @returns {string | null} why the agent must go back, or null to let it finish
  */
 export function evaluate(input) {
@@ -58,10 +67,12 @@ export function evaluate(input) {
  * timeout counts as sent only once `accept()` is called; until then it stays due for this change set and the next
  * call returns it again from the saved result, without running the checks. A host checking several repositories uses
  * this to send failures first and the review only when none fails, with one `deadline` for all of them.
- * @param {{ cwd?: string, sessionId?: string, host: string, deadline?: number }} input
+ * `lastMessage` is the agent's final reply, when the host sends it: a proven change whose reply already names its
+ * residual risks and a ship status gets no review, since the review would ask for the same text again.
+ * @param {{ cwd?: string, sessionId?: string, host: string, deadline?: number, lastMessage?: string }} input
  * @returns {{ kind: 'fail' | 'timeout' | 'review', reason: string, accept?: () => void } | null}
  */
-export function assess({ cwd, sessionId, host, deadline }) {
+export function assess({ cwd, sessionId, host, deadline, lastMessage }) {
   const top = sh('git rev-parse --show-toplevel', cwd ?? process.cwd(), 10_000);
   if (top.code !== 0) return null;
   const root = top.out.trim();
@@ -116,7 +127,12 @@ export function assess({ cwd, sessionId, host, deadline }) {
   // An unreadable report never holds the agent hostage either.
   if (!report || failed.length === 0) {
     if (!reviewed && report && needsFinishReview(root)) {
-      return review(changes.fingerprint, baselineProven(report));
+      const proven = baselineProven(report);
+      if (proven && reportCoversReview(lastMessage)) {
+        save({ fingerprint: changes.fingerprint, result: 'pass', reviewed: true });
+        return null;
+      }
+      return review(changes.fingerprint, proven);
     }
     save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });
     return null;

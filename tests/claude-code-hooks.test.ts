@@ -84,6 +84,17 @@ test('the finish-gate risk review asks for the risks and status only, not the re
   assert.match(finishReviewMessage(), /do not repeat the report/);
 });
 
+test('the finish gate skips its risk review when the final reply already names risks and a ship status', async () => {
+  const { reportCoversReview } = (await import(pathToFileURL(path.join(process.cwd(), 'adapters', 'shared', 'finish-gate.mjs')).href)) as {
+    reportCoversReview: (text?: string) => boolean;
+  };
+  assert.equal(reportCoversReview('Residual risks: a caller outside src/ was not checked. Status: READY WITH RESIDUAL RISK.'), true);
+  assert.equal(reportCoversReview('Two risks, both ruled out by the import test. READY'), true);
+  assert.equal(reportCoversReview('Fixed the bug, all tests pass. Ready to merge.'), false, 'no ship status');
+  assert.equal(reportCoversReview('Status: READY'), false, 'no risk named');
+  assert.equal(reportCoversReview(undefined), false);
+});
+
 test('Claude Code stop gate blocks a finish with failing checks, at most twice, and lets a fixed change through', () => {
   const repo = mkdtempSync(path.join(os.tmpdir(), 'sog-'));
   const git = (...args: string[]) => assert.equal(spawnSync('git', args, { cwd: repo, encoding: 'utf8' }).status, 0);
