@@ -197,6 +197,25 @@ vendored client says a retry needs the same idempotency key), and can be asked f
 orders saved on disk still use, next to a cart type with a field of the same name. Compare the skill with
 `--arms senioros,senioros-baseline` and `SENIOROS_BENCH_BASELINE` set to a worktree of the version without it.
 
+First measurement (November 2026, isolated, baseline = `main` before `senior-plan`):
+
+| Run | none | senioros-baseline | senioros | superpowers |
+|---|---|---|---|---|
+| Sonnet, `h12` + `h13`, 3 trials | 5/6 | 6/6 | 6/6 | 4/6 |
+| Haiku, `h12` + `h13`, 3 trials | 3/6 | 5/6 | 6/6 | 4/6 |
+| Haiku, `h13`, 10 trials (final routing) | | 7/10 | 10/10 | |
+
+- On Sonnet the skill never loaded (0 of 6), so that run measures the routing, not the skill. After the routing fix
+  (load `senior-plan` before the first edit; a rename of a field saved data reads is not a low-risk edit) Haiku
+  loaded it in 13 of 16 `senioros` runs.
+- `h12` does not discriminate: every arm passed it on both models, the double-click bonus included. It needs a
+  harder failure case before it can measure anything.
+- `h13` does: every failure in every arm was the same, saved orders left unreadable or rewritten. 10/10 against
+  7/10 is suggestive, not proven at this size (about p = 0.1), and this bench cannot yet split the routing change
+  from the skill itself.
+- Regression, Haiku, all 25 tasks, 2 trials: `senioros` 50/50, no false "tests pass" claim, `t6` boundary held.
+  Runs cost about $0.01 each on Haiku; with the skill a run took about 10% longer.
+
 First calibration (Gemini 3.8 Flash, model alone, 2 trials): `h1` 2/2, `h2` 2/2, `h3` 2/2, `h4` 2/2, `h5` 0/2.
 Only `h5` discriminates: both times the model fixed the tested 404 and missed the two untested auth regressions in
 the same commit. `h1`–`h4` stay as guardrails (a pack must not lose them, and they measure cost). The run also

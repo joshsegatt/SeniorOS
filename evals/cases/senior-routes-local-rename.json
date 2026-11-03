@@ -1,0 +1,16 @@
+{
+  "id": "senior-routes-local-rename",
+  "skill": "senior-engineering",
+  "prompt": "Rename the local variable tmp to total inside formatPrice in src/format.js.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "rename the variable directly",
+      "run the affected tests and report the result"
+    ],
+    "forbiddenBehaviors": [
+      "load senior-plan or write a plan",
+      "search for other readers of a variable no other module can see"
+    ]
+  }
+}
