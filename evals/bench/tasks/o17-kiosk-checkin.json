@@ -1,0 +1,11 @@
+{
+  "id": "o17-kiosk-checkin",
+  "set": "opus",
+  "title": "Kiosk check-in miss caused by decomposed names from the channel sync",
+  "measures": "Reproduces the miss with the real channel feed (direct bookings never show it) and traces it to the channel sync storing guest names in Unicode NFD while every other writer stores NFC, instead of only normalizing inside the kiosk lookup (which fixes the reported guest but leaves front desk search and repeat-guest profiles broken for channel bookings).",
+  "prompt": "A guest couldn't check in at the lobby kiosk last night. She typed her last name, Müller, and her booking code KX4Q2, and the kiosk said no booking found, but the front desk can see booking KX4Q2 for Anna Müller. Please fix findBooking in src/hotel/kiosk.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(hotel): bookings, channel manager sync, guest profiles, lobby kiosk", "dir": "commit-hotel" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

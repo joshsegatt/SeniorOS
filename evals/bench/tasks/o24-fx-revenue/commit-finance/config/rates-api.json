@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://api.fxreference.example",
+  "plan": "starter",
+  "quota": { "requestsPerDay": 500 },
+  "note": "Over quota the service answers 429 until midnight UTC."
+}

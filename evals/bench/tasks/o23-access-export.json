@@ -1,0 +1,11 @@
+{
+  "id": "o23-access-export",
+  "set": "opus",
+  "title": "Workspace export that runs the permission check once per document",
+  "measures": "Implements a 'download workspace' listing that stays bounded at the volume the dev seed shows (15k documents, 600 folders, nested groups). Filtering with the existing canView looks like one check per document, but each call re-resolves the user's nested groups and walks the folder chain, one database query per step (~13 per document); a pass resolves groups once and reads each folder once, with the same permission rules.",
+  "prompt": "We're adding a \"Download workspace\" button. Please add exportableDocuments(db, userId, workspaceId) in src/docs/export.js that returns the documents in that workspace the user is allowed to view, as [{ id, title }] sorted by title.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(docs): permissions with folder ACLs and nested groups, document endpoints, dev seed", "dir": "commit-docs" }] },
+  "allowedPaths": ["src/**", "test/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}
