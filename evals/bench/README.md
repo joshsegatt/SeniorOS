@@ -296,6 +296,26 @@ Opus, 5 trials (`senioros` after the routing fix below was tuned on these two ta
   runs the changed path at the volume the repository shows before saying done.
 - The held-out tasks `o9`–`o16` scored 23/24 for Opus alone, so they guard against a pack making Opus worse rather
   than show a win. Tasks Opus fails are rare: 2 of 16 here.
+- Never worse on `o9`–`o16` (Opus, 3 trials): `none` 23/24, `superpowers` 24/24, `senioros` 24/24, at $0.29, $0.35
+  and $0.38 a run.
+
+Held-out proof (`o17`–`o24`, a third blind round written after the fix and never used to tune the pack). Calibration
+on Opus alone (3 trials) kept the three tasks it failed every time; the other five it solved 3/3. Opus, 5 trials:
+
+| Task | `none` | `superpowers` | `senioros` |
+|---|---|---|---|
+| `o17-kiosk-checkin`: kiosk can't find a guest; the channel sync stores names in decomposed Unicode | 0/5 | 0/5 | 5/5 |
+| `o19-category-filter`: a category page misses products; renames don't refresh the path copied on products | 0/5 | 0/5 | 5/5 |
+| `o20-trial-reminders`: no trial reminder; the sales back office opens accounts with no trial end | 0/5 | 0/5 | 5/5 |
+| Avg duration (s) | 38 | 52 | 76 |
+| Avg cost per run (USD) | 0.25 | 0.35 | 0.41 |
+
+- Every arm found the cause. `none` and `superpowers` (which loaded `systematic-debugging` in all 15 runs) fixed it
+  where the report pointed, so the other paths the same cause breaks stayed broken. `senioros` loaded
+  `senior-debugging` in all 15 runs and fixed the writer as well.
+- Limits: the task classes were chosen from what the first rounds showed Opus missing, the same finding the fix came
+  from, so this shows the fix generalizes to new tasks of that kind, not to every kind of work. Three tasks, one
+  model. SeniorOS costs about 60% more than the model alone per run here.
 
 ## Arms
 
