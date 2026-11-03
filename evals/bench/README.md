@@ -234,6 +234,22 @@ Split of routing and skill (Haiku, harder `h12` with returned lines, 8 trials, 6
 - Decision: the planning steps went into the rules and `senior-engineering`, and the skill moved to
   `experiments/senior-plan/`.
 
+After the move (planning steps in the rules, no skill), Haiku, 8 trials: `h12` 7/8, `h13` 8/8, 15/16 as before.
+
+Claude Opus, 5 trials, same isolation:
+
+| Task | `none` | `senioros-baseline` | `senioros` |
+|---|---|---|---|
+| `h12` | 5/5 | 4/5 | 5/5 |
+| `h13` | 5/5 | 5/5 | 5/5 |
+| Avg duration (s) | 57 | 75 | 75 |
+| Avg tool calls | 8 | 15 | 14 |
+| Avg cost per run (USD) | 0.31 | 0.42 | 0.45 |
+
+- Opus alone solves both tasks: they do not separate a strong model, so they measure planning only on weaker
+  models. On Opus, SeniorOS costs about 45% more per run here for the same score.
+- Tasks that separate Opus are still missing; the next ones need a model-alone calibration on Opus first.
+
 First calibration (Gemini 3.8 Flash, model alone, 2 trials): `h1` 2/2, `h2` 2/2, `h3` 2/2, `h4` 2/2, `h5` 0/2.
 Only `h5` discriminates: both times the model fixed the tested 404 and missed the two untested auth regressions in
 the same commit. `h1`–`h4` stay as guardrails (a pack must not lose them, and they measure cost). The run also
