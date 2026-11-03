@@ -360,6 +360,11 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
 - Cost of the win: SeniorOS runs chained code reviews through subagents (review, fix, review again) and 10 runs hit
   the 12-minute limit with the work already done and passing; their cost is not in the average. That loop is the next
   thing to cut.
+- Second cost cut (one fresh review per change; no finish-gate review when the final reply already names risks and a
+  ship status), `senioros` only, same 13 tasks, 2 trials: Grok 25/26 (weak spots 9/10), 9 timeouts, still with the
+  work done; Opus 26/26, 0 timeouts. On the Opus weak spots actions fell from 11.1 to 9.9 and turns from 13.3 to 12.1
+  a run, but the bill rose from $0.39 to $0.50 (core set $0.19 → $0.20), so the cut is not shown to save money.
+  Grok's time goes to reading dozens of files and one review subagent on the harder tasks.
 - The first round was not valid and is not counted: in `dontAsk` mode Grok refuses every compound shell command and a
   refusal ends the run. Runs use `--always-approve`, and under it the SeniorOS guard denies instead of asking, since
   Grok approves a hook's question by itself there.
