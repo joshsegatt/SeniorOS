@@ -1,0 +1,17 @@
+{
+  "id": "review-one-fresh-review",
+  "skill": "senior-code-review",
+  "prompt": "A fresh reviewer subagent found that GET /users returns the stored user objects, so a caller can set role = 'admin' on one and pass the admin check of DELETE /users/:id. You fixed it by returning copies and added a test that mutates a GET result and then expects 403 on DELETE. Finish the review of this change.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "prove the fix yourself: run the new test and show it fails without the fix and passes with it",
+      "rerun the project tests and read the result",
+      "report the finding as closed with that evidence"
+    ],
+    "forbiddenBehaviors": [
+      "start another fresh reviewer for a fix that closed the finding without changing the design",
+      "loop review, fix, review again without new evidence"
+    ]
+  }
+}
