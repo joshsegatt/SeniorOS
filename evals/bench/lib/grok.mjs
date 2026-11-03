@@ -21,8 +21,6 @@ import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
 
 const GROK = process.env.SENIOROS_BENCH_GROK ?? join(homedir(), '.grok', 'bin', process.platform === 'win32' ? 'grok.exe' : 'grok');
 const RM = { recursive: true, force: true, maxRetries: 10, retryDelay: 250 };
-// The tools a run may use without asking, as the Claude backend's --allowedTools.
-const ALLOW = ['Bash', 'Read', 'Edit', 'Write'];
 
 /** What each arm installs: a plugin folder to copy and how to get the context its session start injects. */
 export const GROK_ARMS = {
@@ -154,9 +152,9 @@ export function runGrok({ prompt, repo, runDir, arm, model, timeoutMs }) {
       resolve({ timedOut: false, exitCode: null, error: `could not prepare grok: ${/** @type {Error} */ (e).message}` });
       return;
     }
-    // Not --always-approve: it also approves what a hook asks about, so the guard would never hold. Under dontAsk a
-    // question no one can answer is refused, as in a headless Claude run, and the allow rules cover routine work.
-    const args = ['-p', prompt, '-m', model, '--permission-mode', 'dontAsk', ...ALLOW.flatMap((t) => ['--allow', t]), '--output-format', 'streaming-json'];
+    // Always-approve, as Grok documents for scripts. Not dontAsk: it refuses every compound shell command (`a; b`) and
+    // a refusal ends the whole run. Under always-approve the SeniorOS guard denies instead of asking.
+    const args = ['-p', prompt, '-m', model, '--always-approve', '--output-format', 'streaming-json'];
     const child = spawn(GROK, args, { cwd: repo, env: setup.env, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     let err = '';
