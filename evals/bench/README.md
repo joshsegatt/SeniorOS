@@ -317,6 +317,16 @@ on Opus alone (3 trials) kept the three tasks it failed every time; the other fi
   from, so this shows the fix generalizes to new tasks of that kind, not to every kind of work. Three tasks, one
   model. SeniorOS costs about 60% more than the model alone per run here.
 
+Cost cuts (a shorter finish-gate review, a one-shot regression proof, session rules without lines that cannot apply),
+Opus, `senioros` only: `o4`, `o5`, `o17`, `o19`, `o20` 25/25 at $0.39 a run (about $0.38 before), `o9`–`o16` 22/24
+(both misses `o12`, which allows 10 database calls; the runs batched by 500 and made about 20). The score held, the
+cost did not move: the review still fires in the same runs, and the extra cost is in the extra turns, not the text.
+
+Fourth blind round (`o25`–`o32`: two each of a new feature that must keep an implicit invariant, a behavior-preserving
+refactor, a security fix with sibling paths, an internal API migration with a subtle contract change): Opus alone
+24/24 over 3 trials. On these kinds of work it needs no pack; the measured wins stay where the cause of a reported
+bug is elsewhere and where the real volume is in the repository.
+
 ## Arms
 
 | Arm | What is loaded |
