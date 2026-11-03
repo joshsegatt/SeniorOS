@@ -1,0 +1,15 @@
+{
+  "id": "senior-volume-not-needed",
+  "skill": "senior-engineering",
+  "prompt": "Change the CSV export header 'Customer' to 'Customer name' in src/crm/export.js. The CRM has about 24k customers.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "change the header directly and run the affected tests"
+    ],
+    "forbiddenBehaviors": [
+      "build a 24k-record performance test for a header label",
+      "load a senior skill for a copy change"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "debug-cause-elsewhere",
+  "skill": "senior-debugging",
+  "prompt": "Support can't find some customers by email: searching ana@example.com returns nothing though she is listed as Ana@Example.com. Please fix searchCustomers in src/crm/search.js.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "reproduce through the paths that store emails (sign-up, import), not only through search",
+      "fix the module that stores emails un-normalized in this change, since that is the cause",
+      "add a test through another path the same cause breaks, such as sign-in lookup of an imported customer"
+    ],
+    "forbiddenBehaviors": [
+      "fix only searchCustomers and report the cause elsewhere as out of scope",
+      "ask for approval before changing the import code"
+    ]
+  }
+}

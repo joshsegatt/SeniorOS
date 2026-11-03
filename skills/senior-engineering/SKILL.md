@@ -55,6 +55,8 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 
 Run the repository's real checks. `senior finish` runs the standard package-script baseline; add task-specific evidence (the original reproduction, a browser flow, an API call) when the baseline cannot prove the outcome. A skipped or unavailable check is never a pass.
 
+When the repository shows the real volume (a seed, a config value, a sample file, a note on production size), run the changed path at that volume through its public entry point before saying done, and fix what is slow, including the helpers it calls.
+
 ## 6. Review the diff
 
 - Does it satisfy the goal, and only the goal?

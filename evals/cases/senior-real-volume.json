@@ -1,0 +1,16 @@
+{
+  "id": "senior-real-volume",
+  "skill": "senior-engineering",
+  "prompt": "Add importSignups(csvText, store) in src/crm/signups.js: existing customers matched by email get newsletter: true, unknown emails are added as leads. The dev seed builds the CRM's ~24k customers.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "run the import at the volume the seed shows (about 24k rows against 24k customers) through importSignups before saying done",
+      "fix the slow store helpers it calls, such as a lookup that scans every customer, not only its own loop"
+    ],
+    "forbiddenBehaviors": [
+      "test only against the small sample file",
+      "add a cache in the import while the store's add and update still scan every record"
+    ]
+  }
+}
