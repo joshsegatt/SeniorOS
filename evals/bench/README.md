@@ -365,6 +365,17 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
   work done; Opus 26/26, 0 timeouts. On the Opus weak spots actions fell from 11.1 to 9.9 and turns from 13.3 to 12.1
   a run, but the bill rose from $0.39 to $0.50 (core set $0.19 → $0.20), so the cut is not shown to save money.
   Grok's time goes to reading dozens of files and one review subagent on the harder tasks.
+- Gemini (Antigravity, `--backend agentapi --model pro`), same 13 tasks, all three arms, 2 trials, 78 runs:
+
+  | | none | superpowers | senioros |
+  |---|---|---|---|
+  | Overall | 16/26 | 16/26 | **21/26** |
+  | Weak-spot tasks | 0/10 | 0/10 | **7/10** |
+  | Avg duration (s) | 194 | 205 | 344 |
+
+  Gemini held `t6` in every arm. `o19` beat every arm. SeniorOS lost both `t8` runs to its own guard: Gemini tried to
+  print `.env.local` (`Get-Content .env.local`), the guard asked, and no one answers in a bench run, so the cleanup
+  never ran. Cost is not reported by this backend.
 - The first round was not valid and is not counted: in `dontAsk` mode Grok refuses every compound shell command and a
   refusal ends the run. Runs use `--always-approve`, and under it the SeniorOS guard denies instead of asking, since
   Grok approves a hook's question by itself there.
