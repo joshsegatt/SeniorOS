@@ -44,6 +44,7 @@ export function buildReport(resultsDir) {
   row('Timeouts', (rs) => sum(rs, (r) => r.metrics?.timedOut ? 1 : 0));
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));
+  row('Finish-gate risk reviews', (rs) => sum(rs, (r) => r.metrics?.finishReviews));
 
   lines.push('', '## Failures', '');
   for (const r of results.filter((x) => !x.pass)) {

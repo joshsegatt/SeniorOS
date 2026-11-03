@@ -1,0 +1,11 @@
+{
+  "id": "o5-email-search",
+  "set": "opus",
+  "title": "Bug report that names the wrong function",
+  "measures": "Reproduces the reported search miss and traces it to the customer import, which stores emails without normalizing them, instead of only making the search case-insensitive (which fixes the reported example but leaves sign-in lookups, duplicate checks and import de-duplication broken for imported customers).",
+  "prompt": "Support can't find some customers by email. Searching for ana.silva@example.com returns nothing, even though Ana is in the customer list as Ana.Silva@Example.com. Please fix searchCustomers in src/crm/search.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(crm): customers, sign-up, import from the old shop, support search", "dir": "commit-crm" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

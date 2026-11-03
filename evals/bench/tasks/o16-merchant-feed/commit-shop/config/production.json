@@ -1,0 +1,7 @@
+{
+  "shop": {
+    "currency": "JPY",
+    "locale": "ja-JP",
+    "baseUrl": "https://kiosk-ceramics.example.jp"
+  }
+}

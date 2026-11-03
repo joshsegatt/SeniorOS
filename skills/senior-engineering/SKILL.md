@@ -37,11 +37,11 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 | Level | Examples | Process |
 |---|---|---|
 | Low | copy, comments, isolated UI tweak, obvious local fix (not a rename or reshape of a field others read) | Do it, verify proportionately, report briefly |
-| Medium | local feature logic, contained endpoint, refactor with tests | Short plan (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), targeted tests, diff review |
-| High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | Explicit acceptance criteria (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), full relevant verification, independent review, rollback/recovery check |
+| Medium | local feature logic, contained endpoint, refactor with tests | Short plan (before the first edit when it has several steps, a shared contract or stored data, or can fail halfway), targeted tests, diff review |
+| High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | Explicit acceptance criteria (a plan before the first edit when it has several steps, a shared contract or stored data, or can fail halfway), full relevant verification, independent review, rollback/recovery check |
 | Critical | irreversible data operations, credentials, deploys, history rewrites, destructive infrastructure | Prepare and verify, then stop: the external or destructive step needs the user's explicit approval |
 
-**Plan before the first edit when the design can be wrong.** Load `senior-plan` now, before editing, when the change has several steps at medium risk or above, renames or reshapes a field, key or type that other modules or saved data read (whatever the risk score says), or does something that can fail halfway (a payment or refund, stock, an external call). A plan written after the code is a report, not a plan.
+**Plan before the first edit when the design can be wrong.** Write a short plan now, before editing, when the change has several steps at medium risk or above, renames or reshapes a field, key or type that other modules or saved data read (whatever the risk score says), or does something that can fail halfway (a payment or refund, stock, an external call). In a few lines: the acceptance criteria; every reader and writer of what changes, found by searching (code, tests, scripts, saved data); what happens if a step fails after an earlier one took effect, if the call runs twice, and if it meets old data or an old caller; and the test that proves each of those. A plan written after the code is a report, not a plan.
 
 ## 4. Implement the minimum coherent change
 
@@ -54,6 +54,8 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 ## 5. Prove the outcome
 
 Run the repository's real checks. `senior finish` runs the standard package-script baseline; add task-specific evidence (the original reproduction, a browser flow, an API call) when the baseline cannot prove the outcome. A skipped or unavailable check is never a pass.
+
+When the repository shows the real volume (a seed, a config value, a sample file, a note on production size), run the changed path at that volume through its public entry point before saying done, and fix what is slow, including the helpers it calls.
 
 ## 6. Review the diff
 

@@ -1,0 +1,11 @@
+{
+  "id": "o6-orders-csv",
+  "set": "opus",
+  "title": "A ticket of nine small requirements",
+  "measures": "Delivers every point of a nine-item export ticket, including the boring ones (shop-time dates and inclusive day bounds, real-date validation, the paid total with shipping and discount, CSV quoting, and the report registered so the admin route serves it as a CSV with query-string parameters), instead of dropping or half-doing one or two.",
+  "prompt": "Accounting wants a CSV export of orders. Please add exportOrdersCsv(orders, { from, to, includeCancelled }) in src/reports/orders-csv.js:\n1. a header line id,date,customer,items,total, then one line per order\n2. date = the day the order was placed in shop time (Europe/Zurich), as YYYY-MM-DD\n3. items = the total quantity across the order's lines\n4. total = what the customer paid, in CHF with two decimals and no currency sign (e.g. 54.90)\n5. from and to are optional YYYY-MM-DD days, both inclusive; a from after to, or a value that isn't a real date, throws a RangeError\n6. cancelled orders are left out unless includeCancelled is true\n7. oldest order first\n8. values containing a comma, a double quote or a line break are quoted the usual CSV way\n9. register it in src/reports/index.js as 'orders-csv' so it shows up in the admin Reports menu and downloads as a CSV file",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat(reports): admin reports menu with revenue and top products", "dir": "commit-reports" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

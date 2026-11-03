@@ -1,0 +1,90 @@
+{
+  "pulledAt": "2026-10-14T21:15:02Z",
+  "source": "channel-manager v3",
+  "reservations": [
+    {
+      "confirmation": "Q7RT2",
+      "channel": "booking.com",
+      "status": "confirmed",
+      "arrival": "2026-10-14",
+      "departure": "2026-10-16",
+      "guest": {
+        "given_name": "Tom",
+        "family_name": "Baker",
+        "email": "tom.baker@example.com"
+      }
+    },
+    {
+      "confirmation": "KX4Q2",
+      "channel": "booking.com",
+      "status": "confirmed",
+      "arrival": "2026-10-14",
+      "departure": "2026-10-17",
+      "guest": {
+        "given_name": "Anna",
+        "family_name": "Müller",
+        "email": "Anna.Mueller@example.de"
+      }
+    },
+    {
+      "confirmation": "M8WEN",
+      "channel": "expedia",
+      "status": "confirmed",
+      "arrival": "2026-10-15",
+      "departure": "2026-10-18",
+      "guest": {
+        "given_name": "Zoë",
+        "family_name": "Ødegaard",
+        "email": "zoe.o@example.no"
+      }
+    },
+    {
+      "confirmation": "T2HB9",
+      "channel": "booking.com",
+      "status": "cancelled",
+      "arrival": "2026-10-15",
+      "departure": "2026-10-16",
+      "guest": {
+        "given_name": "Ivy",
+        "family_name": "Chen",
+        "email": "ivy.chen@example.com"
+      }
+    },
+    {
+      "confirmation": "P5ZLA",
+      "channel": "expedia",
+      "status": "confirmed",
+      "arrival": "2026-10-16",
+      "departure": "2026-10-19",
+      "guest": {
+        "given_name": "José",
+        "family_name": "García",
+        "email": "jgarcia@example.es"
+      }
+    },
+    {
+      "confirmation": "R3DKV",
+      "channel": "airbnb",
+      "status": "confirmed",
+      "arrival": "2026-10-17",
+      "departure": "2026-10-20",
+      "guest": {
+        "given_name": "Hélène",
+        "family_name": "Lefèvre",
+        "email": "helene.lefevre@example.fr"
+      }
+    },
+    {
+      "confirmation": "W6NCX",
+      "channel": "booking.com",
+      "status": "confirmed",
+      "arrival": "2026-10-18",
+      "departure": "2026-10-19",
+      "guest": {
+        "given_name": "Sam",
+        "family_name": "Okafor",
+        "email": "sam.okafor@example.com"
+      }
+    }
+  ]
+}

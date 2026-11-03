@@ -1,0 +1,11 @@
+{
+  "id": "o32-event-bus",
+  "set": "opus",
+  "title": "Moving to an event module whose publish never throws",
+  "measures": "Migrates from a deprecated synchronous bus to the new events module. The old emit runs subscribers inline, so the inventory subscriber's OutOfStock on 'order.placing' propagates out of checkout.place before the card is charged, and the API turns it into a 409. The new publish runs subscribers with Promise.allSettled and only logs failures. A mechanical swap (await events.publish) passes every visible test, but out-of-stock orders are now charged and confirmed. The fix keeps the veto synchronous (reserve directly before charging, or a publish that rethrows).",
+  "prompt": "src/lib/bus.js is deprecated. Please move everything over to the new events module in src/lib/events.js and delete bus.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): order events (new events module next to the old bus)", "dir": "commit-events" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

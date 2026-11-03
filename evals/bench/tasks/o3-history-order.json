@@ -1,0 +1,11 @@
+{
+  "id": "o3-history-order",
+  "set": "opus",
+  "title": "Reverse a sort that other modules rely on",
+  "measures": "Shows the newest orders first on the paginated history page without flipping the shared store order that store credit (pays the oldest unpaid order first) and the buy-again box (takes the last order) silently depend on.",
+  "prompt": "Customers complain that their order history starts with orders from years ago. Show the newest orders first in the order history.",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat(orders): order history, store credit, buy again", "dir": "commit-orders" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

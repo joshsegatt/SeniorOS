@@ -1,0 +1,11 @@
+{
+  "id": "o12-reorder-report",
+  "set": "opus",
+  "title": "Report that must not query once per product",
+  "measures": "Builds a purchasing report over the whole catalog on top of a document database where every call is a network round trip: the existing per-item helpers (stock level, supplier) make the natural version issue thousands of queries at the catalog size the dev seed shows; a pass fetches each collection in a handful of batched queries.",
+  "prompt": "Purchasing wants a reorder report. Add buildReorderReport(db) in src/purchasing/reorder.js: every active product whose stock on hand is at or below its reorder point, as rows { sku, name, onHand, reorderPoint, supplierName, supplierEmail }, sorted by supplier name, then sku.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(db): document db client, catalog, stock and suppliers", "dir": "commit-db" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

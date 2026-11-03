@@ -21,6 +21,25 @@ test('Claude Code guard asks before destructive commands and stays silent otherw
   assert.equal(decide('not json'), null);
 });
 
+test('Claude Code guard also judges Grok shell calls, which load the same plugin', () => {
+  for (const tool_name of ['run_terminal_command', 'Shell']) {
+    const raw = (command: string) => JSON.stringify({ tool_name, tool_input: { command } });
+    assert.equal(decide(raw('git reset --hard HEAD'))?.hookSpecificOutput.permissionDecision, 'ask', tool_name);
+    assert.equal(decide(raw('git status')), null, tool_name);
+  }
+  // Grok approves a hook's question by itself under always-approve, so there the guard refuses.
+  const grok = (permission_mode: string) => JSON.stringify({
+    hookEventName: 'pre_tool_use', permission_mode, tool_name: 'run_terminal_command', tool_input: { command: 'git reset --hard HEAD' },
+  });
+  const denied = decide(grok('bypassPermissions')) as { hookSpecificOutput: { permissionDecision: string; permissionDecisionReason: string } } | null;
+  assert.equal(denied?.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(denied?.hookSpecificOutput.permissionDecisionReason ?? '', /was not run.*run it themselves/);
+  assert.equal(decide(grok('default'))?.hookSpecificOutput.permissionDecision, 'ask');
+  // Claude Code sends PascalCase event names: bypassPermissions there keeps asking.
+  const claude = JSON.stringify({ hook_event_name: 'PreToolUse', permission_mode: 'bypassPermissions', tool_name: 'Bash', tool_input: { command: 'git reset --hard HEAD' } });
+  assert.equal(decide(claude)?.hookSpecificOutput.permissionDecision, 'ask');
+});
+
 test('Claude Code guard runs as a hook without triggering the Antigravity guard it imports', () => {
   const r = spawnSync(process.execPath, [path.join(hooksDir, 'pretool-guard.mjs')], { input: bash('git status'), encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
@@ -34,6 +53,47 @@ test('Claude Code session start injects the SeniorOS routing rules', () => {
   assert.equal(out.hookSpecificOutput.hookEventName, 'SessionStart');
   assert.match(out.hookSpecificOutput.additionalContext, /senior-engineering/);
   assert.match(out.hookSpecificOutput.additionalContext, /Approval boundary/);
+});
+
+test('Claude Code session start leaves out the .senior and CLI lines that cannot apply', async () => {
+  const { rulesFor } = (await import(pathToFileURL(path.join(hooksDir, 'session-start.mjs')).href)) as {
+    rulesFor: (rules: string, env: { hasSeniorDir: boolean; hasCli: boolean }) => string;
+  };
+  const rules = '- **Routing:** r\n- **Project state:** p\n- **Proof:** q\n\nIf the `senior` CLI is on PATH: c';
+  assert.equal(rulesFor(rules, { hasSeniorDir: true, hasCli: true }), rules);
+  const bare = rulesFor(rules, { hasSeniorDir: false, hasCli: false });
+  assert.doesNotMatch(bare, /Project state|senior` CLI/);
+  assert.match(bare, /Routing:\*\* r\n- \*\*Proof:\*\* q/);
+  const repo = mkdtempSync(path.join(os.tmpdir(), 'ss-'));
+  try {
+    const r = spawnSync(process.execPath, [path.join(hooksDir, 'session-start.mjs')], { input: JSON.stringify({ cwd: repo }), encoding: 'utf8' });
+    assert.doesNotMatch(JSON.parse(r.stdout).hookSpecificOutput.additionalContext, /Project state/);
+    mkdirSync(path.join(repo, '.senior'));
+    const s = spawnSync(process.execPath, [path.join(hooksDir, 'session-start.mjs')], { input: JSON.stringify({ cwd: repo }), encoding: 'utf8' });
+    assert.match(JSON.parse(s.stdout).hookSpecificOutput.additionalContext, /Project state/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('the finish-gate risk review asks for the risks and status only, not the report again', async () => {
+  const { finishReviewMessage } = (await import(pathToFileURL(path.join(process.cwd(), 'adapters', 'antigravity', 'hooks', 'lib.mjs')).href)) as {
+    finishReviewMessage: (proven?: boolean) => string;
+  };
+  assert.match(finishReviewMessage(), /reply with only those two risks, their evidence and the ship status/);
+  assert.match(finishReviewMessage(), /do not repeat the report/);
+});
+
+test('the finish gate skips its risk review when the final reply already names risks and a ship status', async () => {
+  const { reportCoversReview } = (await import(pathToFileURL(path.join(process.cwd(), 'adapters', 'shared', 'finish-gate.mjs')).href)) as {
+    reportCoversReview: (text?: string) => boolean;
+  };
+  assert.equal(reportCoversReview('Residual risks: a caller outside src/ was not checked. Status: READY WITH RESIDUAL RISK.'), true);
+  assert.equal(reportCoversReview('Two risks, both ruled out by the import test. READY'), true);
+  assert.equal(reportCoversReview('Fixed the bug, all tests pass. Ready to merge.'), false, 'no ship status');
+  assert.equal(reportCoversReview('Status: READY'), false, 'no risk named');
+  assert.equal(reportCoversReview('Done. READY WITH RESIDUAL RISK'), false, 'the status alone names no risk');
+  assert.equal(reportCoversReview(undefined), false);
 });
 
 test('Claude Code stop gate blocks a finish with failing checks, at most twice, and lets a fixed change through', () => {

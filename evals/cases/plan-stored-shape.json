@@ -1,6 +1,6 @@
 {
   "id": "plan-stored-shape",
-  "skill": "senior-plan",
+  "skill": "senior-engineering",
   "prompt": "Rename the order line field priceCents to unitPriceCents everywhere. Saved orders are loaded from data/orders/*.json.",
   "expected": {
     "shouldTrigger": true,

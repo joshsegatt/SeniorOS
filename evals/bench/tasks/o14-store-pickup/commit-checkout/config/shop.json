@@ -1,0 +1,9 @@
+{
+  "name": "Kiosk Ceramics",
+  "supportEmail": "hello@kiosk-ceramics.example",
+  "freeShippingFromCents": 5000,
+  "shop": {
+    "address": "Rua das Flores 12, 4050-265 Porto",
+    "openingHours": "Mon-Sat 10:00-19:00"
+  }
+}

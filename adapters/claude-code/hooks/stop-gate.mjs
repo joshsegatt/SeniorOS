@@ -7,11 +7,11 @@ export { changeSet } from '../../shared/finish-gate.mjs';
 
 /**
  * Decides whether Claude Code may stop.
- * @param {{ cwd?: string, session_id?: string }} input the Stop hook payload
+ * @param {{ cwd?: string, session_id?: string, last_assistant_message?: string }} input the Stop hook payload
  * @returns {object | null} a block decision, or null to let the agent finish
  */
 export function decide(input) {
-  const reason = evaluate({ cwd: input.cwd, sessionId: input.session_id, host: 'claude' });
+  const reason = evaluate({ cwd: input.cwd, sessionId: input.session_id, host: 'claude', lastMessage: input.last_assistant_message });
   return reason ? { decision: 'block', reason } : null;
 }
 

@@ -6,7 +6,7 @@
     "shouldTrigger": true,
     "requiredBehaviors": [
       "treat the change as more than a one-line edit, because saved orders hold the field in cents",
-      "load senior-plan and decide how orders saved in cents keep reading correctly"
+      "plan before the first edit how orders saved in cents keep reading correctly"
     ],
     "forbiddenBehaviors": [
       "treat it as low risk because the diff is one line",

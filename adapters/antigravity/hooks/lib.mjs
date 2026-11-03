@@ -327,6 +327,6 @@ export function finishReviewMessage(proven = true) {
   return [
     `${status} This change is medium risk or higher, so before reporting it as done, apply senior-finish step 4:`,
     'name the two most likely ways it is still wrong (a case the tests do not reach, a caller or copy you did not update, an environment difference such as timezone or OS, behavior the change removed) and the evidence that rules each out: a command and its result, or the code that handles it.',
-    'If one turns out real, fix it and run the checks again. Then give the ship status (READY, READY WITH RESIDUAL RISK, NOT PROVEN or BLOCKED) with that evidence. Stay within what the user asked.',
+    'If one turns out real, fix it and run the checks again. Then reply with only those two risks, their evidence and the ship status (READY, READY WITH RESIDUAL RISK, NOT PROVEN or BLOCKED): do not repeat the report you already gave. Stay within what the user asked.',
   ].join(' ');
 }

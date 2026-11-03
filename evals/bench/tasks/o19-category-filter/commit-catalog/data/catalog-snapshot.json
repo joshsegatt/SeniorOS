@@ -1,0 +1,237 @@
+{
+  "takenAt": "2026-10-14T06:00:00Z",
+  "categories": [
+    {
+      "id": "cat-1",
+      "name": "Outdoor",
+      "parentId": null
+    },
+    {
+      "id": "cat-2",
+      "name": "Grills",
+      "parentId": "cat-1"
+    },
+    {
+      "id": "cat-3",
+      "name": "Furniture",
+      "parentId": "cat-1"
+    },
+    {
+      "id": "cat-4",
+      "name": "Kitchen",
+      "parentId": null
+    },
+    {
+      "id": "cat-5",
+      "name": "Gas",
+      "parentId": "cat-2"
+    },
+    {
+      "id": "cat-6",
+      "name": "Cookware",
+      "parentId": "cat-4"
+    }
+  ],
+  "products": [
+    {
+      "sku": "GR-100",
+      "title": "Kettle grill 47cm",
+      "price": 19,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-101",
+      "title": "Kettle grill 57cm",
+      "price": 32.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-102",
+      "title": "Charcoal smoker",
+      "price": 46,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-103",
+      "title": "Ceramic kamado",
+      "price": 59.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-104",
+      "title": "Portable grill",
+      "price": 73,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-105",
+      "title": "Grill cover XL",
+      "price": 86.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-106",
+      "title": "Grill brush",
+      "price": 100,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-107",
+      "title": "Chimney starter",
+      "price": 113.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-108",
+      "title": "Pizza stone 33cm",
+      "price": 127,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-109",
+      "title": "Rib rack",
+      "price": 140.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": false
+    },
+    {
+      "sku": "GR-110",
+      "title": "Grill thermometer",
+      "price": 154,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-111",
+      "title": "Cast iron grate",
+      "price": 167.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-112",
+      "title": "Charcoal 10kg",
+      "price": 181,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GR-113",
+      "title": "Grill tongs",
+      "price": 194.5,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > BBQ",
+      "active": true
+    },
+    {
+      "sku": "GG-200",
+      "title": "Gas grill 3 burner",
+      "price": 299,
+      "categoryId": "cat-5",
+      "categoryPath": "Outdoor > BBQ > Gas",
+      "active": true
+    },
+    {
+      "sku": "GG-201",
+      "title": "Gas grill 4 burner",
+      "price": 399,
+      "categoryId": "cat-5",
+      "categoryPath": "Outdoor > BBQ > Gas",
+      "active": true
+    },
+    {
+      "sku": "GG-202",
+      "title": "Propane regulator",
+      "price": 499,
+      "categoryId": "cat-5",
+      "categoryPath": "Outdoor > BBQ > Gas",
+      "active": true
+    },
+    {
+      "sku": "FU-300",
+      "title": "Deck chair",
+      "price": 49,
+      "categoryId": "cat-3",
+      "categoryPath": "Outdoor > Furniture",
+      "active": true
+    },
+    {
+      "sku": "FU-301",
+      "title": "Bistro table",
+      "price": 79,
+      "categoryId": "cat-3",
+      "categoryPath": "Outdoor > Furniture",
+      "active": true
+    },
+    {
+      "sku": "FU-302",
+      "title": "Parasol 3m",
+      "price": 109,
+      "categoryId": "cat-3",
+      "categoryPath": "Outdoor > Furniture",
+      "active": true
+    },
+    {
+      "sku": "FU-303",
+      "title": "Lounge bed",
+      "price": 139,
+      "categoryId": "cat-3",
+      "categoryPath": "Outdoor > Furniture",
+      "active": true
+    },
+    {
+      "sku": "CW-400",
+      "title": "Frying pan 28cm",
+      "price": 39,
+      "categoryId": "cat-6",
+      "categoryPath": "Kitchen > Cookware",
+      "active": true
+    },
+    {
+      "sku": "CW-401",
+      "title": "Stock pot 8l",
+      "price": 64,
+      "categoryId": "cat-6",
+      "categoryPath": "Kitchen > Cookware",
+      "active": true
+    },
+    {
+      "sku": "CW-402",
+      "title": "Dutch oven",
+      "price": 89,
+      "categoryId": "cat-6",
+      "categoryPath": "Kitchen > Cookware",
+      "active": true
+    },
+    {
+      "sku": "GR-140",
+      "title": "Grill gloves",
+      "price": 24.9,
+      "categoryId": "cat-2",
+      "categoryPath": "Outdoor > Grills",
+      "active": true
+    }
+  ]
+}

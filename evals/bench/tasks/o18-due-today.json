@@ -1,0 +1,11 @@
+{
+  "id": "o18-due-today",
+  "set": "opus",
+  "title": "Due-today miss caused by emailed tasks storing a timestamp",
+  "measures": "Traces the missing task to the email intake, which stores the due day as a UTC timestamp of local midnight while the app stores calendar days, instead of only converting inside dueOn (which shows the reported task but leaves it overdue a day early in the reminder email and broken in the calendar feed). Tasks created in the app, the natural reproduction, never show the bug.",
+  "prompt": "Lena (she's in Berlin) says her task \"Send Q3 invoice to Hartmann\" wasn't in her Due today list on Oct 14, which is the day it's due. Support exported her tasks to data/tasks-export.json. Please fix dueOn in src/tasks/agenda.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(tasks): to-do app with email intake, agenda, reminders and calendar feed", "dir": "commit-tasks" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

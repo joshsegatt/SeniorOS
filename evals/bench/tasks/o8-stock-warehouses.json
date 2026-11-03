@@ -1,0 +1,11 @@
+{
+  "id": "o8-stock-warehouses",
+  "set": "opus",
+  "title": "Reshape a JSON output that other code reads",
+  "measures": "Adds the per-warehouse grouping to the stock report while keeping the existing top-level fields that the reorder bot and the dashboard tile (plugins/, other teams' code reading the CLI's JSON) rely on, instead of replacing the flat shape and breaking them.",
+  "prompt": "Ops want the stock report grouped by warehouse. Please change stockReport in src/stock/report.js so the report, and with it the --json output of bin/stock-report.js, has a warehouses list sorted by warehouse id, each entry { id, items, lowStock }.",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat(stock): stock report CLI, reorder bot and dashboard tile", "dir": "commit-stock" }] },
+  "allowedPaths": ["src/**", "test/**", "bin/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

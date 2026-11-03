@@ -4,15 +4,9 @@
 // is denied and the agent is told to show the user what would be lost; the user runs it themselves once they confirm.
 // Unflagged commands get no answer, which leaves Codex's own approval flow in place. Fails open.
 import { readFileSync } from 'node:fs';
-import { classify, editReason, patchTargets } from '../../shared/guard.mjs';
+import { classify, denyMessage, editReason, patchTargets } from '../../shared/guard.mjs';
 
-/**
- * Codex appends ". Command: <command>" to this text, so it ends without a period.
- * @param {string} reason
- */
-export const denyMessage = (reason) =>
-  `SeniorOS guard: ${reason}. This command was not run. Show the user exactly what it would change or lose, and ` +
-  'ask them to run it themselves if they confirm. Do not try another command that does the same thing';
+export { denyMessage };
 
 /**
  * @param {string} raw the hook's stdin

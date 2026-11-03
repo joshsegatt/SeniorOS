@@ -1,0 +1,11 @@
+{
+  "id": "o4-signup-import",
+  "set": "opus",
+  "title": "Import that has to scale to the real CRM",
+  "measures": "Implements a simple CSV import whose natural per-row store lookups are linear scans of the whole CRM: a pass needs the import to stay fast at production volume (24k customers, 24k rows), which the seed data makes known.",
+  "prompt": "Marketing sends us the newsletter signups as a CSV export (sample in data/signups-sample.csv). Add importSignups(csvText, store) in src/crm/signups.js: customers we already have (matched by email) get newsletter: true, unknown emails are added as leads with newsletter: true. Return { subscribed, added } with how many customers were matched and how many leads were added.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(crm): customer store and dev seed", "dir": "commit-crm" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

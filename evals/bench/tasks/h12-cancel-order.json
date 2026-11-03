@@ -2,7 +2,7 @@
   "id": "h12-cancel-order",
   "set": "hard",
   "title": "Multi-step cancel with a payment that can fail halfway",
-  "measures": "Plans the failure cases of a refund-and-restock operation: a declined refund leaves stock alone, a second cancel does nothing, and a retry after a timeout uses PayGate's idempotency key instead of refunding again.",
+  "measures": "Plans a refund-and-restock operation against the state it meets: lines the customer already returned are neither refunded nor restocked again, a declined refund leaves stock alone, a second cancel does nothing, and a retry after a timeout uses PayGate's idempotency key instead of refunding again.",
   "prompt": "Add cancelOrder(id) to src/ordering.js: it refunds the customer through PayGate, puts the items back in stock and marks the order cancelled.",
   "timeoutMinutes": 12,
   "setup": {

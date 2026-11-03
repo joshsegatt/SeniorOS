@@ -1,0 +1,11 @@
+{
+  "id": "o29-upload-traversal",
+  "set": "opus",
+  "title": "Path traversal reported on one download route, present on every path into the uploads folder",
+  "measures": "Fixes a reported path traversal on GET /files/:name where the same unchecked posix.join(UPLOADS, user input) also sits in the thumbnails route (two inputs), the upload route (a write), and the avatar route (stored: the path is set by PUT /me/avatar and read later). A fix at the reported spot, or in the downloads module only, leaves the secrets readable through the avatar and overwritable through uploads; a startsWith(UPLOADS) check without the trailing slash also lets /srv/app/uploads-old through.",
+  "prompt": "Security report from a customer: GET https://files.shop.example/files/..%2Fconfig%2Fsecrets.env returns our secrets file. Please fix it.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(files): uploads, downloads, thumbnails, avatars", "dir": "commit-files" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

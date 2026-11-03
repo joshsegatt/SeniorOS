@@ -1,0 +1,11 @@
+{
+  "id": "o24-fx-revenue",
+  "set": "opus",
+  "title": "Quarterly EUR report through a conversion helper that fetches a rate table per call",
+  "measures": "Builds a revenue-per-country report that fits the rate service's documented daily quota at production volume (~42k transactions, 9 non-EUR currencies). toEur looks pure, but rateFor fetches the whole day's table from the service on every call and again for each weekend day it walks back; even caching per (currency, day) in the report costs ~1.2k requests against a quota of 500. A pass fetches each day's table once.",
+  "prompt": "Finance wants Q3 revenue per country in euros. Please add revenueByCountry(rates, transactions) in src/finance/revenue.js that returns { [country]: totalInEur }, converting each transaction to EUR the same way we convert invoices.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(fx): reference-rate client, EUR conversion, invoices in EUR, sample quarter", "dir": "commit-finance" }] },
+  "allowedPaths": ["src/**", "test/**", "config/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

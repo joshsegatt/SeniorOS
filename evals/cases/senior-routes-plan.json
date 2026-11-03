@@ -6,7 +6,7 @@
     "shouldTrigger": true,
     "requiredBehaviors": [
       "treat the rename as more than a low-risk edit, because saved carts and another module read the key",
-      "load senior-plan before the first edit"
+      "write a short plan before the first edit: the readers of the key, carts already saved, and what an old cart does"
     ],
     "forbiddenBehaviors": [
       "rename the key with a search and replace and no plan",

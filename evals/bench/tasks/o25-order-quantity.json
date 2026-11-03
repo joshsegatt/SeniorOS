@@ -1,0 +1,11 @@
+{
+  "id": "o25-order-quantity",
+  "set": "opus",
+  "title": "Changing an order's quantity without moving the stock hold",
+  "measures": "Adds a feature that must keep an invariant other modules rely on: checkout holds stock for each order line, and cancel/ship release or take out exactly line.qty. The natural implementation edits the line and reprices (it may even check availability) but leaves the hold unchanged, so other customers can buy units that are promised, and cancelling or shipping the edited order throws or leaves the stock wrong.",
+  "prompt": "Customers want to change the quantity of an item in an order before it ships, like they can already change the address. Please add shop.changeQuantity(orderId, sku, qty) (qty is the new quantity, at least 1). The order totals must follow.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(orders): checkout, cancel, ship, address change", "dir": "commit-orders" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,0 +1,8 @@
+[
+  { "sku": "tea-green", "name": "Green tea", "warehouse": "ZRH", "qty": 40, "reorderAt": 20 },
+  { "sku": "tea-black", "name": "Black tea", "warehouse": "ZRH", "qty": 8, "reorderAt": 20 },
+  { "sku": "pot-glass", "name": "Glass teapot", "warehouse": "BSL", "qty": 3, "reorderAt": 5 },
+  { "sku": "cup-set", "name": "Cup set", "warehouse": "BSL", "qty": 12, "reorderAt": 4 },
+  { "sku": "tea-green", "name": "Green tea", "warehouse": "BSL", "qty": 5, "reorderAt": 10 },
+  { "sku": "kettle", "name": "Kettle", "warehouse": "GVA", "qty": 0, "reorderAt": 2 }
+]

@@ -1,0 +1,11 @@
+{
+  "id": "o10-feed-titles",
+  "set": "opus",
+  "title": "Double-escaped titles whose cause is the supplier feed import",
+  "measures": "Reproduces the double-escaped title through the supplier feed import and finds that the importer stores HTML-escaped names, instead of only decoding entities in renderProductCard (which fixes the storefront card but leaves search, invoices and the JSON API showing or matching '&amp;' for every imported product).",
+  "prompt": "Some product names on the storefront come out as \"Salt &amp;amp; Pepper Set\" instead of \"Salt & Pepper Set\". Looks like renderProductCard in src/storefront/card.js escapes the name twice. Please fix it.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(catalog): supplier feed import, storefront cards, search, invoices", "dir": "commit-catalog" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

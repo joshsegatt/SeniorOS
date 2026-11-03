@@ -1,0 +1,11 @@
+{
+  "id": "o27-shared-slug",
+  "set": "opus",
+  "title": "Merging two slug functions that drifted apart",
+  "measures": "Does a behavior-preserving dedupe of two slug implementations that look like copies but differ: product handles keep underscores (\\W vs [^a-z0-9]) and are trimmed before the cut (so a cut can leave a trailing dash), posts are cut at 80 and then trimmed. A shared function written from one copy with only the length as a parameter passes the visible tests but changes the URLs new products and posts get.",
+  "prompt": "src/blog/posts.js and src/shop/products.js each have their own copy of the slug code. Please move it into one shared slugify in src/lib/slug.js and use it from both. It's a pure refactor: posts and products must keep getting exactly the same slugs and handles as today.",
+  "timeoutMinutes": 10,
+  "setup": { "commits": [{ "message": "feat(blog): posts with slugs; products with url handles", "dir": "commit-slugs" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

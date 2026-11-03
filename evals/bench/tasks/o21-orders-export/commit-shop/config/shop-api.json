@@ -1,0 +1,6 @@
+{
+  "baseUrl": "https://api.shopplatform.example",
+  "apiVersion": "v2",
+  "rateLimit": { "requestsPerHour": 2000, "burst": 40 },
+  "maxPageSize": 100
+}

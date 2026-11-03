@@ -1,0 +1,11 @@
+{
+  "id": "o21-orders-export",
+  "set": "opus",
+  "title": "Monthly export that pages through a helper which re-walks every page",
+  "measures": "Writes a monthly order export that stays inside the platform's documented rate limit at production volume. The natural loop over the existing listOrders(page) helper looks like one request per page, but the API client's ordersPage re-walks pages 1..n-1 through cursors on every call, so a month of ~36k orders costs ~65k requests; a pass follows the cursors once.",
+  "prompt": "Accounting wants last month's orders as a CSV for their bookkeeping import. Please add exportOrders(api, month) to src/shop/export.js: given a month like \"2026-10\" it returns the CSV text, a header row plus one row per order created in that month with order number, date, customer email, net, VAT, gross and status.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): platform API client, orders, admin order list", "dir": "commit-shop" }] },
+  "allowedPaths": ["src/**", "test/**", "config/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "o19-category-filter",
+  "set": "opus",
+  "title": "Empty category page caused by a stale copied category path",
+  "measures": "Traces the empty page to the admin rename/move operations, which leave the category path copied onto each product stale (for the whole subtree), instead of only matching by category id in productsInCategory (which fills the page but leaves breadcrumbs and the merchant feed showing the old names). Categories and products created fresh, the natural reproduction, never show the bug.",
+  "prompt": "The shop's category page for Outdoor > Grills only shows Grill gloves, but the admin lists 15 products under Grills. There's a snapshot of the production catalog in data/catalog-snapshot.json. Please fix productsInCategory in src/catalog/browse.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(catalog): categories, products, category pages, breadcrumbs, merchant feed", "dir": "commit-catalog" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

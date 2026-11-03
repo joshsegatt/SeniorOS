@@ -1,0 +1,11 @@
+{
+  "id": "o20-trial-reminders",
+  "set": "opus",
+  "title": "Missing trial reminder caused by the back office leaving trialEndsAt empty",
+  "measures": "Traces the missing reminder to the back-office account creation, which leaves trialEndsAt null when sales sets no custom date, instead of copying the account page's fallback into trialsEndingSoon (which sends the reminder but leaves those accounts on Pro forever: they never expire or lose Pro features). Self-service sign-ups, the natural reproduction, never show the bug.",
+  "prompt": "Brightline Ltd (account a-311) never got the \"your trial ends in 3 days\" email, and their account page now says 2 days left in the trial. There's a support export in data/accounts-export.json. Please fix trialsEndingSoon in src/billing/trials.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(billing): accounts, trials, reminder and expiry jobs, sales back office", "dir": "commit-billing" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

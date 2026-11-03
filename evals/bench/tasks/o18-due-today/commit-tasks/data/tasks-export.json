@@ -1,0 +1,14 @@
+{
+  "exportedAt": "2026-10-14T07:02:11Z",
+  "note": "Support export for ticket #4471 (Lena's account)",
+  "users": [
+    { "id": "u-lena", "name": "Lena Brandt", "timeZone": "Europe/Berlin" }
+  ],
+  "tasks": [
+    { "id": "t-8790", "owner": "u-lena", "title": "Renew parking permit", "dueDate": "2026-10-14", "done": false, "source": "app", "createdAt": "2026-10-02T16:41:09.000Z" },
+    { "id": "t-8803", "owner": "u-lena", "title": "Dentist", "dueDate": "2026-10-21", "done": false, "source": "app", "createdAt": "2026-10-08T07:12:55.000Z" },
+    { "id": "t-8812", "owner": "u-lena", "title": "Send Q3 invoice to Hartmann", "dueDate": "2026-10-13T22:00:00.000Z", "done": false, "source": "email", "createdAt": "2026-10-12T08:31:40.000Z" },
+    { "id": "t-8820", "owner": "u-lena", "title": "Review onboarding deck", "dueDate": null, "done": false, "source": "email", "createdAt": "2026-10-13T10:05:13.000Z" },
+    { "id": "t-8826", "owner": "u-lena", "title": "Order printer toner", "dueDate": "2026-10-12", "done": true, "source": "app", "createdAt": "2026-10-11T18:20:00.000Z" }
+  ]
+}

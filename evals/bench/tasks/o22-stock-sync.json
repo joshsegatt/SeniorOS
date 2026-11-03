@@ -1,0 +1,11 @@
+{
+  "id": "o22-stock-sync",
+  "set": "opus",
+  "title": "Nightly stock file that rewrites the whole catalog per line",
+  "measures": "Implements a simple stock-file import that holds up at production volume (42k products, 6.5k lines). The natural loop over catalog.setStock looks cheap (a Map lookup), but every call commits, and commit serialises and writes the whole multi-MB catalog document; a pass applies the file with a bounded number of saves while still notifying listeners of every change.",
+  "prompt": "The warehouse now sends us a stock file every night (sample in data/stock-2026-10-14.csv). Please add applyStockFile(catalog, csvText) in src/inventory/stock-file.js: it sets the stock of every SKU we know to the quantity in the file and returns { updated, unknown }, where updated is how many products were updated and unknown lists the SKUs we don't have.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(inventory): catalog with storage, search index sync, dev seed", "dir": "commit-inventory" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

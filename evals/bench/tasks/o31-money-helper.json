@@ -1,0 +1,11 @@
+{
+  "id": "o31-money-helper",
+  "set": "opus",
+  "title": "Moving callers to a stricter money parser",
+  "measures": "Migrates callers from a lenient deprecated parseAmount (strips currency symbols, accepts a decimal comma, '' and missing become 0) to the new exact toCents (dot decimals only, throws otherwise). A mechanical swap compiles and passes every visible test, but the admin price form throws when the compare-at field is left empty (it relied on '' -> 0 -> `|| null`), and the supplier cost import throws on ACME's real file, which uses decimal commas (sample in data/).",
+  "prompt": "src/legacy/money.js is deprecated. Please move every caller of parseAmount over to toCents from src/lib/money.js and delete the legacy module.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(money): exact toCents helper; admin prices, supplier costs, refunds, tips", "dir": "commit-money" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

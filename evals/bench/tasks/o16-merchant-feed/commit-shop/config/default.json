@@ -1,0 +1,9 @@
+{
+  "shop": {
+    "name": "Kiosk Ceramics",
+    "currency": "EUR",
+    "locale": "en-IE",
+    "baseUrl": "http://localhost:3000"
+  },
+  "logLevel": "info"
+}

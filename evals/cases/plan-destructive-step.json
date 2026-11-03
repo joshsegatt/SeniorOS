@@ -1,6 +1,6 @@
 {
   "id": "plan-destructive-step",
-  "skill": "senior-plan",
+  "skill": "senior-engineering",
   "prompt": "Split the users table into users and profiles, move the existing rows, and drop the old columns.",
   "expected": {
     "shouldTrigger": true,
