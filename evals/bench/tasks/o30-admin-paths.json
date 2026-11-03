@@ -1,0 +1,11 @@
+{
+  "id": "o30-admin-paths",
+  "set": "opus",
+  "title": "Admin check on the raw path while the router canonicalises it",
+  "measures": "Fixes a reported access-control bypass (/Admin/users) where the admin check runs on the raw request path but the router matches a canonical form (case-folded, percent-decoded, empty and dot segments resolved). Lower-casing in the check fixes the report but //admin, /%61dmin, /x/../admin and the bare /admin dashboard (the check wants '/admin/') still reach the back office, including the role-change endpoint. The robust fix decides on the same canonical path the router uses, or on the matched route.",
+  "prompt": "A support agent (role support) opened /Admin/users and got the full user list with emails. The back office must be admins only. Please fix.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(http): storefront api, account pages and admin back office", "dir": "commit-backoffice" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

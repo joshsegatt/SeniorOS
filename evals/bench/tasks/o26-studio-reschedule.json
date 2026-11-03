@@ -1,0 +1,11 @@
+{
+  "id": "o26-studio-reschedule",
+  "set": "opus",
+  "title": "Moving a booking in a calendar whose lookups binary-search a sorted list",
+  "measures": "Adds a feature that must keep an invariant the calendar maintains implicitly: book() inserts at the sorted position and isFree/book/agenda binary-search the list by start and end. The natural reschedule checks for clashes and edits the booking's times in place, which leaves the list out of order, so later availability checks, new bookings and the day agenda give wrong answers. Using the existing clash() for the check also wrongly lets a move through when the first overlap found is the booking itself.",
+  "prompt": "People want to move a booking to another time on the booking page. Please add calendar.reschedule(id, { start, end }) and an api handler rescheduleBooking(id, body) (200 with the booking, 409 when the new time is taken, 404 for an unknown booking). The booking keeps its id.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(studio): room calendar and booking api", "dir": "commit-studio" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

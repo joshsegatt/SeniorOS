@@ -1,0 +1,11 @@
+{
+  "id": "o28-policy-module",
+  "set": "opus",
+  "title": "Pulling inline permission checks into a policy module without losing short-circuits",
+  "measures": "Does a behavior-preserving extraction of three handlers' inline checks into src/auth/policy.js. The inline code relies on evaluation order and short-circuit: suspended first, role before the billing call, and `admin || await billing.hasFeature(...)` never calls billing for admins, so admins can export during a billing outage. A declarative rules table that evaluates async alternatives with Promise.all (or loads the plan up front) keeps every visible test green but calls billing for admins and turns their exports into 503s when billing is down.",
+  "prompt": "The permission checks in src/api/exports.js, reports.js and team.js are copy-pasted ifs. Please move them into one policy module, src/auth/policy.js exporting can(user, action, ...), and have the three handlers use it. Pure refactor: the API must behave exactly as it does today.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(api): exports, reports and team handlers", "dir": "commit-api" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

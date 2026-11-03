@@ -36,6 +36,35 @@ test('Claude Code session start injects the SeniorOS routing rules', () => {
   assert.match(out.hookSpecificOutput.additionalContext, /Approval boundary/);
 });
 
+test('Claude Code session start leaves out the .senior and CLI lines that cannot apply', async () => {
+  const { rulesFor } = (await import(pathToFileURL(path.join(hooksDir, 'session-start.mjs')).href)) as {
+    rulesFor: (rules: string, env: { hasSeniorDir: boolean; hasCli: boolean }) => string;
+  };
+  const rules = '- **Routing:** r\n- **Project state:** p\n- **Proof:** q\n\nIf the `senior` CLI is on PATH: c';
+  assert.equal(rulesFor(rules, { hasSeniorDir: true, hasCli: true }), rules);
+  const bare = rulesFor(rules, { hasSeniorDir: false, hasCli: false });
+  assert.doesNotMatch(bare, /Project state|senior` CLI/);
+  assert.match(bare, /Routing:\*\* r\n- \*\*Proof:\*\* q/);
+  const repo = mkdtempSync(path.join(os.tmpdir(), 'ss-'));
+  try {
+    const r = spawnSync(process.execPath, [path.join(hooksDir, 'session-start.mjs')], { input: JSON.stringify({ cwd: repo }), encoding: 'utf8' });
+    assert.doesNotMatch(JSON.parse(r.stdout).hookSpecificOutput.additionalContext, /Project state/);
+    mkdirSync(path.join(repo, '.senior'));
+    const s = spawnSync(process.execPath, [path.join(hooksDir, 'session-start.mjs')], { input: JSON.stringify({ cwd: repo }), encoding: 'utf8' });
+    assert.match(JSON.parse(s.stdout).hookSpecificOutput.additionalContext, /Project state/);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('the finish-gate risk review asks for the risks and status only, not the report again', async () => {
+  const { finishReviewMessage } = (await import(pathToFileURL(path.join(process.cwd(), 'adapters', 'antigravity', 'hooks', 'lib.mjs')).href)) as {
+    finishReviewMessage: (proven?: boolean) => string;
+  };
+  assert.match(finishReviewMessage(), /reply with only those two risks, their evidence and the ship status/);
+  assert.match(finishReviewMessage(), /do not repeat the report/);
+});
+
 test('Claude Code stop gate blocks a finish with failing checks, at most twice, and lets a fixed change through', () => {
   const repo = mkdtempSync(path.join(os.tmpdir(), 'sog-'));
   const git = (...args: string[]) => assert.equal(spawnSync('git', args, { cwd: repo, encoding: 'utf8' }).status, 0);

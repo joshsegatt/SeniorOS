@@ -57,6 +57,16 @@ function existedAtBase(repo, baseSha, path) {
   return git(repo, ['cat-file', '-e', `${baseSha}:${path}`], false).code === 0;
 }
 
+/**
+ * Times the Claude Code finish gate sent the agent back for its risk review. Those are not failures, so the hook log
+ * does not count them; the transcript shows each as Stop hook feedback.
+ */
+function finishReviews(meta) {
+  const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
+  if (!file || !existsSync(file)) return 0;
+  return readFileSync(file, 'utf8').split('\n').filter((line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:')).length;
+}
+
 /** Hook decisions logged by the SeniorOS adapter during this run's time window. */
 function hookEvents(meta) {
   if (!existsSync(HOOK_LOG) || !meta.startedAt) return { guardTriggers: 0, stopGateBlocks: 0 };
@@ -192,6 +202,7 @@ export function gradeRun(meta, task) {
       durationSec: startedAt && finishedAt ? Math.round((finishedAt - startedAt) / 1000) : null,
       timedOut: Boolean(meta.timedOut),
       ...hookEvents(meta),
+      finishReviews: finishReviews(meta),
     },
     gradedAt: new Date().toISOString(),
   };
