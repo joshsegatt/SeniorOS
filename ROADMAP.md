@@ -73,6 +73,22 @@ Most repositories are not a single `package.json`. Without this, the finish gate
 - [ ] Runtime and UI proof: a browser check (page renders, no console errors, a flow completes) as a proof source
 - [ ] Bench tasks in Python and Go, so the claim is measured, not assumed
 
+## Now — beat the strongest model alone (Opus set)
+
+Order matters: the pack changes in step 2, so step 3 measures the pack that step 2 leaves.
+
+- [x] Opus set `o1`–`o24`, written blind to the pack; calibrated on Opus alone; held-out proof on `o17`/`o19`/`o20`:
+      SeniorOS 15/15, Superpowers 0/15, model alone 0/15
+- [ ] 1. Wider proof: a fourth blind round on other kinds of work (a new feature, a refactor, a security fix, a
+      dependency or API upgrade), calibrated on Opus alone; where Opus fails, find the pack's weak spot, fix it on
+      tuning tasks, prove on held-out ones
+- [ ] 2. Cost: SeniorOS runs cost about 60% more than Opus alone on the Opus set. Find where the extra goes (skill
+      reads, finish-gate review, extra checks) and cut what does not move the score; target the Superpowers cost
+      with the same score
+- [ ] 3. Other models: the Opus set on Sonnet, and a Codex runner (`codex exec`) to measure a GPT-class model, after
+      step 2
+- [ ] Never worse: every pack change re-runs `o9`–`o16` (and the core set) before it is kept
+
 ## Phase 6 — Measurement anyone can trust
 
 - [ ] Bench runners for Codex (`codex exec`) and OpenCode (`opencode serve`), so the hosts SeniorOS supports are measured
