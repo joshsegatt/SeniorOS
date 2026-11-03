@@ -5,6 +5,8 @@
 import { readFileSync } from 'node:fs';
 import { classify, editReason, guardMessage } from '../../shared/guard.mjs';
 
+const SHELL_TOOLS = new Set(['Bash', 'run_terminal_command', 'Shell']);
+
 /**
  * @param {string} raw the hook's stdin
  * @returns {object | null} the hook response, or null to stay silent
@@ -17,7 +19,8 @@ export function decide(raw) {
     return null;
   }
   const tool = input?.tool_input ?? {};
-  const reason = input?.tool_name === 'Bash' || input?.tool_name === undefined
+  // Grok loads this plugin too, and names its shell tool `run_terminal_command` (`Shell` under its Cursor preset).
+  const reason = SHELL_TOOLS.has(input?.tool_name) || input?.tool_name === undefined
     ? classify(tool.command)
     : editReason([tool.file_path, tool.notebook_path]);
   if (!reason) return null;

@@ -21,6 +21,14 @@ test('Claude Code guard asks before destructive commands and stays silent otherw
   assert.equal(decide('not json'), null);
 });
 
+test('Claude Code guard also judges Grok shell calls, which load the same plugin', () => {
+  for (const tool_name of ['run_terminal_command', 'Shell']) {
+    const raw = (command: string) => JSON.stringify({ tool_name, tool_input: { command } });
+    assert.equal(decide(raw('git reset --hard HEAD'))?.hookSpecificOutput.permissionDecision, 'ask', tool_name);
+    assert.equal(decide(raw('git status')), null, tool_name);
+  }
+});
+
 test('Claude Code guard runs as a hook without triggering the Antigravity guard it imports', () => {
   const r = spawnSync(process.execPath, [path.join(hooksDir, 'pretool-guard.mjs')], { input: bash('git status'), encoding: 'utf8' });
   assert.equal(r.status, 0, r.stderr);
