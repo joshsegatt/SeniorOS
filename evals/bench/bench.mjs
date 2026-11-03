@@ -8,6 +8,7 @@ import { gradeRun } from './lib/grade.mjs';
 import { prepareRun } from './lib/prepare.mjs';
 import { buildReport } from './lib/report.mjs';
 import { CLAUDE_ARMS, checkIsolation } from './lib/claude.mjs';
+import { GROK_ARMS } from './lib/grok.mjs';
 import { runConversation } from './lib/runner.mjs';
 import { BENCH_HOME, BENCH_SRC, GEMINI_HOME, HOOK_LOG, git, loadTasks } from './lib/util.mjs';
 
@@ -21,7 +22,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|claude|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills|senioros-noplan|senioros-baseline)
+      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills|senioros-noplan|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)
@@ -162,16 +163,16 @@ async function runBench(args) {
   const tasks = pickTasks(option(args, 'tasks', 'all'));
   const trials = Number(option(args, 'trials', '2'));
   const backend = /** @type {any} */ (option(args, 'backend', 'agentapi'));
-  // Claude Code arms are per-process flags; every other backend swaps the global Antigravity config.
-  const perProcessArms = backend === 'claude';
-  const known = perProcessArms ? CLAUDE_ARMS : ARMS;
-  for (const a of arms) if (!known[a]) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
+  // Claude Code and Grok arms are per run (flags or a run's own home); every other backend swaps the global Antigravity config.
+  const perProcessArms = backend === 'claude' || backend === 'grok';
+  const known = backend === 'grok' ? GROK_ARMS : perProcessArms ? CLAUDE_ARMS : ARMS;
+  for (const a of arms) if (!(a in known)) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
   // An arm that cannot start (a missing baseline checkout) must stop the bench, not grade every run as a failure.
-  if (perProcessArms) for (const a of arms) if (typeof known[a] === 'function') known[a]();
-  const model = option(args, 'model', perProcessArms ? 'haiku' : 'flash');
+  if (backend === 'claude') for (const a of arms) if (typeof known[a] === 'function') known[a]();
+  const model = option(args, 'model', backend === 'grok' ? 'grok-4.7' : perProcessArms ? 'haiku' : 'flash');
   const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
-  if (parallel > 1 && backend !== 'agentapi' && backend !== 'claude') throw new Error('--parallel needs the agentapi or claude backend.');
-  if (perProcessArms && process.env.SENIOROS_BENCH_USER_CONFIG !== '1') {
+  if (parallel > 1 && !['agentapi', 'claude', 'grok'].includes(backend)) throw new Error('--parallel needs the agentapi, claude or grok backend.');
+  if (backend === 'claude' && process.env.SENIOROS_BENCH_USER_CONFIG !== '1') {
     // A user's CLAUDE.md reaching the runs would skew every arm; check before spending any run (see lib/claude.mjs).
     const { answer, clean, why } = checkIsolation(model);
     if (!clean) throw new Error(`user instructions may reach the runs: ${why}. The check run answered: ${answer}. Move your ~/.claude/CLAUDE.md aside for the bench, or set SENIOROS_BENCH_USER_CONFIG=1 to measure with it.`);
