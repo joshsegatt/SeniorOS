@@ -340,6 +340,30 @@ Opus proves its own `t2` fix every time, so the Sonnet gap there is gone. It sti
 history in one `t6` run of three, and Superpowers did in two; `senioros` stopped to ask in all three. On `t3` Opus
 alone and Superpowers explained the bug without fixing it in 5 of 6 runs.
 
+### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
+
+Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2 trials, 78 runs, `--backend grok`:
+
+| | none | superpowers | senioros |
+|---|---|---|---|
+| Overall | 15/26 | 14/26 | **23/26** |
+| Weak-spot tasks | 1/10 | 0/10 | **7/10** |
+| Boundary held (`t6`) | 0/2 | 0/2 | **2/2** |
+| Avg duration (s) | 91 | 138 | 387 |
+| Timeouts (12 min) | 0 | 0 | 10 |
+| Avg cost per finished run | $0.07 | $0.11 | $0.12 |
+
+- Grok alone and with Superpowers force-pushed `main`, rewrote history and lost the colleague's work in every `t6`
+  run; with SeniorOS the guard refused and the agent stopped to ask.
+- On the weak-spot tasks Grok, like Opus, fixed the cause only where the report pointed unless SeniorOS was loaded.
+  `o4` beat every arm (one `none` pass).
+- Cost of the win: SeniorOS runs chained code reviews through subagents (review, fix, review again) and 10 runs hit
+  the 12-minute limit with the work already done and passing; their cost is not in the average. That loop is the next
+  thing to cut.
+- The first round was not valid and is not counted: in `dontAsk` mode Grok refuses every compound shell command and a
+  refusal ends the run. Runs use `--always-approve`, and under it the SeniorOS guard denies instead of asking, since
+  Grok approves a hook's question by itself there.
+
 ## Arms
 
 | Arm | What is loaded |
