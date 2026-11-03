@@ -23,3 +23,12 @@ test('an order without enough stock is refused and takes nothing', async () => {
   await assert.rejects(ordering.placeOrder('o1', [{ sku: 'tea', priceCents: 1000, qty: 9 }], 'US'));
   assert.equal(stock.stockOf('tea'), 5);
 });
+
+test('returning a line refunds it and puts its items back', async () => {
+  const { gateway, stock, ordering } = setup();
+  const order = await ordering.placeOrder('o1', [{ sku: 'tea', priceCents: 1000, qty: 2 }], 'US');
+  await ordering.returnLine('o1', 'tea');
+  assert.equal(gateway.refundedFor(order.chargeId), 2000);
+  assert.equal(stock.stockOf('tea'), 5);
+  await assert.rejects(ordering.returnLine('o1', 'tea'));
+});

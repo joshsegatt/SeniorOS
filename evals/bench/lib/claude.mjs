@@ -20,7 +20,7 @@ import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { homedir, userInfo } from 'node:os';
 import { rm } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { join, resolve, sep } from 'node:path';
 import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR, newestMtime } from './util.mjs';
 
 /**
@@ -36,12 +36,31 @@ function skillsOnlyPlugin() {
   return dir;
 }
 
+/**
+ * The SeniorOS plugin with one skill left out and everything else (rules, hooks) as in this checkout. Built once per
+ * bench process. `senioros-noplan` uses it to split what the routing rules add from what the skill itself adds: the
+ * rules still say when to plan, but the skill's procedure is not there to load.
+ * @param {string} skill
+ */
+function pluginWithout(skill) {
+  const dir = join(BENCH_HOME, 'plugins', `senioros-without-${skill}`);
+  rmSync(dir, { recursive: true, force: true });
+  mkdirSync(dir, { recursive: true });
+  for (const part of ['.claude-plugin', 'hooks', 'adapters']) cpSync(join(REPO_ROOT, part), join(dir, part), { recursive: true });
+  const skills = join(REPO_ROOT, 'skills');
+  const left = join(skills, skill);
+  cpSync(skills, join(dir, 'skills'), { recursive: true, filter: (src) => src !== left && !src.startsWith(left + sep) });
+  return dir;
+}
+let noPlanDir;
+
 /** Extra `claude` arguments per arm (functions are resolved when a run starts). */
 export const CLAUDE_ARMS = {
   none: [],
   superpowers: ['--plugin-dir', SUPERPOWERS_DIR],
   senioros: ['--plugin-dir', REPO_ROOT],
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
+  'senioros-noplan': () => ['--plugin-dir', noPlanDir ??= pluginWithout('senior-plan')],
   // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
   'senioros-baseline': () => {
     const dir = process.env.SENIOROS_BENCH_BASELINE && resolve(process.env.SENIOROS_BENCH_BASELINE);

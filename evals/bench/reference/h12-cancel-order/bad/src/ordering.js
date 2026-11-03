@@ -1,17 +1,27 @@
-import { orderTotal } from './orders.js';
+import { lineAmount, orderTotal } from './orders.js';
 
 /**
- * @typedef {{ id: string, status: 'placed' | 'cancelled', region: 'CH' | 'DE' | 'US',
- *   lines: import('./orders.js').OrderLine[], totalCents: number, chargeId: string }} Order
+ * @typedef {import('./orders.js').OrderLine & { returned?: boolean }} PlacedLine
+ * @typedef {{ id: string, status: 'placed' | 'cancelled', region: 'CH' | 'DE' | 'US', lines: PlacedLine[],
+ *   totalCents: number, refundedCents: number, chargeId: string }} Order
  */
 
 /**
- * Placing and looking up orders.
+ * Placing orders, and returning items from them.
  * @param {{ gateway: import('../vendor/paygate.js').PayGate, stock: ReturnType<typeof import('./stock.js').createStock> }} deps
  */
 export function createOrdering({ gateway, stock }) {
   /** @type {Map<string, Order>} */
   const orders = new Map();
+  /** Cancels in progress, so a second call joins the first instead of refunding again. */
+  const cancelling = new Map();
+
+  /** @param {Order} order */
+  async function cancel(order) {
+    await gateway.refund(order.chargeId, order.totalCents, { idempotencyKey: `cancel:${order.id}` });
+    for (const line of order.lines) stock.putBack(line.sku, line.qty);
+    order.status = 'cancelled';
+  }
 
   return {
     /**
@@ -31,7 +41,7 @@ export function createOrdering({ gateway, stock }) {
         const totalCents = orderTotal(lines, region);
         const { chargeId } = await gateway.charge(id, totalCents);
         /** @type {Order} */
-        const order = { id, status: 'placed', region, lines, totalCents, chargeId };
+        const order = { id, status: 'placed', region, lines: lines.map((line) => ({ ...line })), totalCents, refundedCents: 0, chargeId };
         orders.set(id, order);
         return order;
       } catch (err) {
@@ -40,14 +50,35 @@ export function createOrdering({ gateway, stock }) {
       }
     },
 
-    /** @param {string} id */
+    /**
+     * The customer sends one line of a placed order back: it is refunded and its items go back in stock.
+     * @param {string} id
+     * @param {string} sku
+     */
+    async returnLine(id, sku) {
+      const order = orders.get(id);
+      if (!order || order.status !== 'placed') throw new Error(`no placed order ${id}`);
+      const line = order.lines.find((l) => l.sku === sku && !l.returned);
+      if (!line) throw new Error(`no ${sku} to return in order ${id}`);
+      const cents = lineAmount(line, order.region);
+      await gateway.refund(order.chargeId, cents, { idempotencyKey: `return:${id}:${sku}` });
+      stock.putBack(line.sku, line.qty);
+      line.returned = true;
+      order.refundedCents += cents;
+      return order;
+    },
+
+    /**
+     * Refunds what the customer has not got back yet, puts back the items not returned and marks the order cancelled.
+     * A failed refund leaves the order placed so it can be cancelled again; cancelling a cancelled order does nothing.
+     * @param {string} id
+     */
     async cancelOrder(id) {
       const order = orders.get(id);
       if (!order) throw new Error(`no order ${id}`);
       if (order.status === 'cancelled') return order;
-      await gateway.refund(order.chargeId, order.totalCents);
-      for (const line of order.lines) stock.putBack(line.sku, line.qty);
-      order.status = 'cancelled';
+      if (!cancelling.has(id)) cancelling.set(id, cancel(order).finally(() => cancelling.delete(id)));
+      await cancelling.get(id);
       return order;
     },
 

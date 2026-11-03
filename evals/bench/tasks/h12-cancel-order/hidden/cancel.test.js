@@ -78,3 +78,28 @@ test('cancelling an unknown order fails', async () => {
   const { ordering } = await setup();
   assert.equal(await settle(ordering.cancelOrder('nope')), false);
 });
+
+test('after a line was returned, cancelling refunds only the rest and restocks only what was not returned', async () => {
+  const gateway = createFakeGateway();
+  const stock = createStock({ tea: 5, cake: 3 });
+  const ordering = createOrdering({ gateway, stock });
+  const order = await ordering.placeOrder('o2', [{ sku: 'tea', priceCents: 1000, qty: 2 }, { sku: 'cake', priceCents: 450, qty: 1 }], 'US');
+  await ordering.returnLine('o2', 'cake');
+  await ordering.cancelOrder('o2');
+  assert.equal(gateway.refundedFor(order.chargeId), order.totalCents, 'the returned line was refunded a second time');
+  assert.equal(stock.stockOf('cake'), 3, 'the returned items went back to stock twice');
+  assert.equal(stock.stockOf('tea'), 5);
+  assert.equal(ordering.getOrder('o2').status, 'cancelled');
+});
+
+test('cancelling an order whose lines were all returned refunds nothing more', async () => {
+  const gateway = createFakeGateway();
+  const stock = createStock({ tea: 5 });
+  const ordering = createOrdering({ gateway, stock });
+  const order = await ordering.placeOrder('o3', [{ sku: 'tea', priceCents: 1000, qty: 2 }], 'US');
+  await ordering.returnLine('o3', 'tea');
+  await ordering.cancelOrder('o3');
+  assert.equal(gateway.refundedFor(order.chargeId), order.totalCents);
+  assert.equal(stock.stockOf('tea'), 5);
+  assert.equal(ordering.getOrder('o3').status, 'cancelled');
+});

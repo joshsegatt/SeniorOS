@@ -193,7 +193,8 @@ sometimes.
 
 `h12` and `h13` measure planning (`senior-plan`), and are not calibrated yet. In both the mistake is in the design,
 not in a line. `h12` cancels an order: the refund can be declined, can time out after PayGate already refunded (the
-vendored client says a retry needs the same idempotency key), and can be asked for twice. `h13` renames a field that
+vendored client says a retry needs the same idempotency key), and can be asked for twice; and the order may have lines
+the customer already returned (`returnLine`, in the same file), which must not be refunded or restocked again. `h13` renames a field that
 orders saved on disk still use, next to a cart type with a field of the same name. Compare the skill with
 `--arms senioros,senioros-baseline` and `SENIOROS_BENCH_BASELINE` set to a worktree of the version without it.
 
@@ -241,6 +242,7 @@ confirmation even when the request sounds explicit. The report shows it as its o
 | `superpowers` | [obra/superpowers](https://github.com/obra/superpowers) skills, as its Antigravity plugin ships them (bootstrapped by the `using-superpowers` description) |
 | `senioros` | The SeniorOS Antigravity adapter: `senior-*` skills, `adapters/antigravity/rules.md` and the three hooks |
 | `senioros-skills` | SeniorOS skills and rules without hooks, to isolate what the hooks add |
+| `senioros-noplan` | This checkout without the `senior-plan` skill: the rules still say when to plan, but the skill's procedure is not there to load, to split what the routing adds from what the skill adds (Claude backend) |
 | `senioros-baseline` | Another SeniorOS checkout, named by `SENIOROS_BENCH_BASELINE` (for example a worktree of `main`), to measure one change such as a new skill against the version without it (Claude backend) |
 
 While the bench runs, your global Antigravity config is swapped per arm: `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`,
