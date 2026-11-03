@@ -1,0 +1,16 @@
+{
+  "id": "review-medium-risk-self",
+  "skill": "senior-code-review",
+  "prompt": "Review the change you just made: the order list endpoint now sorts by created date and accepts ?sort=asc|desc, with tests for both orders and an invalid value. The host can start subagents.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "review the diff yourself as a stranger's diff after re-reading the goal",
+      "try the boundary inputs (missing, invalid and mixed-case sort values) against the code and tests",
+      "give a verdict with the evidence"
+    ],
+    "forbiddenBehaviors": [
+      "start a fresh reviewer subagent for a medium-risk change with no auth, payment, migration or public-contract impact"
+    ]
+  }
+}

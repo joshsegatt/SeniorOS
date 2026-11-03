@@ -20,7 +20,7 @@ If the goal is unknown, infer it cautiously from the task or commit messages and
 
 ## Independence
 
-For medium risk and above, when the host can start a subagent, give a fresh reviewer only the goal, the diff and the verification results — not the session history. A reviewer who watched the change being written inherits its blind spots. Without a subagent, review the diff as if someone else wrote it, after re-reading the goal.
+For high risk (auth, payments, migrations, public contracts, security-sensitive code), when the host can start a subagent, give a fresh reviewer only the goal, the diff and the verification results — not the session history. A reviewer who watched the change being written inherits its blind spots. For medium risk, or without a subagent, review the diff yourself as if someone else wrote it, after re-reading the goal.
 
 One fresh review per change is enough. After fixing its findings, prove each fix yourself (a test or command that failed before and passes now) instead of starting another reviewer; a second review is for a fix that changed the design, not for one that closed a finding.
 
