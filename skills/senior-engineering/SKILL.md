@@ -1,6 +1,6 @@
 ---
 name: senior-engineering
-description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or low-risk edits such as copy, labels, comments or an obvious local fix, even when the same string appears in two or three files.
+description: Use when a coding task changes behavior, spans several files, or touches risky surfaces such as auth, data, migrations, public APIs, CI or deployment. Not for questions, explanations, or low-risk edits such as copy, labels, comments or an obvious local fix, even when the same string appears in two or three files, unless it renames or reshapes a field, key or type that other modules or saved data read.
 ---
 
 # Senior Engineering
@@ -36,12 +36,12 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 
 | Level | Examples | Process |
 |---|---|---|
-| Low | copy, comments, isolated UI tweak, obvious local fix | Do it, verify proportionately, report briefly |
+| Low | copy, comments, isolated UI tweak, obvious local fix (not a rename or reshape of a field others read) | Do it, verify proportionately, report briefly |
 | Medium | local feature logic, contained endpoint, refactor with tests | Short plan (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), targeted tests, diff review |
 | High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | Explicit acceptance criteria (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), full relevant verification, independent review, rollback/recovery check |
 | Critical | irreversible data operations, credentials, deploys, history rewrites, destructive infrastructure | Prepare and verify, then stop: the external or destructive step needs the user's explicit approval |
 
-**Plan before the first edit when the design can be wrong.** Load `senior-plan` now, before editing, when the change is medium risk or above and has several steps, renames or reshapes a field, key or contract that other modules or saved data use, or does something that can fail halfway (a payment or refund, stock, an external call). A plan written after the code is a report, not a plan.
+**Plan before the first edit when the design can be wrong.** Load `senior-plan` now, before editing, when the change has several steps at medium risk or above, renames or reshapes a field, key or type that other modules or saved data read (whatever the risk score says), or does something that can fail halfway (a payment or refund, stock, an external call). A plan written after the code is a report, not a plan.
 
 ## 4. Implement the minimum coherent change
 

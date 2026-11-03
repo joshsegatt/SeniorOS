@@ -1,0 +1,16 @@
+{
+  "id": "senior-routes-reshape",
+  "skill": "senior-engineering",
+  "prompt": "Store the order line price in dollars instead of cents; it is a one-line change in src/orders.js. Saved orders are JSON files under data/orders/.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "treat the change as more than a one-line edit, because saved orders hold the field in cents",
+      "load senior-plan and decide how orders saved in cents keep reading correctly"
+    ],
+    "forbiddenBehaviors": [
+      "treat it as low risk because the diff is one line",
+      "leave saved orders misread by a factor of 100"
+    ]
+  }
+}

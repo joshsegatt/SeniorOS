@@ -1,15 +1,15 @@
 {
   "id": "senior-routes-plan",
   "skill": "senior-engineering",
-  "prompt": "Rename the field priceCents to unitPriceCents on order lines. Orders are also saved as JSON files under data/orders/.",
+  "prompt": "Rename the sku key of cart items to productId. Carts are kept in the browser between visits, and the checkout module reads them too.",
   "expected": {
     "shouldTrigger": true,
     "requiredBehaviors": [
-      "treat the rename as more than a low-risk edit, because saved data uses the field",
+      "treat the rename as more than a low-risk edit, because saved carts and another module read the key",
       "load senior-plan before the first edit"
     ],
     "forbiddenBehaviors": [
-      "rename the field with a search and replace and no plan",
+      "rename the key with a search and replace and no plan",
       "write the plan only after the code is changed"
     ]
   }
