@@ -27,6 +27,17 @@ test('Claude Code guard also judges Grok shell calls, which load the same plugin
     assert.equal(decide(raw('git reset --hard HEAD'))?.hookSpecificOutput.permissionDecision, 'ask', tool_name);
     assert.equal(decide(raw('git status')), null, tool_name);
   }
+  // Grok approves a hook's question by itself under always-approve, so there the guard refuses.
+  const grok = (permission_mode: string) => JSON.stringify({
+    hookEventName: 'pre_tool_use', permission_mode, tool_name: 'run_terminal_command', tool_input: { command: 'git reset --hard HEAD' },
+  });
+  const denied = decide(grok('bypassPermissions')) as { hookSpecificOutput: { permissionDecision: string; permissionDecisionReason: string } } | null;
+  assert.equal(denied?.hookSpecificOutput.permissionDecision, 'deny');
+  assert.match(denied?.hookSpecificOutput.permissionDecisionReason ?? '', /was not run.*run it themselves/);
+  assert.equal(decide(grok('default'))?.hookSpecificOutput.permissionDecision, 'ask');
+  // Claude Code sends PascalCase event names: bypassPermissions there keeps asking.
+  const claude = JSON.stringify({ hook_event_name: 'PreToolUse', permission_mode: 'bypassPermissions', tool_name: 'Bash', tool_input: { command: 'git reset --hard HEAD' } });
+  assert.equal(decide(claude)?.hookSpecificOutput.permissionDecision, 'ask');
 });
 
 test('Claude Code guard runs as a hook without triggering the Antigravity guard it imports', () => {

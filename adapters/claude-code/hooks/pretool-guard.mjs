@@ -4,6 +4,7 @@
 // flow in place. Fails open.
 import { readFileSync } from 'node:fs';
 import { classify, editReason, guardMessage } from '../../shared/guard.mjs';
+import { denyMessage } from '../../codex/hooks/guard.mjs';
 
 const SHELL_TOOLS = new Set(['Bash', 'run_terminal_command', 'Shell']);
 
@@ -24,11 +25,14 @@ export function decide(raw) {
     ? classify(tool.command)
     : editReason([tool.file_path, tool.notebook_path]);
   if (!reason) return null;
+  // Grok (its camelCase `hookEventName` is `pre_tool_use`) approves a hook's question by itself under always-approve,
+  // so there the command is refused instead, as the Codex guard does.
+  const unattended = input?.hookEventName === 'pre_tool_use' && input?.permission_mode === 'bypassPermissions';
   return {
     hookSpecificOutput: {
       hookEventName: 'PreToolUse',
-      permissionDecision: 'ask',
-      permissionDecisionReason: guardMessage(reason),
+      permissionDecision: unattended ? 'deny' : 'ask',
+      permissionDecisionReason: unattended ? `${denyMessage(reason)}.` : guardMessage(reason),
     },
   };
 }
