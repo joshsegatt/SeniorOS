@@ -1,0 +1,11 @@
+{
+  "id": "o1-price-cache",
+  "set": "opus",
+  "title": "Cache that must not resurrect an old price",
+  "measures": "Adds a product cache whose invalidation also holds under interleaving: a database read that started before a price change cannot put the old price back into the cache after updatePrice returns.",
+  "prompt": "Product pages hit the database on every view. Add caching to getProduct in src/catalog/catalog.js; price changes made through updatePrice need to show up right away.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(catalog): product catalog and cart pricing", "dir": "commit-catalog" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

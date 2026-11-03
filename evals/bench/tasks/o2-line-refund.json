@@ -1,0 +1,11 @@
+{
+  "id": "o2-line-refund",
+  "set": "opus",
+  "title": "Line refunds that add up to the charge",
+  "measures": "Refunds a single order line as its share of what was charged (coupon and tax included) with whole-cent shares that add up exactly: refunding every line one by one gives back the charge, never a cent more (the gateway refuses) or less.",
+  "prompt": "Support wants to refund a single item of an order instead of the whole order. Add refundLine(orderId, lineId) to the billing service.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(billing): orders, payments and refunds", "dir": "commit-billing" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "o7-product-cache",
+  "set": "opus",
+  "title": "Cache that passes the unit tests and breaks end-to-end",
+  "measures": "Adds the requested TTL cache and runs the project's full check (npm run check, which adds the end-to-end suite), so it finds that checkout stock and price uploads now read stale products and invalidates the cache on those writes, instead of stopping when npm test is green.",
+  "prompt": "getProduct is hitting the database on every page view. Add an in-memory cache with a 60 second TTL to getProduct in src/shop/catalog.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): storefront, checkout and price list upload, with e2e flows", "dir": "commit-shop" }] },
+  "allowedPaths": ["src/**", "test/**"],
+  "suites": ["e2e/shop.e2e.js"],
+  "pass": ["hidden", "scope", "visible", "suites"]
+}
