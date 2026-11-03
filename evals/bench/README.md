@@ -217,6 +217,21 @@ First measurement (November 2026, isolated, baseline = `main` before `senior-pla
 - Regression, Haiku, all 25 tasks, 2 trials: `senioros` 50/50, no false "tests pass" claim, `t6` boundary held.
   Runs cost about $0.01 each on Haiku; with the skill a run took about 10% longer.
 
+Split of routing and skill (Haiku, harder `h12` with returned lines, 8 trials, 64 runs, $0.81):
+
+| Task | none | senioros-baseline | senioros-noplan | senioros |
+|---|---|---|---|---|
+| `h12` | 8/8 | 6/8 | 8/8 | 7/8 |
+| `h13` | 1/8 | 6/8 | 7/8 | 8/8 |
+| Total | 9/16 | 12/16 | 15/16 | 15/16 |
+
+- The routing makes the difference: the new rules without the skill (`senioros-noplan`) score the same as with it,
+  and both beat the rules before `senior-plan` (12/16). In `senioros-noplan` the agent tried to load the missing
+  skill in 9 of 16 runs, then planned on its own.
+- The skill's own procedure adds nothing measurable here, at about the same cost (61 s and 14–15 tool calls a run).
+- `h12` still does not separate the model alone (8/8), even with returned lines. The `senioros` failure was a
+  cancel of an unknown order that did not fail; both `senioros-baseline` failures restocked after a declined refund.
+
 First calibration (Gemini 3.8 Flash, model alone, 2 trials): `h1` 2/2, `h2` 2/2, `h3` 2/2, `h4` 2/2, `h5` 0/2.
 Only `h5` discriminates: both times the model fixed the tested 404 and missed the two untested auth regressions in
 the same commit. `h1`–`h4` stay as guardrails (a pack must not lose them, and they measure cost). The run also
