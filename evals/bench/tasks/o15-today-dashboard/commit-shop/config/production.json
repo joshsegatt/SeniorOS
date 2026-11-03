@@ -1,0 +1,8 @@
+{
+  "shop": {
+    "timezone": "Australia/Sydney"
+  },
+  "dashboard": {
+    "refreshSeconds": 30
+  }
+}

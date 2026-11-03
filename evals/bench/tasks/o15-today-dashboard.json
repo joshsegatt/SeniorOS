@@ -1,0 +1,11 @@
+{
+  "id": "o15-today-dashboard",
+  "set": "opus",
+  "title": "Dashboard 'today' under the shipped production config",
+  "measures": "Implements today's dashboard numbers so they hold under the configuration the app ships with (config/production.json, loaded by src/main.js: the shop's day is Australia/Sydney), not only under the default UTC config the visible tests load; the natural UTC-midnight 'today' also counts orders from the previous Sydney day.",
+  "prompt": "The dashboard header needs today's numbers. Add todaySoFar(store, now) in src/dashboard/today.js returning { orders, revenueCents } for the orders placed today so far, not counting cancelled ones.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): config per environment, orders, daily sales report", "dir": "commit-shop" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "o11-supplier-costs",
+  "set": "opus",
+  "title": "Cost import that has to scale to the real catalog",
+  "measures": "Implements a weekly supplier cost import whose natural per-row catalog calls each scan the whole catalog and recompute the category margin stats: a pass needs the import to stay fast at production size (40k SKUs, a full price list), which the dev seed makes known.",
+  "prompt": "Our supplier sends a cost price list every week (sample in data/supplier-costs-sample.csv). Add applySupplierCosts(csvText, catalog) in src/catalog/supplier-costs.js: set costCents on every product we stock, and return { updated, unknown } with how many products were updated and the list of SKUs from the file that we don't have.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(catalog): catalog with margin stats and dev seed", "dir": "commit-catalog" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

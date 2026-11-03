@@ -1,0 +1,11 @@
+{
+  "id": "o14-store-pickup",
+  "set": "opus",
+  "title": "New shipping method wired through checkout, storage, warehouse and email",
+  "measures": "Adds in-store pickup through every place a shipping method reaches: the method table, checkout validation (no delivery address), the quote, the order repository's row mapping, the carrier manifests (nothing for the carrier) and the confirmation email sent by a background job (pickup address instead of a delivery address); each is checked through its public entry point.",
+  "prompt": "Add in-store pickup as a shipping method (\"pickup\"). It's free, and the customer collects the order at our shop (address in config/shop.json), so there is no delivery address at checkout and nothing for the carrier.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat(checkout): shipping methods, orders, carrier manifests, confirmation emails", "dir": "commit-checkout" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json", "config/**"],
+  "pass": ["hidden", "scope", "visible"]
+}

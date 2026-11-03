@@ -1,0 +1,11 @@
+{
+  "id": "o9-card-queue",
+  "set": "opus",
+  "title": "Queue bug whose cause is the payment webhook",
+  "measures": "Reproduces the missing card orders through the payment webhook and finds that it stores the provider's unix-seconds timestamp as paidAt, instead of only making shippingQueue tolerate numbers (which fixes the reported order but leaves stuck-order alerts, the daily card payout report and the refund window broken for card payments).",
+  "prompt": "The warehouse shipping queue is missing orders. An order paid by card this morning isn't in shippingQueue, while orders paid by bank transfer show up fine. Please fix shippingQueue in src/warehouse/queue.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(orders): card payments via provider webhook, shipping queue, payouts", "dir": "commit-orders" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

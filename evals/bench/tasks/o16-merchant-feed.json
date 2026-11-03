@@ -1,0 +1,11 @@
+{
+  "id": "o16-merchant-feed",
+  "set": "opus",
+  "title": "Product feed prices under the shipped production currency",
+  "measures": "Writes feed prices from minor-unit amounts so they hold under the configuration the app ships with (config/production.json, loaded by src/main.js: the shop sells in JPY, which has no minor unit), not only under the default EUR config the visible tests load; the natural amount / 100 lists every production price 100 times too low.",
+  "prompt": "Google Merchant Center needs a product feed. Add merchantFeed(store) in src/feeds/merchant.js returning a TSV with the header id, title, link, price, availability and one line per active product: link is the product page URL (/p/<sku> on our site), price is the amount followed by the ISO currency code (like \"15.00 USD\"), availability is in_stock or out_of_stock.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): config per environment, catalog, product pages", "dir": "commit-shop" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

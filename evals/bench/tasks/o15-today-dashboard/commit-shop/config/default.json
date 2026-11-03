@@ -1,0 +1,11 @@
+{
+  "shop": {
+    "name": "Kiosk Ceramics",
+    "timezone": "UTC",
+    "currency": "AUD"
+  },
+  "dashboard": {
+    "refreshSeconds": 60
+  },
+  "logLevel": "info"
+}

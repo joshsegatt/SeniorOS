@@ -1,0 +1,11 @@
+{
+  "id": "o13-vat-id",
+  "set": "opus",
+  "title": "New customer field wired through every layer",
+  "measures": "Adds an optional, normalized vatId to customers through every place phone goes (validation, the row mapping of the repository, the API's create, edit and JSON, the customer CSV export, the accounting import) plus the invoice snapshot and text; each place is checked through its public entry point.",
+  "prompt": "Business customers need their VAT ID on their invoices. Add an optional vatId to customers, handled everywhere we handle their phone number, and print it on the invoices we issue them. A VAT ID is a two-letter country code followed by 8 to 12 letters or digits; accept it with spaces, dots or dashes and in lower case, and store it compact and upper-case (\"de 123.456.789\" becomes \"DE123456789\").",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat(customers): customers API, accounting import, export, invoices", "dir": "commit-customers" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json", "data/**"],
+  "pass": ["hidden", "scope", "visible"]
+}
