@@ -3,12 +3,16 @@
 SeniorOS is being built in layers so the project can earn complexity instead of cosplay it. Nothing ships because it
 sounds better: it ships when the bench, a deterministic test or a run in the real host shows it.
 
-## Where SeniorOS stands (0.8.0)
+## Where SeniorOS stands (0.9.0)
 
-Measured (see [`evals/bench/`](evals/bench/README.md)): on Claude Sonnet, core set, SeniorOS 24/24, Superpowers 19/24,
-no pack 17/24; it never force-pushed `main` in `t6`, and its regression test was proven in every `t2` run. The win is
-discipline, proof and the approval boundary, not finding more bugs: on the hard and strong sets a strong model alone
-scores as well.
+Measured (see [`evals/bench/`](evals/bench/README.md)), SeniorOS against no pack and Superpowers:
+- Claude Opus core set: 24/24, 21/24 and 19/24.
+- Opus held-out tasks where the cause of a reported bug is in another module: 15/15, 0/15 and 0/15.
+- grok-4.7: 23/26, 15/26 and 14/26.
+- Gemini Pro: 21/26, 16/26 and 16/26.
+
+The wins are the approval boundary and fixing a bug at its cause. On the other kinds of work tried, Opus alone already
+scores as well. SeniorOS costs more per run and is slower on Grok.
 
 | Host | Skills | Rules | Destructive-command guard | Finish gate | Tested in the host |
 |---|---|---|---|---|---|
@@ -36,7 +40,8 @@ work before "done", where Superpowers injects text.
 - OpenCode 1.x plugin; finish gate keeps the agent within what the user asked; guard protects each host's own
   settings, hooks and plugins (0.8.0)
 - Finish gate risk review for medium-risk changes; a test command that runs no tests is not a pass; `senior risk`
-  rates payment and password/encryption code; guard bypass corpus (unreleased)
+  rates payment and password/encryption code; guard bypass corpus; a reported bug fixed at its cause; planning in the
+  rules; guard in Grok; Opus set and Grok bench (0.9.0)
 
 ## Phase 4 — Reach that holds (in progress)
 

@@ -35,16 +35,31 @@
   <img src="brand/social/demo-approval-boundary.svg" alt="Replay of a real bench run: asked to discard local changes and force-push main, Claude Code alone rewrote main on the remote; with SeniorOS it stopped, listed what would be lost and asked first" width="100%" />
 </p>
 
-A live bench runs the same model on the same trap tasks with no pack, with [Superpowers](https://github.com/obra/superpowers) and with SeniorOS. Hidden tests and the repository state grade every run; no model judges another.
+A live bench runs the same model on the same tasks with no pack, with [Superpowers](https://github.com/obra/superpowers) and with SeniorOS. Hidden tests and the repository state grade every run; no model judges another.
 
-| Host and model | No pack | Superpowers | SeniorOS |
+Results on the strongest models of three vendors:
+
+| Model | No pack | Superpowers | SeniorOS |
 |---|---|---|---|
-| Claude Code, Claude Sonnet (8 core tasks, 3 trials each) | 17/24 | 19/24 | **24/24** |
-| Claude Code, Claude Haiku (19 tasks, 3 trials each) | 52/57 | 53/57 | **57/57** |
-| Antigravity, Gemini Flash (4 hard tasks, 3 trials each) | not run | 8/12 | **12/12** |
-| Antigravity, Gemini Flash (multi-regression refactor, 4 trials) | 0/4 | 0/4 | **4/4** |
+| Claude Opus: a reported bug whose cause is in another module (3 held-out tasks, 5 trials) | 0/15 | 0/15 | **15/15** |
+| Claude Opus: discipline (8 core tasks, 3 trials) | 21/24 | 19/24 | **24/24** |
+| Grok 4.7, Grok CLI (13 tasks, 2 trials) | 15/26 | 14/26 | **23/26** |
+| Gemini Pro, Antigravity (13 tasks, 2 trials) | 16/26 | 16/26 | **21/26** |
 
-On a strong model SeniorOS does not win by finding more bugs, it wins on discipline: Claude Sonnet alone fixed a bug three times without a test that proves the fix, and three times discarded a colleague's work in progress and force-pushed `main`; with SeniorOS it wrote the test and stopped to ask every time. Across both models SeniorOS made no false "tests pass" claim. Every run, task and caveat (including which tasks were written alongside the changes they reward) is in [`evals/bench/`](evals/bench/README.md), and you can rerun it with one command.
+- **Bugs fixed at the cause.** Asked to fix a reported bug, every arm found the cause. Without SeniorOS the model fixed it where the report pointed, so other paths broken by the same cause stayed broken. With SeniorOS it fixed the module that wrote the bad data.
+- **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked.
+- **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
+- **No false claims.** Across all runs, SeniorOS made no false "tests pass" claim.
+- **It costs more.** On the Opus core set, SeniorOS averaged $0.20 a run against $0.16 for the model alone. On Grok it is slower: some runs hit the 12-minute limit with the work already done.
+
+Earlier results on smaller models:
+
+| Model | No pack | Superpowers | SeniorOS |
+|---|---|---|---|
+| Claude Sonnet, 8 core tasks, 3 trials | 17/24 | 19/24 | **24/24** |
+| Claude Haiku, 19 tasks, 3 trials | 52/57 | 53/57 | **57/57** |
+
+Every run, task and caveat (including which tasks were used to tune the pack) is in [`evals/bench/`](evals/bench/README.md), and you can rerun it with one command.
 
 ---
 
@@ -635,6 +650,18 @@ Registers the skills, adds the routing rules to `~/.gemini/GEMINI.md` and instal
 destructive-command guard and the proof gate. Files it changes are backed up once; your own rules and hooks are kept.
 
 See [`adapters/antigravity/README.md`](adapters/antigravity/README.md). The live bench that compares SeniorOS with no pack and with other packs lives in [`evals/bench/`](evals/bench/README.md).
+
+### Grok CLI
+
+Grok can load the Claude Code plugin. To set it up:
+
+1. Copy this repository's `.claude-plugin/`, `hooks/`, `adapters/`, `skills/` and `rules/` into `~/.grok/plugins/senioros/`.
+2. Enable it with `[plugins] enabled = ["senioros"]` in `~/.grok/config.toml`.
+3. Grok's session-start hooks cannot add context, so put the routing rules from [`rules/senioros.md`](rules/senioros.md) in `~/.grok/AGENTS.md`.
+
+The skills, the guard and the finish gate then run as they do in Claude Code. Under Grok's always-approve, which would
+approve the guard's question by itself, the guard refuses the command and the user runs it. This is how the bench
+installs it (`--backend grok`); there is no one-command installer for Grok yet.
 
 ### Generic / portable
 
