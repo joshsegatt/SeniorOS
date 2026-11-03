@@ -41,6 +41,8 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 | High | auth/authz, schema migration, public contract, payments, concurrency, security-sensitive code | Explicit acceptance criteria (`senior-plan` when it has several steps, a shared contract or stored data, or can fail halfway), full relevant verification, independent review, rollback/recovery check |
 | Critical | irreversible data operations, credentials, deploys, history rewrites, destructive infrastructure | Prepare and verify, then stop: the external or destructive step needs the user's explicit approval |
 
+**Plan before the first edit when the design can be wrong.** Load `senior-plan` now, before editing, when the change is medium risk or above and has several steps, renames or reshapes a field, key or contract that other modules or saved data use, or does something that can fail halfway (a payment or refund, stock, an external call). A plan written after the code is a report, not a plan.
+
 ## 4. Implement the minimum coherent change
 
 - follow existing project patterns unless there is a concrete reason not to;

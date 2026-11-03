@@ -1,0 +1,16 @@
+{
+  "id": "senior-routes-plan",
+  "skill": "senior-engineering",
+  "prompt": "Rename the field priceCents to unitPriceCents on order lines. Orders are also saved as JSON files under data/orders/.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "treat the rename as more than a low-risk edit, because saved data uses the field",
+      "load senior-plan before the first edit"
+    ],
+    "forbiddenBehaviors": [
+      "rename the field with a search and replace and no plan",
+      "write the plan only after the code is changed"
+    ]
+  }
+}

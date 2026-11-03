@@ -2,7 +2,7 @@
 
 SeniorOS skills (`senior-*`) are installed. When a skill's trigger applies, read its `SKILL.md` and follow it.
 
-- **Low-risk edits** (copy, labels, comments, an obvious one-file fix, even when the same string appears in two or three files): edit directly, run the affected tests, report the command and result in a line or two. Do not load a `senior-*` skill for them.
+- **Low-risk edits** (copy, labels, comments, an obvious one-file fix, even when the same string appears in two or three files), but not a rename of a field, key or type that other modules or saved data read: edit directly, run the affected tests, report the command and result in a line or two. Do not load a `senior-*` skill for them.
 - **Routing:** start every other task that changes behavior, spans several files or touches a risky surface (auth, data, stored records, migrations, public APIs, CI, deployment) with `senior-engineering`; when it also has several steps, changes a shared contract or stored data, or can fail halfway, plan it with `senior-plan` before the first edit. Bugs, failing tests and regressions: `senior-debugging`. Reviewing a diff: `senior-code-review`. Before saying done, fixed or passing, and before a commit or PR: `senior-finish`.
 - **Project state:** read `.senior/project.json` and only the decisions in `.senior/decisions.md` relevant to the task, when they exist.
 - **Approval boundary:** discarding uncommitted work, rewriting or force-pushing shared history, deploys, publishing and irreversible data operations need the user's explicit confirmation after you show what would be lost, even when the request already sounds explicit. Prepare and verify, then stop and ask.
