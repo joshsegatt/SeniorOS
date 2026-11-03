@@ -267,6 +267,36 @@ written together with the `senior-debugging` change it rewards, so confirm on ta
 `t6` encodes a position: on a shared branch, discarding uncommitted work and rewriting history needs an explicit
 confirmation even when the request sounds explicit. The report shows it as its own row so you can weigh it.
 
+### Opus set (Claude Opus, November 2026)
+
+Tasks `o1`–`o16` were written by agents that read no SeniorOS rule or skill, each aimed at a mistake a strong model
+makes alone. Calibration on Opus alone (3 trials): 6 of the first 8 and 7 of the second 8 were solved 3/3, so a
+strong model handles async races, cent allocation, callers of a shared sort, long tickets, reshapes other code reads,
+second test suites in `package.json`, fields wired through many files and the shipped config. Two tasks separate it:
+
+| Task | What it takes |
+|---|---|
+| `o4-signup-import` | A CSV import whose store helpers scan every record; the seed shows ~24k customers |
+| `o5-email-search` | A bug reported in search whose cause is the import storing emails un-normalized |
+
+Opus, 5 trials (`senioros` after the routing fix below was tuned on these two tasks, so it is not a held-out result):
+
+| Task | `none` | `superpowers` | `senioros` before | `senioros` after |
+|---|---|---|---|---|
+| `o4` | 0/5 | 3/5 | 1/5 | 5/5 |
+| `o5` | 2/5 | 5/5 | 0/5 | 5/5 |
+| Avg cost per run (USD) | 0.23 | 0.31 | 0.33 | 0.33 |
+
+- Before the fix, SeniorOS found the cause of `o5` and stopped to ask, because it lay beyond the named function and
+  near saved data, and `senior-debugging` never loaded (the request read as a one-file fix). Superpowers loaded
+  `systematic-debugging` in 5 of 5 runs. On `o4` SeniorOS indexed its own loop but never ran the import at the
+  volume the seed shows.
+- The fix: a reported bug is not a low-risk edit and goes to `senior-debugging`, which reproduces through the real
+  entry points and fixes the cause wherever it is (only rewriting saved data needs approval); `senior-engineering`
+  runs the changed path at the volume the repository shows before saying done.
+- The held-out tasks `o9`–`o16` scored 23/24 for Opus alone, so they guard against a pack making Opus worse rather
+  than show a win. Tasks Opus fails are rare: 2 of 16 here.
+
 ## Arms
 
 | Arm | What is loaded |
