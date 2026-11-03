@@ -89,8 +89,13 @@ Each starts as a bench task the current skills fail; the skill ships only if it 
 
 - [ ] `senior-review-response`: answer review comments with evidence, fix what is real, push back on what is not
       (in practice, Codex review found real defects in #17, #18 and #22)
-- [ ] `senior-plan`: a written plan for multi-step work, checked against the result at finish (built with bench tasks
-      `h12`/`h13`; waiting on the measurement)
+- [x] Planning before the first edit: shipped as routing rules, not as a skill. The `senior-plan` skill tied the
+      rules alone on `h12`/`h13` (15/16 each), so it is parked in `experiments/senior-plan/`
+- [ ] Brainstorming for ambiguous requests: lay out two or three designs and ask before building. Starts as a bench
+      task where the request is ambiguous and the model alone builds the wrong thing
+- [ ] Study open-source coding agents (Codex CLI, OpenCode, Kimi CLI and others) for techniques in context,
+      planning and verification; take ideas, not code unless the license allows it and it is credited, and ship only
+      what wins on the bench
 - [ ] Parallel work: worktrees, file claims, handoffs and an independent reviewer
 - [ ] `senior review-pack`: a self-contained bundle for a fresh-context reviewer
 - [ ] Secret-safe evidence bundle and complexity budget

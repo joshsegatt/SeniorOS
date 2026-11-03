@@ -26,7 +26,7 @@ test('every host routes the same surfaces and the same planning cases', () => {
     const routing = bullet(text, 'Routing');
     assert.match(lowRisk, /Renaming or reshaping a field, key or type that other modules or saved data read is not a low-risk edit\./, file);
     assert.match(routing, /\(auth, data, stored records, migrations, public APIs, CI, deployment\)/, file);
-    assert.match(routing, /when it also has several steps, changes a shared contract or stored data, or can fail halfway, plan it with `senior-plan` before the first edit/, file);
+    assert.match(routing, /when it also has several steps, changes a shared contract or stored data, or can fail halfway, plan it before the first edit: find every reader of what changes and the data already saved in the old shape, and decide what happens if a step fails halfway, runs twice or meets old data./, file);
     for (const skill of ['senior-engineering', 'senior-debugging', 'senior-code-review', 'senior-finish']) assert.ok(routing.includes(`\`${skill}\``), `${file}: ${skill}`);
   }
 });

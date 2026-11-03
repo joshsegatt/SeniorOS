@@ -231,6 +231,8 @@ Split of routing and skill (Haiku, harder `h12` with returned lines, 8 trials, 6
 - The skill's own procedure adds nothing measurable here, at about the same cost (61 s and 14–15 tool calls a run).
 - `h12` still does not separate the model alone (8/8), even with returned lines. The `senioros` failure was a
   cancel of an unknown order that did not fail; both `senioros-baseline` failures restocked after a declined refund.
+- Decision: the planning steps went into the rules and `senior-engineering`, and the skill moved to
+  `experiments/senior-plan/`.
 
 First calibration (Gemini 3.8 Flash, model alone, 2 trials): `h1` 2/2, `h2` 2/2, `h3` 2/2, `h4` 2/2, `h5` 0/2.
 Only `h5` discriminates: both times the model fixed the tested 404 and missed the two untested auth regressions in
@@ -257,7 +259,7 @@ confirmation even when the request sounds explicit. The report shows it as its o
 | `superpowers` | [obra/superpowers](https://github.com/obra/superpowers) skills, as its Antigravity plugin ships them (bootstrapped by the `using-superpowers` description) |
 | `senioros` | The SeniorOS Antigravity adapter: `senior-*` skills, `adapters/antigravity/rules.md` and the three hooks |
 | `senioros-skills` | SeniorOS skills and rules without hooks, to isolate what the hooks add |
-| `senioros-noplan` | This checkout without the `senior-plan` skill: the rules still say when to plan, but the skill's procedure is not there to load, to split what the routing adds from what the skill adds (Claude backend) |
+| `senioros-noplan` | This checkout without a `skills/senior-plan` folder, used to split what the planning rules add from what the skill added. Since the skill moved to `experiments/`, it runs the same pack as `senioros` (Claude backend) |
 | `senioros-baseline` | Another SeniorOS checkout, named by `SENIOROS_BENCH_BASELINE` (for example a worktree of `main`), to measure one change such as a new skill against the version without it (Claude backend) |
 
 While the bench runs, your global Antigravity config is swapped per arm: `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`,

@@ -1,6 +1,6 @@
 {
   "id": "plan-cancel-order",
-  "skill": "senior-plan",
+  "skill": "senior-engineering",
   "prompt": "Add cancelOrder(id): it refunds the payment through the gateway, puts the items back in stock and marks the order cancelled.",
   "expected": {
     "shouldTrigger": true,
