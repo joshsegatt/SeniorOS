@@ -30,7 +30,9 @@ export function rulesFor(rules, { hasSeniorDir, hasCli }) {
     .join('\n');
 }
 
-if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
+// A suffix match, as the other hooks use: an exact path comparison fails behind a symlink or a different drive-letter
+// case, and the session would start without the rules.
+if (/[\\/]claude-code[\\/]hooks[\\/]session-start\.mjs$/.test(process.argv[1] ?? '')) {
   try {
     const rules = readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'rules.md'), 'utf8');
     const additionalContext = rulesFor(rules, { hasSeniorDir: existsSync(join(sessionCwd(), '.senior')), hasCli: onPath('senior') });

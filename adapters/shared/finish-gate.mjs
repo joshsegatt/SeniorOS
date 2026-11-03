@@ -47,7 +47,10 @@ function runFinish(root, deadline) {
  */
 export function reportCoversReview(text) {
   if (typeof text !== 'string') return false;
-  return /\b(READY WITH RESIDUAL RISK|READY|NOT PROVEN|BLOCKED)\b/.test(text) && /\brisks?\b/i.test(text);
+  const STATUS = /\b(READY WITH RESIDUAL RISK|NOT READY|READY|NOT PROVEN|BLOCKED)\b/g;
+  if (!STATUS.test(text)) return false;
+  // The status "READY WITH RESIDUAL RISK" says risk but names none: the reply must mention a risk outside the status.
+  return /\brisks?\b/i.test(text.replace(STATUS, ' '));
 }
 
 /**

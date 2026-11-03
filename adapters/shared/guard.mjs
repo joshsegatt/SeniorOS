@@ -8,6 +8,14 @@ export const guardMessage = (reason) =>
   `SeniorOS guard: ${reason}. Show the user what would be lost and get explicit confirmation first.`;
 
 /**
+ * For a host that refuses instead of asking. Codex appends ". Command: <command>", so it ends without a period.
+ * @param {string} reason
+ */
+export const denyMessage = (reason) =>
+  `SeniorOS guard: ${reason}. This command was not run. Show the user exactly what it would change or lose, and ` +
+  'ask them to run it themselves if they confirm. Do not try another command that does the same thing';
+
+/**
  * Files a patch in the `apply_patch` format adds, updates, deletes or moves to.
  * @param {unknown} patch
  * @returns {string[]}

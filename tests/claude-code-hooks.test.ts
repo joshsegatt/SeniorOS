@@ -92,6 +92,7 @@ test('the finish gate skips its risk review when the final reply already names r
   assert.equal(reportCoversReview('Two risks, both ruled out by the import test. READY'), true);
   assert.equal(reportCoversReview('Fixed the bug, all tests pass. Ready to merge.'), false, 'no ship status');
   assert.equal(reportCoversReview('Status: READY'), false, 'no risk named');
+  assert.equal(reportCoversReview('Done. READY WITH RESIDUAL RISK'), false, 'the status alone names no risk');
   assert.equal(reportCoversReview(undefined), false);
 });
 

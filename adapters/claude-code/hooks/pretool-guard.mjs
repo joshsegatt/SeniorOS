@@ -3,8 +3,7 @@
 // hooks or plugins. Unflagged commands get no answer, which leaves Claude Code's own permission
 // flow in place. Fails open.
 import { readFileSync } from 'node:fs';
-import { classify, editReason, guardMessage } from '../../shared/guard.mjs';
-import { denyMessage } from '../../codex/hooks/guard.mjs';
+import { classify, denyMessage, editReason, guardMessage } from '../../shared/guard.mjs';
 
 const SHELL_TOOLS = new Set(['Bash', 'run_terminal_command', 'Shell']);
 
