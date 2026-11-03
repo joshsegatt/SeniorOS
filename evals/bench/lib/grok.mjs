@@ -64,8 +64,16 @@ function hookContext(cmd, args, input, pluginDir) {
 
 /** The user's login without its refresh token, so runs cannot rotate it. */
 export function accessOnlyAuth(text = readFileSync(join(homedir(), '.grok', 'auth.json'), 'utf8')) {
+  // Every refresh token at any depth, whatever its spelling, so no future file shape lets a run rotate the login.
+  const strip = (value) => {
+    if (!value || typeof value !== 'object') return;
+    for (const key of Object.keys(value)) {
+      if (/^refresh[_-]?token$/i.test(key)) delete value[key];
+      else strip(value[key]);
+    }
+  };
   const auth = JSON.parse(text);
-  for (const entry of Object.values(auth)) if (entry && typeof entry === 'object') delete entry.refresh_token;
+  strip(auth);
   return JSON.stringify(auth);
 }
 

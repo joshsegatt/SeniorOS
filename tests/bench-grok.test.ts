@@ -20,6 +20,8 @@ const AUTH = JSON.stringify({ 'https://auth.x.ai::id': { key: 'access', refresh_
 test('the Grok login copied into a run has no refresh token', () => {
   const copy = JSON.parse(grok.accessOnlyAuth(AUTH));
   assert.deepEqual(copy, { 'https://auth.x.ai::id': { key: 'access', expires_at: 'later' } });
+  const nested = JSON.parse(grok.accessOnlyAuth(JSON.stringify({ a: { tokens: { refreshToken: 'r', access: 'x' } }, refresh_token: 'top' })));
+  assert.deepEqual(nested, { a: { tokens: { access: 'x' } } }, 'refresh tokens at any depth and spelling are removed');
 });
 
 test('each Grok arm gets its own home: none installs nothing, senioros its plugin and session rules', () => {

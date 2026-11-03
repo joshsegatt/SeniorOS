@@ -18,11 +18,11 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
   probe                         One live harness check inside Antigravity (run this first)
   isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
-      --arms none,superpowers,senioros   (also: senioros-skills, senioros-noplan, senioros-baseline)
+      --arms none,superpowers,senioros   (also: senioros-skills, senioros-baseline)
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills|senioros-noplan|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros)
+      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)
@@ -166,7 +166,7 @@ async function runBench(args) {
   // Claude Code and Grok arms are per run (flags or a run's own home); every other backend swaps the global Antigravity config.
   const perProcessArms = backend === 'claude' || backend === 'grok';
   const known = backend === 'grok' ? GROK_ARMS : perProcessArms ? CLAUDE_ARMS : ARMS;
-  for (const a of arms) if (!(a in known)) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
+  for (const a of arms) if (!Object.hasOwn(known, a)) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
   // An arm that cannot start (a missing baseline checkout) must stop the bench, not grade every run as a failure.
   if (backend === 'claude') for (const a of arms) if (typeof known[a] === 'function') known[a]();
   const model = option(args, 'model', backend === 'grok' ? 'grok-4.7' : perProcessArms ? 'haiku' : 'flash');

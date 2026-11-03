@@ -15,7 +15,8 @@ test('bench grader passes every good reference solution and fails every bad or n
       cwd: root,
       encoding: 'utf8',
       env: { ...process.env, SENIOROS_BENCH_HOME: home },
-      timeout: 300_000,
+      // About 4.5 minutes alone with the 32 Opus-set tasks, longer beside the rest of the suite.
+      timeout: 900_000,
     });
     assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
     assert.match(result.stdout, /Grader verified/);

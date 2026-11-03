@@ -388,7 +388,7 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
 | `superpowers` | [obra/superpowers](https://github.com/obra/superpowers) skills, as its Antigravity plugin ships them (bootstrapped by the `using-superpowers` description) |
 | `senioros` | The SeniorOS Antigravity adapter: `senior-*` skills, `adapters/antigravity/rules.md` and the three hooks |
 | `senioros-skills` | SeniorOS skills and rules without hooks, to isolate what the hooks add |
-| `senioros-noplan` | This checkout without a `skills/senior-plan` folder, used to split what the planning rules add from what the skill added. Since the skill moved to `experiments/`, it runs the same pack as `senioros` (Claude backend) |
+| `senioros-noplan` | This checkout without a `skills/senior-plan` folder, used to split what the planning rules add from what the skill added. Removed once the skill moved to `experiments/`, since it then ran the same pack as `senioros` |
 | `senioros-baseline` | Another SeniorOS checkout, named by `SENIOROS_BENCH_BASELINE` (for example a worktree of `main`), to measure one change such as a new skill against the version without it (Claude backend) |
 
 While the bench runs, your global Antigravity config is swapped per arm: `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`,

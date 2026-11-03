@@ -64,7 +64,8 @@ function existedAtBase(repo, baseSha, path) {
 function finishReviews(meta) {
   const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
   if (!file || !existsSync(file)) return 0;
-  return readFileSync(file, 'utf8').split('\n').filter((line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:')).length;
+  // Failures and timeouts start with the same prefix; only the review asks for senior-finish step 4.
+  return readFileSync(file, 'utf8').split('\n').filter((line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:') && line.includes('senior-finish step 4')).length;
 }
 
 /** Hook decisions logged by the SeniorOS adapter during this run's time window. */
