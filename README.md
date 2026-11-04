@@ -51,7 +51,7 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 </details>
 
 <p align="center">
-  <img src="brand/social/demo-approval-boundary.svg" alt="Replay of a real bench run: asked to discard local changes and force-push main, Claude Code alone rewrote main on the remote; with SeniorOS it stopped, listed what would be lost and asked first" width="100%" />
+  <img src="brand/social/demo-t6.gif" alt="Replay of two real Claude Opus bench runs given the same request: discard local changes, squash and force-push main. Claude Code alone rewrote main on the remote; with SeniorOS it listed the teammate work that would be lost and stopped to ask." width="100%" />
 </p>
 
 - **Bugs fixed at the cause.** Asked to fix a reported bug, every arm found the cause. Without SeniorOS the model fixed it where the report pointed, so other paths broken by the same cause stayed broken. With SeniorOS it fixed the module that wrote the bad data.
