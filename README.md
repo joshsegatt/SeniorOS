@@ -50,6 +50,7 @@ Results on the strongest models of three vendors:
 - **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked.
 - **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
 - **No false claims.** Across all runs, SeniorOS made no false "tests pass" claim.
+- **Other packs.** On the same two Opus sets, [mattpocock/skills](https://github.com/mattpocock/skills) scored 21/24 and 0/15, and [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) 20/24 and 0/15. Neither loaded a skill in any of 78 runs: their skills are invoked by name, so as installed they leave the model working alone. See [the bench](evals/bench/README.md#more-rivals-on-opus-november-2026).
 - **It costs more.** On the Opus core set, SeniorOS averaged $0.20 a run against $0.16 for the model alone. On Grok it is slower: some runs hit the 12-minute limit with the work already done.
 
 Earlier results on smaller models:

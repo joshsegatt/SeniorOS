@@ -16,6 +16,9 @@ export const BENCH_HOME = process.env.SENIOROS_BENCH_HOME || join(homedir(), 'se
 /** The Antigravity customization home. Override to test arm switching against a scratch folder. */
 export const GEMINI_HOME = process.env.SENIOROS_BENCH_GEMINI_HOME || join(homedir(), '.gemini');
 export const SUPERPOWERS_DIR = process.env.SENIOROS_BENCH_SUPERPOWERS || join(homedir(), 'review-superpowers');
+/** Rival packs measured on the Claude backend: clones of mattpocock/skills and EveryInc/compound-engineering-plugin. */
+export const POCOCK_DIR = process.env.SENIOROS_BENCH_POCOCK || join(homedir(), 'review-mattpocock');
+export const COMPOUND_DIR = process.env.SENIOROS_BENCH_COMPOUND || join(homedir(), 'review-compound');
 export const HOOK_LOG = join(REPO_ROOT, 'adapters', 'antigravity', 'hooks', 'hooks.log');
 
 /**

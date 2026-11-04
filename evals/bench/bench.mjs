@@ -22,7 +22,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros)
+      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)

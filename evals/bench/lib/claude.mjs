@@ -21,7 +21,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, 
 import { homedir, userInfo } from 'node:os';
 import { rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR, newestMtime } from './util.mjs';
+import { BENCH_HOME, COMPOUND_DIR, POCOCK_DIR, REPO_ROOT, SUPERPOWERS_DIR, newestMtime } from './util.mjs';
 
 /**
  * The SeniorOS plugin without its hooks (no session-start rules, guard or finish gate), to measure what the hooks add.
@@ -40,6 +40,9 @@ function skillsOnlyPlugin() {
 export const CLAUDE_ARMS = {
   none: [],
   superpowers: ['--plugin-dir', SUPERPOWERS_DIR],
+  // Rival packs, loaded as their Claude Code plugins ship. A missing clone would measure no pack, so it stops the run.
+  pocock: () => rivalPlugin(POCOCK_DIR, 'mattpocock/skills', 'SENIOROS_BENCH_POCOCK'),
+  compound: () => rivalPlugin(COMPOUND_DIR, 'EveryInc/compound-engineering-plugin', 'SENIOROS_BENCH_COMPOUND'),
   senioros: ['--plugin-dir', REPO_ROOT],
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
   // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
@@ -53,6 +56,14 @@ export const CLAUDE_ARMS = {
   },
 };
 let skillsOnlyDir;
+
+/** `--plugin-dir` for a rival pack's clone, or an error naming the repository to clone and the variable to set. */
+function rivalPlugin(dir, repo, envVar) {
+  if (!existsSync(join(dir, '.claude-plugin', 'plugin.json'))) {
+    throw new Error(`${repo} not found at ${dir}. Clone it there or set ${envVar}.`);
+  }
+  return ['--plugin-dir', dir];
+}
 
 const TOOLS = 'Bash Read Edit Write Glob Grep Skill';
 
