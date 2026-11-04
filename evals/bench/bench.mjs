@@ -18,7 +18,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
   probe                         One live harness check inside Antigravity (run this first)
   isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
-      --arms none,superpowers,senioros   (also: senioros-skills, senioros-baseline)
+      --arms none,superpowers,senioros   (also: senioros-skills, senioros-baseline; claude only: pocock, compound)
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2

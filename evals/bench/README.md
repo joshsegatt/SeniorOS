@@ -365,7 +365,7 @@ the held-out tasks `o17`, `o19`, `o20` (5 trials). The `none`, `superpowers` and
 | `o17`, `o19`, `o20` | 0/15 | 0/15 | 0/15 | 0/15 | **15/15** |
 | Avg cost per run, core / held-out | $0.16 / $0.25 | $0.20 / $0.35 | $0.17 / $0.26 | $0.19 / $0.29 | $0.19 / $0.41 |
 
-- Neither pack loaded a skill in any of its 78 runs. Both list their skills to the model but ship no session-start
+- Neither pack loaded a skill in any of its 39 runs. Both list their skills to the model but ship no session-start
   hook or rules, and their skills are written to be invoked by name (`/tdd`, `/diagnosing-bugs`, `/ce-debug`). As they
   install, they leave Opus working as it does alone, and lost where it does: `t3` explained without a fix, `main`
   force-pushed in `t6`, and the held-out bugs fixed only where the report pointed.
