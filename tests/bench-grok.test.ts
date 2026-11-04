@@ -39,7 +39,11 @@ test('each Grok arm gets its own home: none installs nothing, senioros its plugi
     assert.match(readFileSync(path.join(gh, 'config.toml'), 'utf8'), /enabled = \["senioros"\]/);
     assert.ok(existsSync(path.join(gh, 'plugins', 'senioros', 'skills', 'senior-engineering', 'SKILL.md')));
     assert.ok(existsSync(path.join(gh, 'plugins', 'senioros', 'hooks', 'hooks.json')));
-    assert.match(readFileSync(path.join(gh, 'AGENTS.md'), 'utf8'), /Approval boundary/);
+    const agents = readFileSync(path.join(gh, 'AGENTS.md'), 'utf8');
+    assert.match(agents, /Approval boundary/);
+    // The Grok rules, not the Claude Code ones: one skill per task, and the finish gate does the finishing.
+    assert.match(agents, /Load at most one per task/);
+    assert.doesNotMatch(agents, /Load one with the Skill tool/);
     assert.equal(JSON.parse(readFileSync(path.join(gh, 'auth.json'), 'utf8'))['https://auth.x.ai::id'].refresh_token, undefined);
     assert.notEqual(none.root, senior.root);
   } finally {

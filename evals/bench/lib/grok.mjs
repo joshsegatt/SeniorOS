@@ -16,7 +16,8 @@ import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join, sep } from 'node:path';
+import { delimiter, join, resolve, sep } from 'node:path';
+import { rulesFor } from '../../../adapters/claude-code/hooks/session-start.mjs';
 import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
 
 const GROK = process.env.SENIOROS_BENCH_GROK ?? join(homedir(), '.grok', 'bin', process.platform === 'win32' ? 'grok.exe' : 'grok');
@@ -25,12 +26,23 @@ const RM = { recursive: true, force: true, maxRetries: 10, retryDelay: 250 };
 /** What each arm installs: a plugin folder to copy and how to get the context its session start injects. */
 export const GROK_ARMS = {
   none: null,
+  // The plugin as the README installs it for Grok: its hooks, and the Grok rules in AGENTS.md (Grok's session-start
+  // hooks cannot add context), without the lines that cannot apply, as the Claude Code session start drops them.
   senioros: {
     name: 'senioros',
-    copy: (dest) => {
-      for (const part of ['.claude-plugin', 'hooks', 'adapters', 'skills', 'rules']) cpSync(join(REPO_ROOT, part), join(dest, part), { recursive: true });
+    copy: (dest) => copyPlugin(REPO_ROOT, dest),
+    context: (pluginDir, repo) => {
+      const grokRules = join(pluginDir, 'adapters', 'grok', 'rules.md');
+      if (!existsSync(grokRules)) return hookContext(process.execPath, [join(pluginDir, 'adapters', 'claude-code', 'hooks', 'session-start.mjs')], { cwd: repo }, pluginDir);
+      return rulesFor(readFileSync(grokRules, 'utf8'), { hasSeniorDir: existsSync(join(repo, '.senior')), hasCli: onPath('senior') });
     },
-    context: (pluginDir, repo) => hookContext(process.execPath, [join(pluginDir, 'adapters', 'claude-code', 'hooks', 'session-start.mjs')], { cwd: repo }, pluginDir),
+  },
+  // Another SeniorOS checkout (SENIOROS_BENCH_BASELINE), installed the same way, to measure a change against it.
+  // A checkout without Grok rules gets its Claude Code session-start context, as releases up to 0.9 were measured.
+  'senioros-baseline': {
+    name: 'senioros',
+    copy: (dest) => copyPlugin(baselineDir(), dest),
+    context: (pluginDir, repo) => GROK_ARMS.senioros.context(pluginDir, repo),
   },
   superpowers: {
     name: 'superpowers',
@@ -41,6 +53,22 @@ export const GROK_ARMS = {
     context: (pluginDir, repo) => hookContext('bash', [join(pluginDir, 'hooks', 'session-start')], { cwd: repo }, pluginDir),
   },
 };
+
+/** Copies the parts of a SeniorOS checkout that its plugin needs. */
+function copyPlugin(from, dest) {
+  for (const part of ['.claude-plugin', 'hooks', 'adapters', 'skills', 'rules']) cpSync(join(from, part), join(dest, part), { recursive: true });
+}
+
+/** The baseline checkout, or an error: a wrong path would measure no pack. */
+function baselineDir() {
+  const dir = process.env.SENIOROS_BENCH_BASELINE && resolve(process.env.SENIOROS_BENCH_BASELINE);
+  if (!dir || !existsSync(join(dir, '.claude-plugin', 'plugin.json'))) {
+    throw new Error('The senioros-baseline arm needs SENIOROS_BENCH_BASELINE: the path of a SeniorOS checkout (with .claude-plugin/plugin.json) to compare against.');
+  }
+  return dir;
+}
+
+const onPath = (name) => (process.env.PATH ?? '').split(delimiter).some((dir) => dir && ['', '.cmd', '.exe'].some((ext) => existsSync(join(dir, name + ext))));
 
 /**
  * Runs a pack's session-start hook the way a host would and returns the context it adds.

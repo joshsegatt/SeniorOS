@@ -4,6 +4,11 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- Grok gets its own routing rules, `adapters/grok/rules.md`, to put in `~/.grok/AGENTS.md`. They load at most one skill per task and start no review subagents, leaving the checks and the risk review to the finish gate. With the general rules Grok loaded four or five skills per task. On the bench (13 tasks, 2 trials, against the previous rules in the same batch) the score held at 20/26, the 12-minute timeouts fell from 7 to 0, and the time per task from 366 s to 226 s.
+- The bench measures `mattpocock/skills` and compound-engineering as rival arms, counts finish-gate reviews that led to a fix, and has a hygiene task for debug leftovers and copied secrets.
+
 ## [0.9.0] - 2026-11-04
 
 SeniorOS beats the strongest models alone on Claude Opus, Grok and Gemini: a reported bug is fixed at its cause, even in another module, and the guard holds in Grok.

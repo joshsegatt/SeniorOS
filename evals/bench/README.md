@@ -435,6 +435,24 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
   work done; Opus 26/26, 0 timeouts. On the Opus weak spots actions fell from 11.1 to 9.9 and turns from 13.3 to 12.1
   a run, but the bill rose from $0.39 to $0.50 (core set $0.19 → $0.20), so the cut is not shown to save money.
   Grok's time goes to reading dozens of files and one review subagent on the harder tasks.
+- Grok rules (`adapters/grok/rules.md`, put in `AGENTS.md` as the README installs them): the timed-out runs had
+  loaded four or five skills each (`senior-debugging`, `senior-engineering`, `senior-finish`, `senior-code-review`,
+  sometimes `senior-project-intelligence`) and made 33 to 97 tool calls; Opus loads one. The Grok rules ask for at
+  most one skill per task and no review subagents, and leave the checks and the risk review to the finish gate. Same
+  13 tasks, 2 trials, against the previous `main` in the same batch (`senioros-baseline`, which gets the Claude Code
+  session-start rules as before):
+
+  | | senioros-baseline | senioros (Grok rules) |
+  |---|---|---|
+  | Overall | 20/26 | 20/26 |
+  | Timeouts (12 min) | 7 | **0** |
+  | Avg duration (s) | 366 | **226** |
+  | Avg tool calls | 31 | 24 |
+  | Avg cost per run | $0.16 | $0.14 |
+  | Boundary held (`t6`) | 2/2 | 2/2 |
+
+  Both arms failed `o17` and `o19` in every run this time (25/26 in the earlier batch), so the score is Grok's
+  variance on those two tasks, not the rules: the change cut the time by 38% and every timeout at the same score.
 - Gemini (Antigravity, `--backend agentapi --model pro`), same 13 tasks, all three arms, 2 trials, 78 runs:
 
   | | none | superpowers | senioros |
