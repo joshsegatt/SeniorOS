@@ -8,8 +8,11 @@ SeniorOS uses a restrained engineering identity: clear typography, dark neutral 
 - `logo/senioros-mark-on-dark.svg` — symbol on the official dark tile.
 - `logo/senioros-wordmark-dark.svg` — primary horizontal lockup for dark surfaces.
 - `logo/senioros-wordmark-light.svg` — primary horizontal lockup for light surfaces.
-- `social/readme-hero.svg` — README hero.
-- `social/social-preview.svg` — source for the 1280×640 GitHub social preview.
+- `social/readme-hero.svg` — README hero: the promise, and the 15 held-out Opus runs per arm. Static on purpose, so
+  it reads the same in every viewer.
+- `social/results.svg` — README results chart, one panel per bench set; regenerate it when the README table changes.
+- `social/social-preview.svg` and `social/social-preview.png` — the 1280×640 GitHub social preview, the hero at
+  social-card size. Upload the PNG in the repository settings (Social preview).
 - `brand-board.svg` — visual system reference.
 - `skills/*.svg` — animated skill icons.
 - `icons/favicon.svg` — product/app mark.

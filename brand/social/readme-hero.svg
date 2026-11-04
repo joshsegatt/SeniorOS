@@ -1,1 +1,73 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-label="SeniorOS engineering discipline for coding agents"><defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07101E"/><stop offset="1" stop-color="#101B2D"/></linearGradient><linearGradient id="blue" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6BB6FF"/><stop offset="1" stop-color="#2F80FF"/></linearGradient></defs><rect width="1600" height="620" rx="36" fill="url(#bg)"/><path d="M0 520 C360 450 520 580 840 510 S1320 420 1600 500" fill="none" stroke="#1E2B42" stroke-width="2"/><g transform="translate(105 100) scale(1.5)"><path d="M74 19 50 6 21 23 49 40 76 55 49 72 21 57" fill="none" stroke="url(#blue)" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/></g><text x="285" y="176" fill="#F8FAFC" font-size="92" font-weight="780" font-family="Inter,Segoe UI,Arial,sans-serif">Senior<tspan fill="url(#blue)">OS</tspan></text><text x="105" y="268" fill="#D6E2F2" font-size="36" font-weight="640" font-family="Inter,Segoe UI,Arial,sans-serif">Engineering discipline for coding agents.</text><text x="105" y="316" fill="#94A3B8" font-size="24" font-family="Inter,Segoe UI,Arial,sans-serif">Context-aware. Risk-adaptive. Evidence-backed.</text><g transform="translate(105 386)" font-family="Inter,Segoe UI,Arial,sans-serif"><g><rect width="205" height="76" rx="15" fill="#0D182A" stroke="#263853"/><text x="24" y="33" fill="#93C5FD" font-size="15" font-weight="700">01 · UNDERSTAND</text><text x="24" y="57" fill="#F8FAFC" font-size="18">Goal + context</text></g><g transform="translate(225)"><rect width="205" height="76" rx="15" fill="#0D182A" stroke="#263853"/><text x="24" y="33" fill="#93C5FD" font-size="15" font-weight="700">02 · ASSESS</text><text x="24" y="57" fill="#F8FAFC" font-size="18">Risk + scope</text></g><g transform="translate(450)"><rect width="205" height="76" rx="15" fill="#0D182A" stroke="#263853"/><text x="24" y="33" fill="#93C5FD" font-size="15" font-weight="700">03 · EXECUTE</text><text x="24" y="57" fill="#F8FAFC" font-size="18">Right-sized work</text></g><g transform="translate(675)"><rect width="205" height="76" rx="15" fill="#0D182A" stroke="#263853"/><text x="24" y="33" fill="#93C5FD" font-size="15" font-weight="700">04 · PROVE</text><text x="24" y="57" fill="#F8FAFC" font-size="18">Checks + evidence</text></g><g transform="translate(900)"><rect width="205" height="76" rx="15" fill="#0D182A" stroke="#263853"/><text x="24" y="33" fill="#93C5FD" font-size="15" font-weight="700">05 · REVIEW</text><text x="24" y="57" fill="#F8FAFC" font-size="18">Diff + regressions</text></g></g><text x="105" y="560" fill="#7F93AF" font-size="18" letter-spacing="2" font-family="Inter,Segoe UI,Arial,sans-serif">OPEN SOURCE · BUILT BY JOSH SEGATT</text></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="620" viewBox="0 0 1600 620" role="img" aria-labelledby="t d">
+  <title id="t">SeniorOS: coding agents that prove their work</title>
+  <desc id="d">Measured on Claude Opus, three held-out tasks where a bug is reported in one module and caused in another, five trials each: Opus alone fixed 0 of 15, with Superpowers 0 of 15, with SeniorOS 15 of 15.</desc>
+  <style>
+    .ui { font-family: Inter, "Segoe UI", Arial, sans-serif; }
+    .mono { font-family: "JetBrains Mono", Consolas, Menlo, monospace; }
+  </style>
+
+  <rect width="1600" height="620" rx="20" fill="#07101E"/>
+  <rect x="0.5" y="0.5" width="1599" height="619" rx="20" fill="none" stroke="#263853"/>
+
+  <!-- Left: who it is for and what it does -->
+  <g transform="translate(80 78) scale(0.86)">
+    <path d="M74 19 50 6 21 23 49 40 76 55 49 72 21 57" fill="none" stroke="#2F80FF" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <text class="ui" x="162" y="128" fill="#F8FAFC" font-size="44" font-weight="700" letter-spacing="-0.5">SeniorOS</text>
+
+  <text class="ui" x="80" y="246" fill="#F8FAFC" font-size="62" font-weight="700" letter-spacing="-1.6">Coding agents that</text>
+  <text class="ui" x="80" y="318" fill="#F8FAFC" font-size="62" font-weight="700" letter-spacing="-1.6">prove their work.</text>
+
+  <text class="ui" x="80" y="384" fill="#94A3B8" font-size="25">Skills, a guard for destructive commands and a</text>
+  <text class="ui" x="80" y="420" fill="#94A3B8" font-size="25">finish gate that runs your checks before "done".</text>
+
+  <rect x="80" y="486" width="246" height="56" rx="12" fill="none" stroke="#2F80FF"/>
+  <text class="mono" x="104" y="522" fill="#F8FAFC" font-size="24"><tspan fill="#94A3B8">$ </tspan>npx senioros</text>
+  <text class="ui" x="352" y="509" fill="#94A3B8" font-size="22">Claude Code · Codex · Cursor · OpenCode</text>
+  <text class="ui" x="352" y="541" fill="#94A3B8" font-size="22">Antigravity · Grok · Apache-2.0</text>
+
+  <!-- Right: one real result, every run shown -->
+  <rect x="860" y="72" width="660" height="476" rx="12" fill="none" stroke="#263853"/>
+  <text class="ui" x="900" y="128" fill="#F8FAFC" font-size="28" font-weight="600">A bug reported in one module,</text>
+  <text class="ui" x="900" y="164" fill="#F8FAFC" font-size="28" font-weight="600">caused in another</text>
+  <text class="ui" x="900" y="202" fill="#94A3B8" font-size="22">Claude Opus · 3 held-out tasks × 5 trials · hidden tests</text>
+
+  <g class="ui" font-size="23">
+    <g>
+      <text x="900" y="256" fill="#94A3B8">Opus alone</text>
+      <text x="1480" y="256" fill="#94A3B8" text-anchor="end" font-weight="600">0/15</text>
+      <g fill="none" stroke="#EF4444" stroke-opacity="0.75" stroke-width="2">
+        <rect x="901" y="270" width="26" height="26" rx="5"/><rect x="937" y="270" width="26" height="26" rx="5"/><rect x="973" y="270" width="26" height="26" rx="5"/><rect x="1009" y="270" width="26" height="26" rx="5"/><rect x="1045" y="270" width="26" height="26" rx="5"/><rect x="1081" y="270" width="26" height="26" rx="5"/><rect x="1117" y="270" width="26" height="26" rx="5"/><rect x="1153" y="270" width="26" height="26" rx="5"/><rect x="1189" y="270" width="26" height="26" rx="5"/><rect x="1225" y="270" width="26" height="26" rx="5"/><rect x="1261" y="270" width="26" height="26" rx="5"/><rect x="1297" y="270" width="26" height="26" rx="5"/><rect x="1333" y="270" width="26" height="26" rx="5"/><rect x="1369" y="270" width="26" height="26" rx="5"/><rect x="1405" y="270" width="26" height="26" rx="5"/>
+      </g>
+    </g>
+    <g>
+      <text x="900" y="342" fill="#94A3B8">Opus + Superpowers</text>
+      <text x="1480" y="342" fill="#94A3B8" text-anchor="end" font-weight="600">0/15</text>
+      <g fill="none" stroke="#EF4444" stroke-opacity="0.75" stroke-width="2">
+        <rect x="901" y="356" width="26" height="26" rx="5"/><rect x="937" y="356" width="26" height="26" rx="5"/><rect x="973" y="356" width="26" height="26" rx="5"/><rect x="1009" y="356" width="26" height="26" rx="5"/><rect x="1045" y="356" width="26" height="26" rx="5"/><rect x="1081" y="356" width="26" height="26" rx="5"/><rect x="1117" y="356" width="26" height="26" rx="5"/><rect x="1153" y="356" width="26" height="26" rx="5"/><rect x="1189" y="356" width="26" height="26" rx="5"/><rect x="1225" y="356" width="26" height="26" rx="5"/><rect x="1261" y="356" width="26" height="26" rx="5"/><rect x="1297" y="356" width="26" height="26" rx="5"/><rect x="1333" y="356" width="26" height="26" rx="5"/><rect x="1369" y="356" width="26" height="26" rx="5"/><rect x="1405" y="356" width="26" height="26" rx="5"/>
+      </g>
+    </g>
+    <g>
+      <text x="900" y="428" fill="#F8FAFC" font-weight="600">Opus + <tspan fill="#2F80FF">SeniorOS</tspan></text>
+      <text x="1480" y="428" fill="#22C55E" text-anchor="end" font-weight="700">15/15</text>
+      <g fill="#22C55E">
+        <rect x="900" y="441" width="28" height="28" rx="5"/>
+        <rect x="936" y="441" width="28" height="28" rx="5"/>
+        <rect x="972" y="441" width="28" height="28" rx="5"/>
+        <rect x="1008" y="441" width="28" height="28" rx="5"/>
+        <rect x="1044" y="441" width="28" height="28" rx="5"/>
+        <rect x="1080" y="441" width="28" height="28" rx="5"/>
+        <rect x="1116" y="441" width="28" height="28" rx="5"/>
+        <rect x="1152" y="441" width="28" height="28" rx="5"/>
+        <rect x="1188" y="441" width="28" height="28" rx="5"/>
+        <rect x="1224" y="441" width="28" height="28" rx="5"/>
+        <rect x="1260" y="441" width="28" height="28" rx="5"/>
+        <rect x="1296" y="441" width="28" height="28" rx="5"/>
+        <rect x="1332" y="441" width="28" height="28" rx="5"/>
+        <rect x="1368" y="441" width="28" height="28" rx="5"/>
+        <rect x="1404" y="441" width="28" height="28" rx="5"/>
+      </g>
+    </g>
+  </g>
+  <text class="ui" x="900" y="518" fill="#94A3B8" font-size="21">mattpocock/skills and compound-engineering: 0/15 as well</text>
+</svg>
