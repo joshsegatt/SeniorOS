@@ -63,6 +63,8 @@ async function selftest() {
           rmSync(join(meta.repo, 'commands.json'), { force: true });
         }
       }
+      // A reference has no conversation: an empty transcript says the agent wrote nothing beyond its files.
+      writeFileSync(join(meta.runDir, 'transcript.jsonl'), '');
       const result = gradeRun(meta, task);
       const expected = variant === 'good' || (variant === 'noop' && task.noopPasses === true);
       const ok = result.pass === expected;
