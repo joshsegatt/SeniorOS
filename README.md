@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="brand/social/readme-hero.svg" alt="SeniorOS — Engineering discipline for coding agents" width="100%" />
+  <img src="brand/social/readme-hero.svg" alt="SeniorOS: coding agents that prove their work. On Claude Opus, for a bug reported in one module and caused in another, Opus alone fixed 0 of 15, with Superpowers 0 of 15, with SeniorOS 15 of 15." width="100%" />
 </p>
 
 <p align="center">
@@ -7,12 +7,13 @@
   <a href="https://www.npmjs.com/package/senioros"><img alt="npm" src="https://img.shields.io/npm/v/senioros.svg?color=2F80FF"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-2563eb.svg"></a>
   <a href="package.json"><img alt="Node" src="https://img.shields.io/badge/node-%3E%3D20-0f766e.svg"></a>
-  <a href="ROADMAP.md"><img alt="Status" src="https://img.shields.io/badge/status-foundation-475569.svg"></a>
+  <a href="evals/bench/README.md"><img alt="Bench: Opus, Grok, Gemini" src="https://img.shields.io/badge/bench-Opus%20%C2%B7%20Grok%20%C2%B7%20Gemini-2F80FF.svg"></a>
 </p>
 
 <p align="center">
-  <strong>SeniorOS is a portable engineering harness for coding agents.</strong><br/>
-  It adds selective context, risk-aware execution, deterministic verification, durable project memory, and evidence-backed completion to agentic development workflows.
+  <strong>Skills and hooks that make coding agents fix the cause, keep your history safe and prove the work.</strong><br/>
+  Your agent loads the right skill on its own, asks before a destructive command, and cannot say "done" until your checks pass.
+  Measured on Claude Opus, Grok and Gemini against the model alone and three other skill packs.
 </p>
 
 <p align="center">
@@ -31,26 +32,33 @@
 
 ## Measured, not claimed
 
+A live bench runs the same model on the same tasks with no pack, with [Superpowers](https://github.com/obra/superpowers), [mattpocock/skills](https://github.com/mattpocock/skills), [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) and with SeniorOS. Hidden tests and the repository state grade every run; no model judges another.
+
+<p align="center">
+  <img src="brand/social/results.svg" alt="Bench results. Claude Opus, a bug reported in one module and caused in another, 15 runs: model alone 0, Superpowers 0, mattpocock/skills 0, compound-engineering 0, SeniorOS 15. Claude Opus discipline, 24 runs: 21, 19, 21, 20 and SeniorOS 24. Grok 4.7, 26 runs: model alone 15, Superpowers 14, SeniorOS 23. Gemini Pro, 26 runs: 16, 16 and SeniorOS 21." width="100%" />
+</p>
+
+<details>
+<summary>The same results as a table</summary>
+
+| Model | No pack | Superpowers | mattpocock/skills | compound-engineering | SeniorOS |
+|---|---|---|---|---|---|
+| Claude Opus: a reported bug whose cause is in another module (3 held-out tasks, 5 trials) | 0/15 | 0/15 | 0/15 | 0/15 | **15/15** |
+| Claude Opus: discipline (8 core tasks, 3 trials) | 21/24 | 19/24 | 21/24 | 20/24 | **24/24** |
+| Grok 4.7, Grok CLI (13 tasks, 2 trials) | 15/26 | 14/26 | not measured | not measured | **23/26** |
+| Gemini Pro, Antigravity (13 tasks, 2 trials) | 16/26 | 16/26 | not measured | not measured | **21/26** |
+
+</details>
+
 <p align="center">
   <img src="brand/social/demo-approval-boundary.svg" alt="Replay of a real bench run: asked to discard local changes and force-push main, Claude Code alone rewrote main on the remote; with SeniorOS it stopped, listed what would be lost and asked first" width="100%" />
 </p>
-
-A live bench runs the same model on the same tasks with no pack, with [Superpowers](https://github.com/obra/superpowers) and with SeniorOS. Hidden tests and the repository state grade every run; no model judges another.
-
-Results on the strongest models of three vendors:
-
-| Model | No pack | Superpowers | SeniorOS |
-|---|---|---|---|
-| Claude Opus: a reported bug whose cause is in another module (3 held-out tasks, 5 trials) | 0/15 | 0/15 | **15/15** |
-| Claude Opus: discipline (8 core tasks, 3 trials) | 21/24 | 19/24 | **24/24** |
-| Grok 4.7, Grok CLI (13 tasks, 2 trials) | 15/26 | 14/26 | **23/26** |
-| Gemini Pro, Antigravity (13 tasks, 2 trials) | 16/26 | 16/26 | **21/26** |
 
 - **Bugs fixed at the cause.** Asked to fix a reported bug, every arm found the cause. Without SeniorOS the model fixed it where the report pointed, so other paths broken by the same cause stayed broken. With SeniorOS it fixed the module that wrote the bad data.
 - **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked.
 - **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
 - **No false claims.** Across all runs, SeniorOS made no false "tests pass" claim.
-- **Other packs.** On the same two Opus sets, [mattpocock/skills](https://github.com/mattpocock/skills) scored 21/24 and 0/15, and [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) 20/24 and 0/15. Neither loaded a skill in any of their 78 runs: their skills are invoked by name, so as installed they leave the model working alone. See [the bench](evals/bench/README.md#more-rivals-on-opus-november-2026).
+- **Other packs.** mattpocock/skills and compound-engineering loaded no skill in any of their 78 Opus runs: their skills are invoked by name, so as installed they leave the model working alone. See [the bench](evals/bench/README.md#more-rivals-on-opus-november-2026).
 - **It costs more.** On the Opus core set, SeniorOS averaged $0.20 a run against $0.16 for the model alone. On Grok it is slower: some runs hit the 12-minute limit with the work already done.
 
 Earlier results on smaller models:
@@ -145,19 +153,52 @@ because optimism remains stubbornly absent from every serious test framework.
 
 Requires Node.js 20 or newer. No clone needed: the CLI is published on npm as [`senioros`](https://www.npmjs.com/package/senioros), and its command is `senior`.
 
-### 1. Install SeniorOS for your coding agent
+### 1. Install in 30 seconds
 
-**Claude Code** (recommended: the plugin adds the routing rules and the destructive-command guard):
+**Claude Code** (the plugin brings the skills, the routing rules, the destructive-command guard and the finish gate):
 
 ```text
 /plugin marketplace add joshsegatt/SeniorOS
 /plugin install senioros@senioros
 ```
 
-**Cursor**: a plugin with the routing rules, the destructive-command guard and the finish gate. Until it is listed in
-the Cursor marketplace, add a clone of this repository as a local plugin ([`adapters/cursor`](adapters/cursor/README.md)).
+That is all: the next session loads the right skill on its own. Other agents:
 
-**Google Antigravity** (skills, routing rules and hooks in `~/.gemini`, backed up and reversible):
+<details>
+<summary><strong>Codex</strong>: plugin with rules, guard and finish gate</summary>
+
+After installing, open `/hooks` in Codex and trust the three SeniorOS hooks ([`adapters/codex`](adapters/codex/README.md)):
+
+```bash
+codex plugin marketplace add joshsegatt/SeniorOS
+codex plugin add senioros@senioros
+```
+
+</details>
+
+<details>
+<summary><strong>Cursor</strong>: plugin with rules, guard and finish gate</summary>
+
+Until it is listed in the Cursor marketplace, add a clone of this repository as a local plugin
+([`adapters/cursor`](adapters/cursor/README.md)).
+
+</details>
+
+<details>
+<summary><strong>OpenCode</strong> 1.x: plugin with skills, rules, guard and finish gate</summary>
+
+Add it to `opencode.json` and restart OpenCode ([`adapters/opencode`](adapters/opencode/README.md)):
+
+```json
+{ "plugin": ["senioros"] }
+```
+
+</details>
+
+<details>
+<summary><strong>Google Antigravity</strong>: installer, or a native plugin</summary>
+
+Skills, routing rules and hooks in `~/.gemini`, backed up and reversible:
 
 ```bash
 npx senioros install --target antigravity
@@ -171,22 +212,19 @@ agy plugin install https://github.com/joshsegatt/SeniorOS
 
 Use one or the other, not both, or the skills are listed twice.
 
-**Codex**: a plugin with the routing rules, the destructive-command guard and the finish gate. After installing, open
-`/hooks` in Codex and trust the three SeniorOS hooks ([`adapters/codex`](adapters/codex/README.md)):
+</details>
 
-```bash
-codex plugin marketplace add joshsegatt/SeniorOS
-codex plugin add senioros@senioros
-```
+<details>
+<summary><strong>Grok CLI</strong>: loads the Claude Code plugin</summary>
 
-**OpenCode** (1.x): a plugin with the skills, the routing rules, the destructive-command guard and the finish gate.
-Add it to `opencode.json` and restart OpenCode ([`adapters/opencode`](adapters/opencode/README.md)):
+See [Grok CLI](#grok-cli) for the three steps.
 
-```json
-{ "plugin": ["senioros"] }
-```
+</details>
 
-**Skills only**, for any agent, run inside your project:
+<details>
+<summary><strong>Skills only</strong>, for any agent</summary>
+
+Run inside your project:
 
 ```bash
 npx senioros install --target codex --scope project
@@ -196,6 +234,8 @@ npx senioros install --target generic --scope project   # portable Agent Skills 
 
 SeniorOS refuses to overwrite an existing skill unless you explicitly pass `--force`. In the bench, Claude never loaded
 the skills on its own without the plugin's session-start rules, so prefer the plugin in Claude Code.
+
+</details>
 
 **Upgrading from 0.1:** skills are now prefixed with `senior-` (`senior-debugging`, `senior-finish`, …). `senior install` lists any old, unprefixed SeniorOS skills it finds so you can delete them; it never deletes them for you.
 
