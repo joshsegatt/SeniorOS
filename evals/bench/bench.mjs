@@ -22,7 +22,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros)
+      --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros|senioros-baseline)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)
@@ -171,6 +171,7 @@ async function runBench(args) {
   for (const a of arms) if (!Object.hasOwn(known, a)) throw new Error(`Unknown arm "${a}" for backend ${backend}`);
   // An arm that cannot start (a missing baseline checkout) must stop the bench, not grade every run as a failure.
   if (backend === 'claude') for (const a of arms) if (typeof known[a] === 'function') known[a]();
+  if (backend === 'grok') for (const a of arms) known[a]?.check?.();
   const model = option(args, 'model', backend === 'grok' ? 'grok-4.7' : perProcessArms ? 'haiku' : 'flash');
   const parallel = Math.max(1, Number(option(args, 'parallel', '1')) || 1);
   if (parallel > 1 && !['agentapi', 'claude', 'grok'].includes(backend)) throw new Error('--parallel needs the agentapi, claude or grok backend.');
