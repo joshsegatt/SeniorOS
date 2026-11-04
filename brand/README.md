@@ -13,6 +13,10 @@ SeniorOS uses a restrained engineering identity: clear typography, dark neutral 
 - `social/results.svg` — README results chart, one panel per bench set; regenerate it when the README table changes.
 - `social/social-preview.svg` and `social/social-preview.png` — the 1280×640 GitHub social preview, the hero at
   social-card size. Upload the PNG in the repository settings (Social preview).
+- `social/demo-t6.gif` — README demo: two real Opus runs of bench task t6, replayed. Re-record with
+  `vhs brand/demo/t6.tape` (needs [VHS](https://github.com/charmbracelet/vhs) and ttyd); the content is in
+  `brand/demo/t6-replay.mjs`, quoted from the run transcripts.
+- `social/demo-approval-boundary.svg` — the earlier animated demo (Claude Haiku runs), kept for reference.
 - `brand-board.svg` — visual system reference.
 - `skills/*.svg` — animated skill icons.
 - `icons/favicon.svg` — product/app mark.
