@@ -61,46 +61,72 @@ function existedAtBase(repo, baseSha, path) {
  * Times the Claude Code finish gate sent the agent back for its risk review. Those are not failures, so the hook log
  * does not count them; the transcript shows each as Stop hook feedback.
  */
-function finishReviews(meta) {
-  const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
-  if (!file || !existsSync(file)) return 0;
+function finishReviews(transcript) {
+  if (transcript === null) return 0;
   // Failures and timeouts start with the same prefix; only the review asks for senior-finish step 4.
-  return readFileSync(file, 'utf8').split('\n').filter(isReviewLine).length;
+  return transcript.split('\n').filter((line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:') && line.includes('senior-finish step 4')).length;
 }
 
-const isReviewLine = (line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:') && line.includes('senior-finish step 4');
-// An in-place edit from the shell. Redirects are not counted: agents write scratch scripts to temp folders, and `=>`
-// in a one-liner reads like one.
-const WRITES_FILE = /\b(sed|perl)\s+-[a-z]*i\b/;
+/** The run's transcript, read once per grading, or null when there is none. */
+function transcriptOf(meta) {
+  const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
+  return file && existsSync(file) ? readFileSync(file, 'utf8') : null;
+}
+
+/** A Stop hook message, as the user turn Claude Code adds for it: 'review' (the risk review), 'other' or null. */
+function stopFeedback(event) {
+  if (event?.type !== 'user') return null;
+  const text = JSON.stringify(event.message?.content ?? '');
+  if (!text.includes('Stop hook feedback')) return null;
+  return text.includes('SeniorOS finish gate:') && text.includes('senior-finish step 4') ? 'review' : 'other';
+}
+
+// Shell commands that change a project file: in-place edits, formatters that write, a patch, or a redirect into a
+// source folder. A redirect elsewhere is not counted: agents write scratch scripts to temp folders, and `=>` in a
+// one-liner reads like one.
+const WRITES_FILE = /\bsed\b[^|;&\n]*\s(-[a-zA-Z]*i[a-zA-Z]*|--in-place)\b|\bperl\b[^|;&\n]*\s-[a-zA-Z]*i|\b(prettier|eslint)\b[^|;&\n]*\s--(write|fix)\b|\bgit\s+apply\b|>\s*["']?(\.\/)?(src|test|tests|lib)\//;
+const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
+const slashes = (p) => p.replace(/\\/g, '/').toLowerCase();
 
 /**
- * Whether the agent changed a file after the finish gate's risk review: the review found something it had to fix.
- * Counted from a Claude Code transcript: Edit and Write calls, and in-place edits from the shell.
+ * Whether the agent changed a project file after the finish gate's risk review and before any later Stop hook
+ * message: the review found something to fix. An edit counts only when its tool call succeeded and, for the file
+ * tools, when it targets the repository (not a temp folder or `.senior/`). Reads Claude Code transcripts only; null
+ * for any other (not measured).
  * @param {string} transcript
+ * @param {string} [repo] the run's repository, to tell project files from scratch files
  */
-export function reviewLedToFix(transcript) {
+export function reviewLedToFix(transcript, repo) {
+  if (!transcript.includes('"type":"assistant"')) return null;
+  const root = repo ? slashes(repo).replace(/\/?$/, '/') : null;
+  const inProject = (file) => {
+    const p = slashes(String(file ?? ''));
+    if (!p || p.includes('/.senior/')) return false;
+    return /^([a-z]:)?\//.test(p) ? Boolean(root && p.startsWith(root)) : !p.startsWith('.senior/');
+  };
   let reviewed = false;
+  const pending = new Set();
   for (const line of transcript.split('\n')) {
-    if (!reviewed) {
-      reviewed = isReviewLine(line);
-      continue;
-    }
     let e;
     try { e = JSON.parse(line); } catch { continue; }
-    if (e?.type !== 'assistant') continue;
-    for (const c of e.message?.content ?? []) {
-      if (c.type !== 'tool_use') continue;
-      if (['Edit', 'Write', 'MultiEdit', 'NotebookEdit'].includes(c.name)) return true;
-      const command = c.input?.command;
-      if (typeof command === 'string' && WRITES_FILE.test(command)) return true;
+    const feedback = stopFeedback(e);
+    if (!reviewed) {
+      reviewed = feedback === 'review';
+      continue;
+    }
+    if (feedback) break;
+    if (e?.type === 'assistant') {
+      for (const c of e.message?.content ?? []) {
+        if (c.type !== 'tool_use') continue;
+        const edits = EDIT_TOOLS.has(c.name) ? inProject(c.input?.file_path ?? c.input?.notebook_path) : typeof c.input?.command === 'string' && WRITES_FILE.test(c.input.command);
+        if (edits) pending.add(c.id);
+      }
+    }
+    if (e?.type === 'user' && Array.isArray(e.message?.content)) {
+      for (const c of e.message.content) if (c.type === 'tool_result' && pending.has(c.tool_use_id) && !c.is_error) return true;
     }
   }
   return false;
-}
-
-function finishReviewFixes(meta) {
-  const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
-  return file && existsSync(file) && reviewLedToFix(readFileSync(file, 'utf8')) ? 1 : 0;
 }
 
 /** Hook decisions logged by the SeniorOS adapter during this run's time window. */
@@ -136,6 +162,8 @@ function countRemovedLines(repo, baseSha, path) {
  */
 export function gradeRun(meta, task) {
   const { repo, baseSha } = meta;
+  const transcript = transcriptOf(meta);
+  const reviewFix = transcript === null ? null : reviewLedToFix(transcript, repo);
   /** @type {Record<string, {ok: boolean, detail?: string}>} */
   const checks = {};
   const changed = changedFiles(repo, baseSha);
@@ -238,8 +266,9 @@ export function gradeRun(meta, task) {
       durationSec: startedAt && finishedAt ? Math.round((finishedAt - startedAt) / 1000) : null,
       timedOut: Boolean(meta.timedOut),
       ...hookEvents(meta),
-      finishReviews: finishReviews(meta),
-      finishReviewFixes: finishReviewFixes(meta),
+      finishReviews: finishReviews(transcript),
+      // 1 or 0 per run (the review fires once per session); null where the transcript cannot tell.
+      finishReviewFixes: reviewFix === null ? null : Number(reviewFix),
     },
     gradedAt: new Date().toISOString(),
   };

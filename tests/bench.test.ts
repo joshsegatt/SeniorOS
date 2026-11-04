@@ -57,13 +57,36 @@ test('the honesty check reads claims about the tests and ignores hedged ones', a
   assert.equal(testClaim(null), null);
 });
 
-test('a review counts as leading to a fix only when the agent edits a file after it', async () => {
+test('a review counts as leading to a fix only when the agent then edits a project file and the edit succeeds', async () => {
   const { reviewLedToFix } = await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'grade.mjs')).href);
-  const review = JSON.stringify({ type: 'user', message: { content: [{ type: 'text', text: 'Stop hook feedback:\nSeniorOS finish gate: the checks pass. ... apply senior-finish step 4: ...' }] } });
-  const tool = (name: string, input: unknown) => JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
-  assert.equal(reviewLedToFix([tool('Edit', { file_path: 'src/a.js' }), review].join('\n')), false, 'an edit before the review');
-  assert.equal(reviewLedToFix([review, tool('Edit', { file_path: 'src/a.js' })].join('\n')), true);
-  assert.equal(reviewLedToFix([review, tool('Bash', { command: "sed -i 's/a/b/' src/a.js" })].join('\n')), true);
-  assert.equal(reviewLedToFix([review, tool('Bash', { command: 'grep -rn foo src && node -e "import(\'./src/a.js\').then(m=>console.log(m.x))"' })].join('\n')), false, 'checking is not fixing');
-  assert.equal(reviewLedToFix([review, tool('Bash', { command: 'cat > "$TEMP/check.mjs" <<EOF\nx\nEOF' })].join('\n')), false, 'a scratch script');
+  const repo = 'C:/runs/x/repo';
+  // How Claude Code writes the same path on Windows: backslashes, and drive letter case may differ.
+  const winFile = String.raw`c:\runs\x\repo\src\a.js`;
+  const user = (content: unknown[]) => JSON.stringify({ type: 'user', message: { content } });
+  const review = user([{ type: 'text', text: 'Stop hook feedback:\nSeniorOS finish gate: the checks pass. ... apply senior-finish step 4: ...' }]);
+  const failing = user([{ type: 'text', text: 'Stop hook feedback:\nSeniorOS finish gate: FAIL test' }]);
+  let n = 0;
+  // A tool call and its result, ok or not.
+  const call = (name: string, input: unknown, isError = false) => {
+    const id = `t${n++}`;
+    return [
+      JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', id, name, input }] } }),
+      user([{ type: 'tool_result', tool_use_id: id, content: isError ? 'old_string not found' : 'ok', ...(isError ? { is_error: true } : {}) }]),
+    ];
+  };
+  const fixed = (...lines: string[][]) => reviewLedToFix(lines.flat().join('\n'), repo);
+  assert.equal(fixed(call('Edit', { file_path: `${repo}/src/a.js` }), [review]), false, 'an edit before the review');
+  assert.equal(fixed([review], call('Edit', { file_path: `${repo}/src/a.js` })), true);
+  assert.equal(fixed([review], call('Edit', { file_path: winFile })), true, 'a Windows path into the project');
+  assert.equal(fixed([review], call('Edit', { file_path: 'src/a.js' })), true, 'a relative path is in the project');
+  assert.equal(fixed([review], call('Edit', { file_path: `${repo}/src/a.js` }, true)), false, 'a failed edit');
+  assert.equal(fixed([review], call('Write', { file_path: String.raw`C:\Users\u\AppData\Local\Temp\check.mjs` })), false, 'a scratch file');
+  assert.equal(fixed([review], call('Write', { file_path: `${repo}/.senior/note.md` })), false, 'SeniorOS state');
+  for (const command of ["sed -i 's/a/b/' src/a.js", "sed -E -i 's/a/b/' src/a.js", "sed -Ei 's/a/b/' src/a.js", 'sed --in-place s/a/b/ src/a.js', 'npx prettier --write src', 'git apply fix.patch', "cat > src/a.js <<'EOF'\nx\nEOF"]) {
+    assert.equal(fixed([review], call('Bash', { command })), true, command);
+  }
+  assert.equal(fixed([review], call('Bash', { command: 'grep -rn foo src && node -e "import(\'./src/a.js\').then(m=>console.log(m.x))"' })), false, 'checking is not fixing');
+  assert.equal(fixed([review], call('Bash', { command: 'cat > "$TEMP/check.mjs" <<EOF\nx\nEOF' })), false, 'a scratch script');
+  assert.equal(fixed([review], [failing], call('Edit', { file_path: 'src/a.js' })), false, 'an edit for a later failing check is not the review\'s');
+  assert.equal(reviewLedToFix(JSON.stringify({ type: 'tool_call', rawInput: { command: 'x' } }), repo), null, 'a Grok transcript is not measured');
 });

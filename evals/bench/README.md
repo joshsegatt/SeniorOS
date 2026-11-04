@@ -376,15 +376,21 @@ the held-out tasks `o17`, `o19`, `o20` (5 trials). The `none`, `superpowers` and
 ### What the finish-gate risk review costs and finds (Opus, November 2026)
 
 The review fires once per session on a change `senior risk` rates medium or higher. The report now counts
-`Reviews that led to a fix`: runs where the agent edited a file after the review (Edit or Write, or `sed -i`).
+`Reviews that led to a fix`: runs where, after the review and before any later Stop hook message, the agent
+successfully edited a project file (Edit or Write into the repository, an in-place `sed`/`perl`, a formatter's
+`--write`/`--fix`, `git apply`, or a redirect into a source folder). Scratch files and failed edits do not count.
+It reads Claude Code transcripts only and shows `-` elsewhere.
 
-- Cost: about $0.08 a review on Opus, 19% of the runs it fires in (from the token use after the review, 22 runs).
-- Finds: 4 of 38 reviews led to a fix, each a real bug the agent had just introduced, which no hidden test covered:
-  `o13` twice (an accounting export with no VAT column skipped every row), `o9` (webhooks without a date threw) and
-  `x1` (a soft delete edited the stored object in place, which a Postgres-backed store would not save). Those runs
-  pass with or without the review, so the score shows only its cost.
-- That is about $0.75 per bug caught before it leaves the agent. Firing only on high risk would have missed all four
-  (each change was rated medium).
+- Cost: about $0.08 a review on Opus, 19% of the runs it fires in. This is an estimate from the token use after the
+  review in 22 reviewed runs.
+- Finds: in 4 of 38 reviewed runs (22 earlier, 16 in the A/B below) the review led to a fix, each a real bug the
+  agent had just introduced, which no hidden test covered: `o13` twice (an accounting export with no VAT column
+  skipped every row), `o9` (webhooks without a date threw) and `x1` (a soft delete edited the stored object in place,
+  which a Postgres-backed store would not save). Those runs pass with or without the review, so the score shows only
+  its cost.
+- Combining the two: roughly $0.08 × 38 / 4 ≈ $0.75 per bug caught before it leaves the agent, from two samples, so
+  an order of magnitude rather than a measurement. Firing only on high risk would have missed all four (each change
+  was rated medium).
 - One false trigger: `t1-label` touches `src/checkout.js`, a word the payments rule matches. It is kept: in most
   projects a checkout file does handle payment.
 
