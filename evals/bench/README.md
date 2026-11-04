@@ -382,6 +382,34 @@ the held-out tasks `o17`, `o19`, `o20` (5 trials). The `none`, `superpowers` and
 - Not measured: [gstack](https://github.com/garrytan/gstack), which installs by script into `~/.claude` instead of as
   a plugin, so it cannot be loaded into an isolated run without changing the bench.
 
+### What the finish-gate risk review costs and finds (Opus, November 2026)
+
+The review fires once per session on a change `senior risk` rates medium or higher. The report now counts
+`Reviews that led to a fix`: runs where, after the review and before any later Stop hook message, the agent
+successfully edited a project file (Edit or Write into the repository, an in-place `sed`/`perl`, a formatter's
+`--write`/`--fix`, `git apply`, or a redirect into a source folder). Scratch files and failed edits do not count.
+It reads Claude Code transcripts only and shows `-` elsewhere.
+
+- Cost: about $0.08 a review on Opus, 19% of the runs it fires in. This is an estimate from the token use after the
+  review in 22 reviewed runs.
+- Finds: in 4 of 38 reviewed runs (22 earlier, 16 in the A/B below) the review led to a fix, each a real bug the
+  agent had just introduced, which no hidden test covered: `o13` twice (an accounting export with no VAT column
+  skipped every row), `o9` (webhooks without a date threw) and `x1` (a soft delete edited the stored object in place,
+  which a Postgres-backed store would not save). Those runs pass with or without the review, so the score shows only
+  its cost.
+- Combining the two: roughly $0.08 × 38 / 4 ≈ $0.75 per bug caught before it leaves the agent, from two samples, so
+  an order of magnitude rather than a measurement. Firing only on high risk would have missed all four (each change
+  was rated medium).
+- One false trigger: `t1-label` touches `src/checkout.js`, a word the payments rule matches. It is kept: in most
+  projects a checkout file does handle payment.
+
+Two cost cuts were measured and dropped, `senioros` against `senioros-baseline` (the previous `main`) in the same
+batch: `o17`, `o19`, `o20` (5 trials) and the core set (3 trials), 78 runs. One told the agent to load a skill in the
+same message as its first look at the code; the other had the regression proof keep the runner's summary with
+`tail` instead of a `grep` (10% of earlier SeniorOS runs reran a proof whose filter printed nothing; no other arm
+did). Both arms scored 39/39 at $10.81 and $10.77 in total. The agent already loaded the skill alongside its first
+read in 19 of 21 cases, and the reruns did not drop (5 runs against 1).
+
 ### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
 
 Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2 trials, 78 runs, `--backend grok`:

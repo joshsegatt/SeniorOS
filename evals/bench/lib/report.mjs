@@ -45,6 +45,8 @@ export function buildReport(resultsDir) {
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));
   row('Finish-gate risk reviews', (rs) => sum(rs, (r) => r.metrics?.finishReviews));
+  // Runs whose review was followed by an edit; '-' where no transcript could tell (Grok, other hosts).
+  row('Reviews that led to a fix', (rs) => (rs.some((r) => typeof r.metrics?.finishReviewFixes === 'number') ? sum(rs, (r) => r.metrics?.finishReviewFixes) : '-'));
 
   lines.push('', '## Failures', '');
   for (const r of results.filter((x) => !x.pass)) {
