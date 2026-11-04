@@ -13,7 +13,7 @@ function sessionCwd() {
   return process.cwd();
 }
 
-const onPath = (name) =>
+export const onPath = (name) =>
   (process.env.PATH ?? '').split(delimiter).some((dir) =>
     dir && ['', '.cmd', '.exe'].some((ext) => existsSync(join(dir, name + ext))));
 

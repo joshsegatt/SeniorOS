@@ -16,8 +16,8 @@ import { spawn, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { rm } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { delimiter, join, resolve, sep } from 'node:path';
-import { rulesFor } from '../../../adapters/claude-code/hooks/session-start.mjs';
+import { join, resolve, sep } from 'node:path';
+import { onPath, rulesFor } from '../../../adapters/claude-code/hooks/session-start.mjs';
 import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR } from './util.mjs';
 
 const GROK = process.env.SENIOROS_BENCH_GROK ?? join(homedir(), '.grok', 'bin', process.platform === 'win32' ? 'grok.exe' : 'grok');
@@ -31,18 +31,17 @@ export const GROK_ARMS = {
   senioros: {
     name: 'senioros',
     copy: (dest) => copyPlugin(REPO_ROOT, dest),
-    context: (pluginDir, repo) => {
-      const grokRules = join(pluginDir, 'adapters', 'grok', 'rules.md');
-      if (!existsSync(grokRules)) return hookContext(process.execPath, [join(pluginDir, 'adapters', 'claude-code', 'hooks', 'session-start.mjs')], { cwd: repo }, pluginDir);
-      return rulesFor(readFileSync(grokRules, 'utf8'), { hasSeniorDir: existsSync(join(repo, '.senior')), hasCli: onPath('senior') });
-    },
+    context: (pluginDir, repo) => grokRulesContext(pluginDir, repo),
   },
   // Another SeniorOS checkout (SENIOROS_BENCH_BASELINE), installed the same way, to measure a change against it.
   // A checkout without Grok rules gets its Claude Code session-start context, as releases up to 0.9 were measured.
   'senioros-baseline': {
     name: 'senioros',
+    check: () => baselineDir(),
     copy: (dest) => copyPlugin(baselineDir(), dest),
-    context: (pluginDir, repo) => GROK_ARMS.senioros.context(pluginDir, repo),
+    context: (pluginDir, repo) => existsSync(join(pluginDir, 'adapters', 'grok', 'rules.md'))
+      ? grokRulesContext(pluginDir, repo)
+      : hookContext(process.execPath, [join(pluginDir, 'adapters', 'claude-code', 'hooks', 'session-start.mjs')], { cwd: repo }, pluginDir),
   },
   superpowers: {
     name: 'superpowers',
@@ -68,7 +67,15 @@ function baselineDir() {
   return dir;
 }
 
-const onPath = (name) => (process.env.PATH ?? '').split(delimiter).some((dir) => dir && ['', '.cmd', '.exe'].some((ext) => existsSync(join(dir, name + ext))));
+/**
+ * The Grok rules a user puts in AGENTS.md, without the lines that cannot apply to this run (as the README says, and
+ * as the Claude Code session start drops them). An empty file is an error: it would measure no rules.
+ */
+function grokRulesContext(pluginDir, repo) {
+  const rules = rulesFor(readFileSync(join(pluginDir, 'adapters', 'grok', 'rules.md'), 'utf8'), { hasSeniorDir: existsSync(join(repo, '.senior')), hasCli: onPath('senior') });
+  if (!/\*\*Routing:\*\*/.test(rules)) throw new Error(`Grok rules in ${pluginDir} have no Routing rule: an empty or broken adapters/grok/rules.md`);
+  return rules;
+}
 
 /**
  * Runs a pack's session-start hook the way a host would and returns the context it adds.

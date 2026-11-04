@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -11,6 +11,7 @@ const home = mkdtempSync(path.join(os.tmpdir(), 'senioros-bench-home-'));
 process.env.SENIOROS_BENCH_HOME = home;
 const grok = (await import(pathToFileURL(path.join(process.cwd(), 'evals', 'bench', 'lib', 'grok.mjs')).href)) as {
   accessOnlyAuth: (text?: string) => string;
+  GROK_ARMS: Record<string, { check?: () => string } | null>;
   grokHome: (arm: string, repo: string, authText?: string) => { root: string; env: Record<string, string> & { GROK_HOME: string } };
   summarizeGrokStream: (text: string) => { actions: number; skillsLoaded: string[]; finalReport: string | null; costUsd: number | null; resultSubtype: string | null };
 };
@@ -70,3 +71,26 @@ test('a Grok stream gives the tool calls, skills read, last report and cost', ()
 });
 
 test.after(() => rmSync(home, { recursive: true, force: true }));
+
+test('the Grok baseline arm needs a checkout, and an old one gets its Claude Code session-start rules', () => {
+  const repo = mkdtempSync(path.join(os.tmpdir(), 'grok-repo-'));
+  const old = mkdtempSync(path.join(os.tmpdir(), 'grok-old-'));
+  const saved = process.env.SENIOROS_BENCH_BASELINE;
+  try {
+    delete process.env.SENIOROS_BENCH_BASELINE;
+    assert.throws(() => grok.GROK_ARMS['senioros-baseline']?.check?.(), /needs SENIOROS_BENCH_BASELINE/, 'the bench stops before any run');
+    // A release before the Grok rules: the same plugin without adapters/grok.
+    for (const part of ['.claude-plugin', 'hooks', 'adapters', 'skills', 'rules']) cpSync(path.join(process.cwd(), part), path.join(old, part), { recursive: true });
+    rmSync(path.join(old, 'adapters', 'grok'), { recursive: true, force: true });
+    process.env.SENIOROS_BENCH_BASELINE = old;
+    const base = grok.grokHome('senioros-baseline', repo, AUTH);
+    const agents = readFileSync(path.join(base.env.GROK_HOME, 'AGENTS.md'), 'utf8');
+    assert.match(agents, /Load one with the Skill tool/, 'the Claude Code rules, as releases up to 0.9 were measured');
+    assert.doesNotMatch(agents, /Load at most one per task/);
+  } finally {
+    if (saved === undefined) delete process.env.SENIOROS_BENCH_BASELINE;
+    else process.env.SENIOROS_BENCH_BASELINE = saved;
+    rmSync(repo, { recursive: true, force: true });
+    rmSync(old, { recursive: true, force: true });
+  }
+});

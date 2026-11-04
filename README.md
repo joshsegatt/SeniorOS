@@ -51,7 +51,7 @@ Results on the strongest models of three vendors:
 - **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
 - **No false claims.** Across all runs, SeniorOS made no false "tests pass" claim.
 - **Other packs.** On the same two Opus sets, [mattpocock/skills](https://github.com/mattpocock/skills) scored 21/24 and 0/15, and [compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) 20/24 and 0/15. Neither loaded a skill in any of their 78 runs: their skills are invoked by name, so as installed they leave the model working alone. See [the bench](evals/bench/README.md#more-rivals-on-opus-november-2026).
-- **It costs more.** On the Opus core set, SeniorOS averaged $0.20 a run against $0.16 for the model alone. On Grok it is slower than the model alone (226 s a task against 91 s); its own rules, which load one skill per task, cut that by 38% and removed every 12-minute timeout.
+- **It costs more.** On the Opus core set, SeniorOS averaged $0.20 a run against $0.16 for the model alone. On Grok it is slower than the model alone; its own rules, which load one skill per task, cut the time per task by 38% (366 s to 226 s) and removed every 12-minute timeout.
 
 Earlier results on smaller models:
 
@@ -658,7 +658,7 @@ Grok can load the Claude Code plugin. To set it up:
 
 1. Copy this repository's `.claude-plugin/`, `hooks/`, `adapters/`, `skills/` and `rules/` into `~/.grok/plugins/senioros/`.
 2. Enable it with `[plugins] enabled = ["senioros"]` in `~/.grok/config.toml`.
-3. Grok's session-start hooks cannot add context, so put the Grok routing rules from [`adapters/grok/rules.md`](adapters/grok/rules.md) in `~/.grok/AGENTS.md`. They load one skill per task and leave the checks and the risk review to the finish gate: with the general rules, Grok loaded four or five skills per task and ran review subagents.
+3. Grok's session-start hooks cannot add context, so put the Grok routing rules from [`adapters/grok/rules.md`](adapters/grok/rules.md) in `~/.grok/AGENTS.md` (see [`adapters/grok/`](adapters/grok/README.md) for the lines to leave out). They load one skill per task and leave the checks and the risk review to the finish gate: with the general rules, Grok loaded four or five skills per task and ran review subagents.
 
 The skills, the guard and the finish gate then run as they do in Claude Code. Under Grok's always-approve, which would
 approve the guard's question by itself, the guard refuses the command and the user runs it. This is how the bench
