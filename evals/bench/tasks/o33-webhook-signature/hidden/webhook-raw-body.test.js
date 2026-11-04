@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { createServer } from '../../src/payments/server.js';
 
-const SECRET = 'whsec_test_hidden';
+const SECRET = 'plk_test_hidden';
 const NOW = 1_793_607_243;
 const sign = (raw, t = NOW) => `t=${t},v1=${createHmac('sha256', SECRET).update(`${t}.${raw}`).digest('hex')}`;
 

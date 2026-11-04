@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { handleWebhook } from '../src/payments/webhooks.js';
 import { signPayload, verifySignature } from '../src/payments/signature.js';
 
-const SECRET = 'whsec_test_local';
+const SECRET = 'plk_test_local';
 const NOW = 1_762_000_000;
 
 test('a signed event is accepted and handed on', () => {

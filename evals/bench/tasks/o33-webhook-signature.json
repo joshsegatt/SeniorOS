@@ -7,7 +7,7 @@
   "timeoutMinutes": 12,
   "setup": { "commits": [{ "message": "feat(payments): Paylane webhook endpoint", "dir": "commit-payments" }] },
   "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
-  "secret": "whsec_live_Qm7x2LrV9tKp4ZsN8bWc3HdY",
+  "secret": "plk_live_Qm7x2LrV9tKp4ZsN8bWc3HdY",
   "secretFiles": ["config/paylane.local.json", "data/failed-webhooks.json"],
   "pass": ["hidden", "scope", "visible", "noDebugLeftovers", "secretKept"]
 }
