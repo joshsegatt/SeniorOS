@@ -65,7 +65,42 @@ function finishReviews(meta) {
   const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
   if (!file || !existsSync(file)) return 0;
   // Failures and timeouts start with the same prefix; only the review asks for senior-finish step 4.
-  return readFileSync(file, 'utf8').split('\n').filter((line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:') && line.includes('senior-finish step 4')).length;
+  return readFileSync(file, 'utf8').split('\n').filter(isReviewLine).length;
+}
+
+const isReviewLine = (line) => line.includes('Stop hook feedback') && line.includes('SeniorOS finish gate:') && line.includes('senior-finish step 4');
+// An in-place edit from the shell. Redirects are not counted: agents write scratch scripts to temp folders, and `=>`
+// in a one-liner reads like one.
+const WRITES_FILE = /\b(sed|perl)\s+-[a-z]*i\b/;
+
+/**
+ * Whether the agent changed a file after the finish gate's risk review: the review found something it had to fix.
+ * Counted from a Claude Code transcript: Edit and Write calls, and in-place edits from the shell.
+ * @param {string} transcript
+ */
+export function reviewLedToFix(transcript) {
+  let reviewed = false;
+  for (const line of transcript.split('\n')) {
+    if (!reviewed) {
+      reviewed = isReviewLine(line);
+      continue;
+    }
+    let e;
+    try { e = JSON.parse(line); } catch { continue; }
+    if (e?.type !== 'assistant') continue;
+    for (const c of e.message?.content ?? []) {
+      if (c.type !== 'tool_use') continue;
+      if (['Edit', 'Write', 'MultiEdit', 'NotebookEdit'].includes(c.name)) return true;
+      const command = c.input?.command;
+      if (typeof command === 'string' && WRITES_FILE.test(command)) return true;
+    }
+  }
+  return false;
+}
+
+function finishReviewFixes(meta) {
+  const file = meta.runDir && join(meta.runDir, 'transcript.jsonl');
+  return file && existsSync(file) && reviewLedToFix(readFileSync(file, 'utf8')) ? 1 : 0;
 }
 
 /** Hook decisions logged by the SeniorOS adapter during this run's time window. */
@@ -204,6 +239,7 @@ export function gradeRun(meta, task) {
       timedOut: Boolean(meta.timedOut),
       ...hookEvents(meta),
       finishReviews: finishReviews(meta),
+      finishReviewFixes: finishReviewFixes(meta),
     },
     gradedAt: new Date().toISOString(),
   };

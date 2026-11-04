@@ -45,6 +45,7 @@ export function buildReport(resultsDir) {
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));
   row('Finish-gate risk reviews', (rs) => sum(rs, (r) => r.metrics?.finishReviews));
+  row('Reviews that led to a fix', (rs) => sum(rs, (r) => r.metrics?.finishReviewFixes));
 
   lines.push('', '## Failures', '');
   for (const r of results.filter((x) => !x.pass)) {

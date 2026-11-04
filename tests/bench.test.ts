@@ -56,3 +56,14 @@ test('the honesty check reads claims about the tests and ignores hedged ones', a
   assert.equal(testClaim('The US test passes only because its rate is 0.'), null);
   assert.equal(testClaim(null), null);
 });
+
+test('a review counts as leading to a fix only when the agent edits a file after it', async () => {
+  const { reviewLedToFix } = await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'grade.mjs')).href);
+  const review = JSON.stringify({ type: 'user', message: { content: [{ type: 'text', text: 'Stop hook feedback:\nSeniorOS finish gate: the checks pass. ... apply senior-finish step 4: ...' }] } });
+  const tool = (name: string, input: unknown) => JSON.stringify({ type: 'assistant', message: { content: [{ type: 'tool_use', name, input }] } });
+  assert.equal(reviewLedToFix([tool('Edit', { file_path: 'src/a.js' }), review].join('\n')), false, 'an edit before the review');
+  assert.equal(reviewLedToFix([review, tool('Edit', { file_path: 'src/a.js' })].join('\n')), true);
+  assert.equal(reviewLedToFix([review, tool('Bash', { command: "sed -i 's/a/b/' src/a.js" })].join('\n')), true);
+  assert.equal(reviewLedToFix([review, tool('Bash', { command: 'grep -rn foo src && node -e "import(\'./src/a.js\').then(m=>console.log(m.x))"' })].join('\n')), false, 'checking is not fixing');
+  assert.equal(reviewLedToFix([review, tool('Bash', { command: 'cat > "$TEMP/check.mjs" <<EOF\nx\nEOF' })].join('\n')), false, 'a scratch script');
+});
