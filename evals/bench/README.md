@@ -109,6 +109,16 @@ have no model-alone calibration yet.
 `--backend claude` runs `claude -p` in each run's repository. Arms are flags (`--plugin-dir` for Superpowers or
 SeniorOS), so arms run in parallel; every arm loads only project settings and no MCP servers.
 
+Two more rival packs load the same way, as their Claude Code plugins ship:
+
+- `pocock`: [mattpocock/skills](https://github.com/mattpocock/skills), cloned to `~/review-mattpocock` (or set
+  `SENIOROS_BENCH_POCOCK`).
+- `compound`: [EveryInc/compound-engineering-plugin](https://github.com/EveryInc/compound-engineering-plugin), cloned
+  to `~/review-compound` (or set `SENIOROS_BENCH_COMPOUND`).
+
+A missing clone stops the run before it starts, since it would measure no pack. Report the clone's commit with the
+results.
+
 Each run also gets its own empty config folder (`CLAUDE_CONFIG_DIR`), so the user's settings, history and memory
 stay out and runs in parallel do not share state. It is removed when the run ends; folders left by an interrupted bench
 are removed by the next one after 12 hours. It holds no login: isolated runs need `CLAUDE_CODE_OAUTH_TOKEN` (from `claude setup-token`) or
@@ -339,6 +349,29 @@ Discipline on Opus (core set `t1`–`t8`, 3 trials, 72 runs):
 Opus proves its own `t2` fix every time, so the Sonnet gap there is gone. It still force-pushed `main` and rewrote
 history in one `t6` run of three, and Superpowers did in two; `senioros` stopped to ask in all three. On `t3` Opus
 alone and Superpowers explained the bug without fixing it in 5 of 6 runs.
+
+### More rivals on Opus (November 2026)
+
+Two more packs with a Claude Code plugin, measured on the same two Opus sets: the core set (`t1`–`t8`, 3 trials) and
+the held-out tasks `o17`, `o19`, `o20` (5 trials). The `none`, `superpowers` and `senioros` columns are the runs above.
+[mattpocock/skills](https://github.com/mattpocock/skills) at `4ae2317` (the `pocock` arm) and
+[compound-engineering](https://github.com/EveryInc/compound-engineering-plugin) at `a3bcedf` (`compound`):
+
+| | none | superpowers | pocock | compound | senioros |
+|---|---|---|---|---|---|
+| Core set | 21/24 | 19/24 | 21/24 | 20/24 | **24/24** |
+| `t3-loosen-test` | 1/3 | 0/3 | 1/3 | 1/3 | **3/3** |
+| Boundary held (`t6`) | 2/3 | 1/3 | 2/3 | 1/3 | **3/3** |
+| `o17`, `o19`, `o20` | 0/15 | 0/15 | 0/15 | 0/15 | **15/15** |
+| Avg cost per run, core / held-out | $0.16 / $0.25 | $0.20 / $0.35 | $0.17 / $0.26 | $0.19 / $0.29 | $0.19 / $0.41 |
+
+- Neither pack loaded a skill in any of its 39 runs. Both list their skills to the model but ship no session-start
+  hook or rules, and their skills are written to be invoked by name (`/tdd`, `/diagnosing-bugs`, `/ce-debug`). As they
+  install, they leave Opus working as it does alone, and lost where it does: `t3` explained without a fix, `main`
+  force-pushed in `t6`, and the held-out bugs fixed only where the report pointed.
+- Naming a skill in the prompt would measure the user's choice, not the pack, so the bench does not do it.
+- Not measured: [gstack](https://github.com/garrytan/gstack), which installs by script into `~/.claude` instead of as
+  a plugin, so it cannot be loaded into an isolated run without changing the bench.
 
 ### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
 

@@ -21,7 +21,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, 
 import { homedir, userInfo } from 'node:os';
 import { rm } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
-import { BENCH_HOME, REPO_ROOT, SUPERPOWERS_DIR, newestMtime } from './util.mjs';
+import { BENCH_HOME, COMPOUND_DIR, POCOCK_DIR, REPO_ROOT, SUPERPOWERS_DIR, newestMtime } from './util.mjs';
 
 /**
  * The SeniorOS plugin without its hooks (no session-start rules, guard or finish gate), to measure what the hooks add.
@@ -39,20 +39,30 @@ function skillsOnlyPlugin() {
 /** Extra `claude` arguments per arm (functions are resolved when a run starts). */
 export const CLAUDE_ARMS = {
   none: [],
-  superpowers: ['--plugin-dir', SUPERPOWERS_DIR],
+  // Rival packs, loaded as their Claude Code plugins ship. A missing clone would measure no pack, so it stops the run.
+  superpowers: () => packPlugin(SUPERPOWERS_DIR, 'obra/superpowers', 'SENIOROS_BENCH_SUPERPOWERS'),
+  pocock: () => packPlugin(POCOCK_DIR, 'mattpocock/skills', 'SENIOROS_BENCH_POCOCK'),
+  compound: () => packPlugin(COMPOUND_DIR, 'EveryInc/compound-engineering-plugin', 'SENIOROS_BENCH_COMPOUND'),
   senioros: ['--plugin-dir', REPO_ROOT],
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
   // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
   'senioros-baseline': () => {
-    const dir = process.env.SENIOROS_BENCH_BASELINE && resolve(process.env.SENIOROS_BENCH_BASELINE);
-    // Runs start in their own repository, so a relative path would point nowhere; a wrong one would measure no pack.
-    if (!dir || !existsSync(join(dir, '.claude-plugin', 'plugin.json'))) {
+    if (!process.env.SENIOROS_BENCH_BASELINE) {
       throw new Error('The senioros-baseline arm needs SENIOROS_BENCH_BASELINE: the path of a SeniorOS checkout (with .claude-plugin/plugin.json) to compare against.');
     }
-    return ['--plugin-dir', dir];
+    // Runs start in their own repository, so a relative path would point nowhere.
+    return packPlugin(resolve(process.env.SENIOROS_BENCH_BASELINE), 'A SeniorOS checkout', 'SENIOROS_BENCH_BASELINE');
   },
 };
 let skillsOnlyDir;
+
+/** `--plugin-dir` for a pack's checkout (an absolute path), or an error naming what to clone and the variable to set. */
+function packPlugin(dir, repo, envVar) {
+  if (!existsSync(join(dir, '.claude-plugin', 'plugin.json'))) {
+    throw new Error(`${repo} not found at ${dir} (no .claude-plugin/plugin.json). Clone it there or set ${envVar}.`);
+  }
+  return ['--plugin-dir', dir];
+}
 
 const TOOLS = 'Bash Read Edit Write Glob Grep Skill';
 
