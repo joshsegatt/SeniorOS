@@ -66,4 +66,21 @@ test('the secret check counts what the agent wrote, not what a tool printed back
   assert.deepEqual(secretShown(line([{ type: 'tool_use', name: 'Bash', input: { command: `node sign.js ${secret}` } }]), secret), ['a Bash call']);
   assert.deepEqual(secretShown(line([{ type: 'text', text: `The secret is ${secret}.` }]), secret), ['a reply']);
   assert.deepEqual(secretShown(line([{ type: 'text', text: 'The secret stays in config.' }]), secret), []);
+  // Grok: tool calls carry rawInput, and a reply arrives in pieces.
+  const grok = [
+    { type: 'tool_call', title: 'run_terminal_command', rawInput: { command: `echo ${secret}` } },
+    { type: 'text', data: 'The key is plk_li' },
+    { type: 'text', data: 've_abc.' },
+  ].map((e) => JSON.stringify(e)).join('\n');
+  assert.deepEqual(secretShown(grok, secret), ['a run_terminal_command call', 'a reply']);
+});
+
+test('the debug-leftover check flags prints and pauses, not error reporting', async () => {
+  const { DEBUG_LINE } = await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'grade.mjs')).href);
+  for (const line of ["  console.log('sig', payload);", 'console.info(x)', 'process.stdout.write(raw)', '  debugger;', '// [DEBUG-a4f2] here']) {
+    assert.match(line, DEBUG_LINE, line);
+  }
+  for (const line of ["console.error('webhook refused', id);", "console.warn('slow')", 'const debuggerUrl = 1;', 'logger.log(x)']) {
+    assert.doesNotMatch(line, DEBUG_LINE, line);
+  }
 });
