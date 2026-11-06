@@ -44,6 +44,11 @@ test('hosts other than Antigravity share the low-risk and routing bullets word f
   }
 });
 
+test('every host but Antigravity gets its rules from rules/core.md', () => {
+  const generated = Object.keys(JSON.parse(readFileSync(path.join(root, 'rules', 'hosts.json'), 'utf8')) as Record<string, string>).sort();
+  assert.deepEqual(generated, files.filter((file) => !file.includes('antigravity')).sort());
+});
+
 test('generated rules match rules/core.md (edit the template, then npm run gen:rules)', () => {
   assert.deepEqual(generateRules(root, true), []);
 });
