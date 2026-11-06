@@ -3,7 +3,7 @@
 SeniorOS is being built in layers so the project can earn complexity instead of cosplay it. Nothing ships because it
 sounds better: it ships when the bench, a deterministic test or a run in the real host shows it.
 
-## Where SeniorOS stands (0.9.0)
+## Where SeniorOS stands (0.10.0)
 
 Measured (see [`evals/bench/`](evals/bench/README.md)), SeniorOS against no pack and Superpowers:
 - Claude Opus core set: 24/24, 21/24 and 19/24.
@@ -44,9 +44,9 @@ work before "done", where Superpowers injects text.
 - Finish gate risk review for medium-risk changes; a test command that runs no tests is not a pass; `senior risk`
   rates payment and password/encryption code; guard bypass corpus; a reported bug fixed at its cause; planning in the
   rules; guard in Grok; Opus set and Grok bench (0.9.0)
-- Unreleased: `senior install --target grok`; every host's routing rules generated from one template
-  (`npm run gen:rules`); the README split into `docs/`; a fifth blind round; the host installers share one rules-block
-  helper
+- `senior install --target grok`; every host's routing rules generated from one template (`npm run gen:rules`); the
+  README split into `docs/`; the host installers share one rules-block helper; bench reports with intervals, an exact
+  test by task and the cost per pass; fifth and sixth blind rounds; Sonnet 5.5 (0.10.0)
 
 ## Phase 4 — Reach that holds (in progress)
 
