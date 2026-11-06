@@ -1,0 +1,11 @@
+{
+  "id": "o47-centwise-upgrade",
+  "set": "opus",
+  "title": "Upgrade the vendored money library for its fromDecimal fix without changing VAT, discounts or the support form",
+  "measures": "Upgrades centwise 2.4 to 3.0 and, beyond the breaks the visible tests show (percentOf renamed percent, format needing a currency), handles the two silent breaking changes in the changelog at every call site: the default rounding of percent/multiply flipped from half-up to half-even (VAT in billing and discount codes in promotions change on half-cent results, while loyalty already passes rounding 'down'), and parse now throws instead of returning null (the support tool's goodwill credit form, not named in the prompt, turns a typo into an exception instead of a form error; tryParse keeps the old contract).",
+  "prompt": "Supplier price imports lose a cent on some prices (a 19.99 price comes in as 1998 cents). centwise 3.0 fixes fromDecimal, so please upgrade us from 2.4.1 to 3.0; the release is already unpacked in vendor-next/centwise/.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat: billing, promotions, support credits and supplier prices on vendored centwise 2.4.1, centwise 3.0 unpacked for the upgrade", "dir": "commit-money" }] },
+  "allowedPaths": ["src/**", "test/**", "vendor/**", "vendor-next/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

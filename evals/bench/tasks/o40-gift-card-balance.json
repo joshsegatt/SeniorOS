@@ -1,0 +1,11 @@
+{
+  "id": "o40-gift-card-balance",
+  "set": "opus",
+  "title": "Gift card spent twice by two orders placed at once, with refunds to the card racing the same balance",
+  "measures": "Sees that redeemGiftCard reads the card, awaits, and writes back a balance computed from that stale read, so two orders placed at the same moment both pass the balance check, and that creditGiftCard (order cancellations, which the nightly job runs while customers shop) does the same read-modify-write on the same balance. The careful fix makes the balance change atomic per card for every writer (an update-under-lock in the store, or one lock both paths share), instead of guarding only redeemGiftCard (a lock or a re-read local to redeem.js), which stops the double spend but still loses a refund credited while the card is being used. Redeeming twice one after the other, the natural reproduction, never shows the bug.",
+  "prompt": "Support escalated gift card GC-7Q2M. It had €50 on it, the customer placed two €40 orders a few seconds apart from two browser tabs (o-61377 and o-61378) and both were paid by the card. The card now says €10 left and its history only shows one of the orders. I tried it locally by redeeming €40 twice and the second one is refused like it should be, so I don't get it. A copy of the card file is in data/giftcards.json. Please fix redeemGiftCard in src/giftcards/redeem.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(giftcards): gift card store, redemption at checkout, refunds to the card, statements", "dir": "commit-giftcards" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

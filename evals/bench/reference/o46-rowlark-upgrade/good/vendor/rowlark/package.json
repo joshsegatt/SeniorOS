@@ -1,0 +1,8 @@
+{
+  "name": "rowlark",
+  "version": "2.0.0",
+  "description": "Small CSV parser and serializer",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT"
+}

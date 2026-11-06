@@ -1,0 +1,6 @@
+Subject: Confirm your email address
+Hi {{name}},
+
+Here is a new link to confirm your email address (valid for 24 hours):
+
+{{link}}

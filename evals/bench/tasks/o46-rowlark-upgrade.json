@@ -1,0 +1,11 @@
+{
+  "id": "o46-rowlark-upgrade",
+  "set": "opus",
+  "title": "Upgrade the vendored CSV library for a formula-injection advisory without breaking the semicolon files and numeric columns",
+  "measures": "Upgrades rowlark 1.8 to 2.0 and, beyond the import-line break every call site shows, applies the two silent breaking changes in the changelog to every call site: `delimiter` is renamed `separator` and no longer read (the supplier stock import and the accountant's journal export are semicolon files and fall back to commas), and `parse` stops casting numbers (the stock import sums quantities with `+` and the price update sheet checks Number.isInteger, so both break quietly). The visible tests only cover the customer upload and a plain orders export, which keep working after a naive swap.",
+  "prompt": "We got a security advisory for rowlark 1.8 (CSV formula injection in exported files). Please upgrade us to rowlark 2.0; the release is already unpacked in vendor-next/rowlark/.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat: CSV imports and exports on vendored rowlark 1.8, rowlark 2.0 unpacked for the upgrade", "dir": "commit-csv" }] },
+  "allowedPaths": ["src/**", "test/**", "vendor/**", "vendor-next/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

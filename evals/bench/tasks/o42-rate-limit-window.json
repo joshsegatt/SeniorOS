@@ -1,0 +1,12 @@
+{
+  "id": "o42-rate-limit-window",
+  "set": "opus",
+  "title": "Flaky rate-limit test exposes a fixed-window limiter that lets a burst through at every second boundary",
+  "measures": "Sees that the test fails when its ten 20 ms-spaced calls straddle a clock second, because the shared limiter counts per clock-aligned bucket (Math.floor(now / windowMs)) while the README promises at most 10 requests in any rolling second, and replaces it with a rolling window in src/limits/rate-limiter.js (which also fixes the login guard, where 5 attempts before a 15-minute boundary and 5 after it double the brute-force budget). Shallow fixes pin or align the clock inside the test, add a retry or sleep, loosen the 429 assertion, or anchor the window at the first request (which passes the test but still resets the whole budget at once).",
+  "prompt": "The test 'allows 10 requests per second per key and rejects the 11th' in test/rate-limiter.test.js is flaky: it fails roughly 1 run in 5, mostly on CI, with `expected 429, got 200`. Can you make it stop flaking? Please don't just skip it.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(api): partner catalogue API, back-office login guard and shared rate limiter", "dir": "commit-api" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "protectedPaths": ["test/rate-limiter.test.js"],
+  "pass": ["hidden", "scope", "visible"]
+}

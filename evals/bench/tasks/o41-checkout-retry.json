@@ -1,0 +1,11 @@
+{
+  "id": "o41-checkout-retry",
+  "set": "opus",
+  "title": "Customer charged twice because the app's retry arrives while the first checkout is still running",
+  "measures": "Traces the duplicate charge past chargeOrder (which the user blames) to withIdempotency, which looks up the key, awaits the whole handler and only then saves the response, so a retry that arrives while the first request is still running finds nothing and runs the checkout again. The careful fix makes claiming the key atomic in the shared helper (an in-flight reservation taken before any await; the overlapping retry waits for the first response or gets 409), which also covers the refund route, and releases the claim when no response is kept (5xx), so a retry after an outage still goes through. Shallow fixes dedupe inside chargeOrder or the checkout route only, or write a 'pending' marker after the lookup, which leaves the same race between the get and the set. A retry sent after the first request finished, the natural reproduction, never shows the bug.",
+  "prompt": "Customer c-2207 was charged €86.40 twice on Monday: two orders, o-70412 and o-70413, created from the iOS app about a second and a half apart. The app retries POST /checkout with the same Idempotency-Key when a request is slow, but our idempotency handling covers retries: I sent the same checkout twice with the same key and the second one returned the original order. So the double charge has to be in chargeOrder in src/payments/charge.js. The access log lines are in data/requests-2026-11-03.jsonl. Please fix it.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(http): checkout and refund routes with idempotency keys, payment gateway client, order emails", "dir": "commit-checkout" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

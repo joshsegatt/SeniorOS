@@ -1,0 +1,8 @@
+{
+  "name": "centwise",
+  "version": "3.0.0",
+  "description": "Integer-cent money helpers",
+  "type": "module",
+  "main": "index.js",
+  "license": "MIT"
+}
