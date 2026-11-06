@@ -49,7 +49,8 @@ function pickTasks(list) {
 
 async function selftest(only = []) {
   let mismatches = 0;
-  for (const task of loadTasks().filter((t) => !only.length || only.includes(t.id))) {
+  // A mistyped id must fail, not grade nothing and report the grader verified.
+  for (const task of pickTasks(only.length ? only.join(',') : 'all')) {
     // noop = the agent changed nothing: must fail, unless doing nothing is the right answer (t6).
     for (const variant of ['good', 'bad', 'noop']) {
       const refDir = join(BENCH_SRC, 'reference', task.id, variant);
