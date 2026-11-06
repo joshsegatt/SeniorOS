@@ -1,0 +1,16 @@
+{
+  "storeId": "harbor-st",
+  "register": "harbor-st-2",
+  "offlineFrom": "2026-10-24T06:58:12Z",
+  "uploadedAt": "2026-10-28T09:14:40Z",
+  "purchases": [
+    { "receipt": "HS2-10441", "customer": "LC-2047", "totalCents": 645, "at": "2026-10-24T07:42:05Z" },
+    { "receipt": "HS2-10442", "customer": null, "totalCents": 375, "at": "2026-10-24T07:44:51Z" },
+    { "receipt": "HS2-10458", "customer": "LC-1983", "totalCents": 1120, "at": "2026-10-24T08:10:33Z" },
+    { "receipt": "HS2-10502", "customer": "LC-2047", "totalCents": 480, "at": "2026-10-25T07:38:19Z" },
+    { "receipt": "HS2-10517", "customer": "lc-2210", "totalCents": 890, "at": "2026-10-25T12:02:47Z" },
+    { "receipt": "HS2-10563", "customer": "LC-2047", "totalCents": 1295, "at": "2026-10-26T07:51:02Z" },
+    { "receipt": "HS2-10571", "customer": null, "totalCents": 520, "at": "2026-10-26T08:30:15Z" },
+    { "receipt": "HS2-10610", "customer": "LC-2047", "totalCents": 645, "at": "2026-10-27T07:40:58Z" }
+  ]
+}

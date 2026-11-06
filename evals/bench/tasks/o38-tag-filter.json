@@ -1,0 +1,11 @@
+{
+  "id": "o38-tag-filter",
+  "set": "opus",
+  "title": "Missing posts on a tag page caused by the bulk editor saving tags as typed",
+  "measures": "Reproduces the miss with the posts export (posts tagged in the post editor or imported never show it) and traces it to the admin bulk editor, which saves tags exactly as typed (\"Release Notes \") while the post editor and the markdown importer store them through normalizeTag, instead of only normalizing the stored tags inside postsByTag (which fills the tag page but leaves the tag cloud split, the tag RSS feed missing the posts and the post page showing a different tag).",
+  "prompt": "Filtering posts by the tag \"Release Notes\" on the blog misses the three posts we published last week, though they show the tag on the post page. There's an export of the posts in data/posts-export.json. Please fix postsByTag in src/blog/tags.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(blog): posts, markdown import, tag pages, tag feeds, admin bulk editor", "dir": "commit-blog" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

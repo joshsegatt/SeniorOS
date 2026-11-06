@@ -1,0 +1,15 @@
+{
+  "exportedAt": "2026-11-11T09:12:40.000Z",
+  "patients": [
+    { "id": "p-1012", "name": "Johan Pretorius", "phone": "+27825550134" },
+    { "id": "p-1031", "name": "Ayesha Patel", "phone": "+27835550160" },
+    { "id": "p-1047", "name": "Grace Okafor", "phone": "+27725550118" },
+    { "id": "p-1052", "name": "Sipho Ndlovu", "phone": "+27615550102" }
+  ],
+  "appointments": [
+    { "id": "ap-5208", "patientId": "p-1012", "doctor": "Dr. Naidoo", "startsAt": "2026-11-12T06:00:00.000Z", "status": "booked", "source": "reception" },
+    { "id": "ap-5211", "patientId": "p-1031", "doctor": "Dr. Naidoo", "startsAt": "2026-11-12T06:30:00.000Z", "status": "booked", "source": "calendar", "calendarEventId": "7b1kq0g3s2c9a8t" },
+    { "id": "ap-5219", "patientId": "p-1047", "doctor": "Dr. Naidoo", "startsAt": "2026-11-12T09:30:00", "status": "booked", "source": "online" },
+    { "id": "ap-5224", "patientId": "p-1052", "doctor": "Dr. Botha", "startsAt": "2026-11-12T08:00:00.000Z", "status": "booked", "source": "reception" }
+  ]
+}

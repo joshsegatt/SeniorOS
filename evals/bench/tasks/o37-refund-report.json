@@ -1,0 +1,11 @@
+{
+  "id": "o37-refund-report",
+  "set": "opus",
+  "title": "Refunds report short of the provider statement because the support tool saves refunds in euros",
+  "measures": "Traces the missing refunds to the support tool's partial-refund action, which saves the amount as the euro string typed in the form (\"37.85\") while checkout refunds and the provider webhook save integer amountCents, instead of converting inside refundsTotal (which fixes the report but leaves customer balances, payout reconciliation and the refund limits in checkout and the support tool ignoring support refunds). Refunds made through checkout, the natural reproduction, never show the bug.",
+  "prompt": "The October refunds report shows €1,240.00 refunded, but the payment provider's statement for October shows €1,618.50. There's an export of our October refunds in data/refunds-2026-10.json. Please fix refundsTotal in src/finance/reports.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(finance): payments, refunds, provider webhook, support refunds, reports and payouts", "dir": "commit-finance" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

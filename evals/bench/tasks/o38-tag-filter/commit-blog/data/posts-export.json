@@ -1,0 +1,10 @@
+[
+  { "id": "p-212", "slug": "release-notes-4-0", "title": "Release notes: 4.0", "body": "Offline mode, a new editor and dark mode.", "author": "dana", "tags": ["release notes", "product"], "createdAt": "2026-08-31T15:02:11.000Z", "publishedAt": "2026-09-01T09:00:00.000Z" },
+  { "id": "p-219", "slug": "how-we-run-incident-reviews", "title": "How we run incident reviews", "body": "Blameless, written, within a week.", "author": "sam", "tags": ["engineering", "culture"], "createdAt": "2026-09-08T10:40:52.000Z", "publishedAt": "2026-09-09T08:30:00.000Z" },
+  { "id": "p-224", "slug": "release-notes-4-1", "title": "Release notes: 4.1", "body": "Shared folders and faster search.", "author": "dana", "tags": ["release notes", "product"], "createdAt": "2026-09-29T16:20:03.000Z", "publishedAt": "2026-10-01T09:00:00.000Z" },
+  { "id": "p-230", "slug": "meet-the-support-team", "title": "Meet the support team", "body": "Six people, four time zones.", "author": "ines", "tags": ["culture", "team"], "createdAt": "2026-10-12T13:11:47.000Z", "publishedAt": "2026-10-14T08:00:00.000Z" },
+  { "id": "p-233", "slug": "release-notes-4-2", "title": "Release notes: 4.2", "body": "Calendar sync and a new mobile widget.", "author": "dana", "tags": ["product", "Release Notes "], "createdAt": "2026-10-22T17:45:09.000Z", "publishedAt": "2026-10-27T09:12:40.000Z" },
+  { "id": "p-234", "slug": "release-notes-4-2-1", "title": "Release notes: 4.2.1", "body": "Fixes for calendar sync on iOS.", "author": "dana", "tags": ["product", "Release Notes "], "createdAt": "2026-10-23T09:03:31.000Z", "publishedAt": "2026-10-27T09:12:40.000Z" },
+  { "id": "p-235", "slug": "release-notes-api-v3", "title": "Release notes: API v3", "body": "Webhooks, pagination cursors and a new rate limit.", "author": "ravi", "tags": ["api", "Release Notes "], "createdAt": "2026-10-24T11:28:16.000Z", "publishedAt": "2026-10-27T09:12:40.000Z" },
+  { "id": "p-236", "slug": "our-2027-roadmap", "title": "Our 2027 roadmap (draft)", "body": "TBD", "author": "sam", "tags": ["product"], "createdAt": "2026-10-28T14:00:00.000Z", "publishedAt": null }
+]

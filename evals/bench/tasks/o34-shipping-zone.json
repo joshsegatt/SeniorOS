@@ -1,0 +1,11 @@
+{
+  "id": "o34-shipping-zone",
+  "set": "opus",
+  "title": "International shipping on a German address caused by the app API storing country names",
+  "measures": "Traces the wrong rate to the mobile app's address API, which stores the country picker's display name (\"Germany\") while the web checkout and the ERP import store ISO codes, instead of only mapping names to codes inside shippingRate (which fixes the reported charge but leaves app addresses with no VAT and an international delivery estimate). Addresses added through the web checkout, the natural reproduction, never show the bug.",
+  "prompt": "A customer in Berlin was charged international shipping (€24.90) on order #5512 instead of the €4.90 domestic rate, and her address shows Germany. There's a support export in data/support-export-5512.json. Please fix shippingRate in src/shop/shipping.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): addresses, shipping, VAT, delivery estimates, app address API, ERP import", "dir": "commit-shop" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

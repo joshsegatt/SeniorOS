@@ -1,0 +1,14 @@
+{
+  "exportedAt": "2026-10-21T09:12:00Z",
+  "ticket": "Customer says she was charged international shipping on order #5512 (Berlin).",
+  "addresses": [
+    { "id": "ad-1934", "customerId": "c-2207", "name": "Lena Hoffmann", "street": "Kastanienallee 41", "postcode": "10435", "city": "Berlin", "country": "DE", "createdVia": "web" },
+    { "id": "ad-2210", "customerId": "c-2207", "name": "Lena Hoffmann", "street": "Oderberger Str. 12", "postcode": "10435", "city": "Berlin", "country": "Germany", "createdVia": "app" },
+    { "id": "ad-2211", "customerId": "c-3051", "name": "Pieter de Vries", "street": "Prinsengracht 220", "postcode": "1016 HG", "city": "Amsterdam", "country": "NL", "createdVia": "web" }
+  ],
+  "orders": [
+    { "id": "5390", "customerId": "c-2207", "addressId": "ad-1934", "items": [{ "sku": "MUG-07", "qty": 2, "price": 1490 }], "subtotal": 2980, "shipping": 490, "vat": 659, "total": 4129, "deliveryBy": "2026-09-30", "placedAt": "2026-09-28T17:40:11.000Z" },
+    { "id": "5508", "customerId": "c-3051", "addressId": "ad-2211", "items": [{ "sku": "TEA-12", "qty": 1, "price": 2450 }], "subtotal": 2450, "shipping": 990, "vat": 722, "total": 4162, "deliveryBy": "2026-10-24", "placedAt": "2026-10-19T08:02:45.000Z" },
+    { "id": "5512", "customerId": "c-2207", "addressId": "ad-2210", "items": [{ "sku": "KTL-02", "qty": 1, "price": 3450 }, { "sku": "TEA-03", "qty": 2, "price": 1990 }], "subtotal": 7430, "shipping": 2490, "vat": 0, "total": 9920, "deliveryBy": "2026-11-02", "placedAt": "2026-10-19T19:26:03.000Z" }
+  ]
+}

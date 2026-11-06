@@ -1,0 +1,11 @@
+{
+  "id": "o39-loyalty-points",
+  "set": "opus",
+  "title": "Missing loyalty points caused by the register sync saving the card number as the customer",
+  "measures": "Reproduces the missing points with the store's register sync batch (purchases rung up on a connected register or in the app never show it) and traces them to the offline register sync saving the scanned card number as customerId while the connected register and the app save the member's id, instead of also matching card numbers inside pointsBalance (which fixes the reported balance but leaves the free-drink stamp card and the monthly purchase email missing those purchases).",
+  "prompt": "Customer Dana Reyes (card LC-2047) says her points balance didn't go up after her last four purchases at the Harbor St store. The store's register sync batch is in data/harbor-st-batch-2026-10-28.json. Please fix pointsBalance in src/loyalty/points.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(loyalty): members, register and app purchases, register sync, points, rewards, monthly email", "dir": "commit-loyalty" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}
