@@ -11,6 +11,9 @@
     "dist/src",
     "skills",
     "adapters",
+    ".claude-plugin",
+    "hooks",
+    "rules",
     "README.md",
     "LICENSE"
   ],

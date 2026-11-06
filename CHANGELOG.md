@@ -4,6 +4,10 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- `senior install --target grok` sets up Grok CLI in one command: the plugin in `~/.grok/plugins/senioros/`, the entry in `~/.grok/config.toml` and the Grok routing rules in a marked block of `~/.grok/AGENTS.md`, each file backed up once. `senior uninstall --target grok` removes them, `senior setup` and `senior doctor` report Grok, and `senior setup --apply` installs it. The npm package now ships the plugin parts Grok loads (`.claude-plugin/`, `hooks/`, `rules/`).
+
 ### Changed
 
 - The routing rules come from one template, `rules/core.md`. `npm run gen:rules` writes `rules/senioros.md` and the Claude Code, Codex, Cursor, Grok and OpenCode rules from it, each with its own first line from `rules/hosts.json`, and `npm test` fails when a generated file is out of date. The text each host loads is unchanged. Antigravity keeps its hand-written rules.

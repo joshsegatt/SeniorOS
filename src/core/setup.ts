@@ -1,7 +1,8 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { antigravityPaths, installAntigravity } from './antigravity.js';
-import { defaultEnvironment, detectHosts, geminiHome, opencodeConfigFiles, opencodeEditBlocked, type HostEnvironment, type HostStatus } from './hosts.js';
+import { grokPaths, installGrok } from './grok.js';
+import { defaultEnvironment, detectHosts, geminiHome, grokHome, onPath, opencodeConfigFiles, opencodeEditBlocked, type HostEnvironment, type HostStatus } from './hosts.js';
 
 export interface SetupReport {
   hosts: HostStatus[];
@@ -33,7 +34,7 @@ export function addOpencodePlugin(e: HostEnvironment): string {
 
 /**
  * The setup steps for each host on this machine; with `apply`, also runs the ones the CLI owns: the Antigravity
- * installer and the OpenCode plugin entry. Plugins of Claude Code, Codex and Cursor are installed in the app.
+ * installer, the Grok installer and the OpenCode plugin entry. Plugins of Claude Code, Codex and Cursor are installed in the app.
  */
 export async function setup(root: string, options: { apply?: boolean } = {}, e: HostEnvironment = defaultEnvironment(root)): Promise<SetupReport> {
   const before = detectHosts(root, e);
@@ -54,6 +55,14 @@ export async function setup(root: string, options: { apply?: boolean } = {}, e: 
         } catch (error) {
           // One host failing must not hide what was already applied to another.
           skipped.push(`Antigravity: the installer failed: ${(error as Error).message}`);
+        }
+      } else if (host.id === 'grok' && host.steps.length) {
+        try {
+          const report = await installGrok({ hasCli: Boolean(onPath('senior', e.env)) }, grokPaths(grokHome(e)));
+          applied.push(...report.actions.map((a) => `Grok: ${a}`));
+          skipped.push(...report.warnings.map((w) => `Grok: ${w}`));
+        } catch (error) {
+          skipped.push(`Grok: the installer failed: ${(error as Error).message}`);
         }
       }
     }
