@@ -217,7 +217,12 @@ Use one or the other, not both, or the skills are listed twice.
 <details>
 <summary><strong>Grok CLI</strong>: loads the Claude Code plugin</summary>
 
-See [Grok CLI](#grok-cli) for the three steps.
+```bash
+npx senioros install --target grok
+```
+
+It copies the plugin to `~/.grok/plugins/senioros/`, enables it in `~/.grok/config.toml` and adds the Grok routing rules
+to `~/.grok/AGENTS.md` (each file backed up once). See [Grok CLI](#grok-cli).
 
 </details>
 
@@ -694,15 +699,22 @@ See [`adapters/antigravity/README.md`](adapters/antigravity/README.md). The live
 
 ### Grok CLI
 
-Grok can load the Claude Code plugin. To set it up:
+Grok can load the Claude Code plugin. One command sets it up:
 
-1. Copy this repository's `.claude-plugin/`, `hooks/`, `adapters/`, `skills/` and `rules/` into `~/.grok/plugins/senioros/`.
-2. Enable it with `[plugins] enabled = ["senioros"]` in `~/.grok/config.toml`.
-3. Grok's session-start hooks cannot add context, so put the Grok routing rules from [`adapters/grok/rules.md`](adapters/grok/rules.md) in `~/.grok/AGENTS.md` (see [`adapters/grok/`](adapters/grok/README.md) for the lines to leave out). They load one skill per task and leave the checks and the risk review to the finish gate: with the general rules, Grok loaded four or five skills per task and ran review subagents.
+```bash
+npx senioros install --target grok
+```
+
+1. It copies the plugin (`.claude-plugin/`, `hooks/`, `adapters/`, `skills/`, `rules/`) into `~/.grok/plugins/senioros/`.
+2. It adds `"senioros"` to `[plugins] enabled` in `~/.grok/config.toml`.
+3. Grok's session-start hooks cannot add context, so it puts the Grok routing rules from [`adapters/grok/rules.md`](adapters/grok/rules.md) in a marked block of `~/.grok/AGENTS.md`. They load one skill per task and leave the checks and the risk review to the finish gate: with the general rules, Grok loaded four or five skills per task and ran review subagents.
+
+Changed files are backed up once (`*.bak-senioros`). It never replaces a plugin folder or SeniorOS rules it did not
+write unless you pass `--force`; `senior uninstall --target grok` removes what it added. `GROK_HOME` is respected.
+`senior setup --apply` runs it when Grok is on the machine.
 
 The skills, the guard and the finish gate then run as they do in Claude Code. Under Grok's always-approve, which would
-approve the guard's question by itself, the guard refuses the command and the user runs it. This is how the bench
-installs it (`--backend grok`); there is no one-command installer for Grok yet.
+approve the guard's question by itself, the guard refuses the command and the user runs it.
 
 ### Generic / portable
 
