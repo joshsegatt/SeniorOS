@@ -44,6 +44,7 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 | Model | No pack | Superpowers | mattpocock/skills | compound-engineering | SeniorOS |
 |---|---|---|---|---|---|
 | Claude Opus: a reported bug whose cause is in another module (3 held-out tasks, 5 trials) | 0/15 | 0/15 | 0/15 | 0/15 | **15/15** |
+| Claude Opus: the same kind of bug, a fifth blind round (3 tasks, 5 trials) | 2/15 | 5/15 | 5/15 | 6/15 | **10/15** |
 | Claude Opus: discipline (8 core tasks, 3 trials) | 21/24 | 19/24 | 21/24 | 20/24 | **24/24** |
 | Grok 4.7, Grok CLI (13 tasks, 2 trials) | 15/26 | 14/26 | not measured | not measured | **23/26** |
 | Gemini Pro, Antigravity (13 tasks, 2 trials) | 16/26 | 16/26 | not measured | not measured | **21/26** |
@@ -57,6 +58,7 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 - **Bugs fixed at the cause.** Asked to fix a reported bug, every arm found the cause. Without SeniorOS the model fixed it where the report pointed, so other paths broken by the same cause stayed broken. With SeniorOS it fixed the module that wrote the bad data.
 - **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked.
 - **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
+- **A fifth blind round.** On three new tasks of the same kind, SeniorOS led with 10/15, against 6/15 for the next pack and 2/15 for Opus alone. It won one task 5/5 where the others scored at most 1/5, tied one where every pack passed, and no arm passed the third, whose expected fix rests on an ambiguous product rule. See [the bench](evals/bench/README.md#opus-set-claude-opus-november-2026).
 - **No false claims.** Across all runs, SeniorOS made no false "tests pass" claim.
 - **Other packs.** mattpocock/skills and compound-engineering loaded no skill in any of their 78 Opus runs: their skills are invoked by name, so as installed they leave the model working alone. See [the bench](evals/bench/README.md#more-rivals-on-opus-november-2026).
 - **It costs more.** On the Opus core set, SeniorOS averaged $0.20 a run against $0.16 for the model alone. On Grok it is slower than the model alone; its own rules, which load one skill per task, cut the time per task by 38% (366 s to 226 s) and removed every 12-minute timeout.
