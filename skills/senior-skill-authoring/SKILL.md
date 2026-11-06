@@ -35,7 +35,7 @@ senior-example/
     └── deterministic-check.mjs
 ```
 
-`npm run validate:skills` rejects a `SKILL.md` over 20,000 bytes: hosts may truncate longer skills after context compaction.
+`npm run validate:skills` rejects a `SKILL.md` over 500 lines of body or 20,000 bytes: hosts may truncate longer skills after context compaction.
 
 ## 4. Separate judgment from mechanics
 

@@ -7,7 +7,8 @@ sounds better: it ships when the bench, a deterministic test or a run in the rea
 
 Measured (see [`evals/bench/`](evals/bench/README.md)), SeniorOS against no pack and Superpowers:
 - Claude Opus core set: 24/24, 21/24 and 19/24.
-- Opus held-out tasks where the cause of a reported bug is in another module: 15/15, 0/15 and 0/15.
+- Opus held-out tasks where the cause of a reported bug is in another module: 15/15, 0/15 and 0/15; a fifth blind
+  round of the same kind: 10/15, 2/15 and 5/15.
 - grok-4.7: 23/26, 15/26 and 14/26.
 - Gemini Pro: 21/26, 16/26 and 16/26.
 
@@ -21,6 +22,7 @@ scores as well. SeniorOS costs more per run and is slower on Grok.
 | Cursor | plugin | yes | asks | yes | no, CI only |
 | OpenCode 1.x | plugin (`main`) | yes | fails the call | yes | yes, Windows |
 | Antigravity | installer or native plugin | yes | installer only | installer only | no |
+| Grok CLI | Claude Code plugin, `senior install --target grok` | yes, `AGENTS.md` | asks | yes | yes, bench |
 
 Superpowers is ahead on reach (about 13 hosts, official stores) and breadth (15 skills: planning, TDD, subagents,
 worktrees, responding to review). SeniorOS is ahead on enforcement: hooks that stop destructive commands and check the
@@ -42,6 +44,9 @@ work before "done", where Superpowers injects text.
 - Finish gate risk review for medium-risk changes; a test command that runs no tests is not a pass; `senior risk`
   rates payment and password/encryption code; guard bypass corpus; a reported bug fixed at its cause; planning in the
   rules; guard in Grok; Opus set and Grok bench (0.9.0)
+- Unreleased: `senior install --target grok`; every host's routing rules generated from one template
+  (`npm run gen:rules`); the README split into `docs/`; a fifth blind round; the host installers share one rules-block
+  helper
 
 ## Phase 4 — Reach that holds (in progress)
 
@@ -84,12 +89,17 @@ Order matters: the pack changes in step 2, so step 3 measures the pack that step
 
 - [x] Opus set `o1`–`o24`, written blind to the pack; calibrated on Opus alone; held-out proof on `o17`/`o19`/`o20`:
       SeniorOS 15/15, Superpowers 0/15, model alone 0/15
-- [ ] 1. Wider proof: a fourth blind round on other kinds of work (a new feature, a refactor, a security fix, a
-      dependency or API upgrade), calibrated on Opus alone; where Opus fails, find the pack's weak spot, fix it on
-      tuning tasks, prove on held-out ones
+- [x] Fourth blind round (`o25`–`o32`: a new feature with an invariant, a refactor, a security fix with sibling paths,
+      an internal API migration): Opus alone 24/24, so no pack can win there
+- [x] Fifth blind round (`o34`–`o39`, the cause-elsewhere class): SeniorOS 10/15, compound-engineering 6/15,
+      Superpowers and mattpocock/skills 5/15, Opus alone 2/15; cost per pass $0.65 against $0.78 to $1.17
+- [ ] 1. Wider proof: a sixth blind round on kinds of work not tried yet (a data migration or backfill, a dependency
+      upgrade, performance at the real volume, concurrency), calibrated on Opus alone; where Opus fails, find the
+      pack's weak spot, fix it on tuning tasks, prove on held-out ones
 - [ ] 2. Cost: SeniorOS runs cost about 60% more than Opus alone on the Opus set. Find where the extra goes (skill
       reads, finish-gate review, extra checks) and cut what does not move the score; target the Superpowers cost
-      with the same score
+      with the same score. The finish-gate review threshold was measured and kept: half of the reviews that led to a
+      fix were on medium-risk changes
 - [ ] 3. Other models: the Opus set on Sonnet, and a Codex runner (`codex exec`) to measure a GPT-class model, after
       step 2
 - [ ] Never worse: every pack change re-runs `o9`–`o16` (and the core set) before it is kept

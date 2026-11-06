@@ -28,7 +28,7 @@ Read only the files relevant to the task. Do not map the entire repository for a
 
 When adding or materially changing a skill:
 
-1. keep `SKILL.md` focused and under 500 lines;
+1. keep `SKILL.md` focused: under 500 lines of body and under 20,000 bytes (`npm run validate:skills` enforces both);
 2. make routing metadata describe both what and when;
 3. put deep reference material in one-level-deep `references/` files;
 4. put deterministic repeated mechanics in scripts;
