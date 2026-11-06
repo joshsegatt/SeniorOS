@@ -10,6 +10,7 @@ All notable changes to SeniorOS will be documented here.
 
 ### Changed
 
+- Bench, Claude Sonnet 5.5 on the cause-elsewhere tasks (`o17`, `o19`, `o20`, `o37`), 5 trials: SeniorOS 12/20, Superpowers 0/20, Sonnet alone 0/20 (p < 0.001), $0.16 a run for both packs. `o20` failed in every arm.
 - Bench: a sixth blind round (`o40`–`o47`) on concurrency, flaky tests, changes to stored data and dependency upgrades. Opus alone 23/24, so no task was kept for a held-out comparison and no skill was written; SeniorOS 24/24 (not worse), at $0.53 a run against $0.37. The tasks stay as a "never worse" check.
 - Bench reports give each arm's pass rate with a 95% Wilson interval, a two-sided exact p against the model alone compared task by task, and the cost per passing run (`evals/bench/lib/stats.mjs`). On the fifth round, SeniorOS is the only pack separable from Opus alone (p < 0.001; the others p ≥ 0.08) and has the lowest cost per passing run ($0.65, against $0.78 to $2.04); its lead over compound-engineering (10/15 against 6/15) is not separable at 5 trials.
 - Bench: a fifth blind round of the cause-elsewhere class (`o34`–`o39`), and `selftest` takes task ids. Opus, the three tasks Opus alone always failed in calibration, 5 trials: SeniorOS 10/15, compound-engineering 6/15, Superpowers and mattpocock/skills 5/15, Opus alone 2/15. The finish-gate review threshold was measured and kept: half of the reviews that led to a fix were on medium-risk changes.

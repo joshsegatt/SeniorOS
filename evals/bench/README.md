@@ -408,6 +408,28 @@ records and readers the prompt does not name) and a dependency upgrade with a si
   made the flaky test deterministic with an injected clock, which strengthens it. That check was dropped from both
   tasks (the hidden tests still fail the shallow fixes) and those runs were regraded before any `senioros` run.
 
+Claude Sonnet 5.5 on the cause-elsewhere tasks (`o17`, `o19`, `o20` held out, and `o37` from the fifth round), 5
+trials, every arm in the same batch, November 2026:
+
+| Task | `none` | `superpowers` | `senioros` |
+|---|---|---|---|
+| `o17-kiosk-checkin` | 0/5 | 0/5 | 3/5 |
+| `o19-category-filter` | 0/5 | 0/5 | 4/5 |
+| `o20-trial-reminders` | 0/5 | 0/5 | 0/5 |
+| `o37-refund-report` | 0/5 | 0/5 | **5/5** |
+| Overall | 0/20 | 0/20 | **12/20** |
+| 95% interval (Wilson) | 0–16% | 0–16% | 39–78% |
+| Avg duration (s) | 29 | 50 | 75 |
+| Avg cost per run (USD) | 0.09 | 0.16 | 0.16 |
+
+- SeniorOS against either other arm, task by task: p < 0.001. Superpowers costs the same per run and passed none;
+  SeniorOS costs $0.26 per passing run.
+- The skill carries to a second model: written from Opus failures, it lifts Sonnet from 0/20 to 12/20.
+- Where it still fails: in `o20` every SeniorOS run fixed `src/billing/trials.js`, the module the report names, and
+  left the back office that opens accounts without a trial end; two `o17` runs and one `o19` run did the same with
+  their reported module. Sonnet follows the
+  "fix it where the cause is" step less often than Opus (15/15 on the same three held-out tasks).
+
 Finish-gate review threshold (cost): the risk review fires on medium and high risk. Over the 24 `senioros` runs with
 a review still on disk, 4 led to a fix: 2 on high-risk changes (`o13` twice) and 2 on medium (`o9`, `x1`). Firing on
 high risk alone would save the review (about $0.08) in 19 of 24 runs and lose half of the fixes, so the threshold
