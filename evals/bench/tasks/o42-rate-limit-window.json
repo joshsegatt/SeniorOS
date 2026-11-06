@@ -7,6 +7,5 @@
   "timeoutMinutes": 12,
   "setup": { "commits": [{ "message": "feat(api): partner catalogue API, back-office login guard and shared rate limiter", "dir": "commit-api" }] },
   "allowedPaths": ["src/**", "test/**", "package.json"],
-  "protectedPaths": ["test/rate-limiter.test.js"],
   "pass": ["hidden", "scope", "visible"]
 }

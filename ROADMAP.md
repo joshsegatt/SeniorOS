@@ -100,9 +100,10 @@ Order matters: the pack changes in step 2, so step 3 measures the pack that step
       features with an invariant, refactors, security fixes, API migrations, concurrency, flaky tests, stored-data
       changes, dependency upgrades. Next to try: performance at the real volume, multi-step work across a long
       session, and tasks in Python and Go
-- [ ] 2. Cost: SeniorOS runs cost about 60% more than Opus alone on the Opus set (45% on the sixth round), and the
-      least per passing run. Measured: the first context is the same as the model alone's, so the extra is turns (a
-      regression test seen failing before the fix, the finish-gate review). The review threshold was measured and
+- [ ] 2. Cost: SeniorOS runs cost about 60% more than Opus alone on the Opus set (45% on the sixth round). It costs
+      the least per passing run on the rounds it wins; on the sixth, where it ties, it costs more per pass too.
+      Measured: the first context is the same as the model alone's, so the extra is turns (a regression test seen
+      failing before the fix, the finish-gate review). The review threshold was measured and
       kept: 5 of 58 reviews led to a fix, about $0.93 per bug. Still open: cut turns that do not move the score
 - [ ] 3. Other models: the Opus set on Sonnet, and a Codex runner (`codex exec`) to measure a GPT-class model, after
       step 2

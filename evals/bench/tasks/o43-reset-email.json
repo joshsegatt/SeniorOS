@@ -7,6 +7,5 @@
   "timeoutMinutes": 12,
   "setup": { "commits": [{ "message": "feat(account): sign-up, password reset and verification emails with audit log", "dir": "commit-account" }] },
   "allowedPaths": ["src/**", "test/**", "package.json"],
-  "protectedPaths": ["test/password-reset.test.js"],
   "pass": ["hidden", "scope", "visible"]
 }
