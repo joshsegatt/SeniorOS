@@ -1,6 +1,7 @@
 // Aggregates graded runs into a markdown report.
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { costPerPass, formatP, passWithInterval, stratifiedExact } from './stats.mjs';
 
 const pct = (n, d) => (d ? `${Math.round((100 * n) / d)}%` : '-');
 
@@ -28,6 +29,19 @@ export function buildReport(resultsDir) {
   lines.push('| Metric | ' + arms.join(' | ') + ' |', '|---|' + arms.map(() => '---').join('|') + '|');
   const row = (label, f) => lines.push(`| ${label} | ${arms.map((a) => f(of(a))).join(' | ')} |`);
   row('Overall pass', (rs) => `${rs.filter((r) => r.pass).length}/${rs.length} (${pct(rs.filter((r) => r.pass).length, rs.length)})`);
+  row('Pass, 95% interval (Wilson)', (rs) => passWithInterval(rs.filter((r) => r.pass).length, rs.length));
+  // Against the model alone, when it ran: how likely results this uneven are if the arm made no difference. Compared
+  // task by task, on the tasks both ran, so an easy and a hard task are not pooled as one pass rate.
+  if (arms.includes('none')) {
+    row('vs none, p (exact, by task)', (rs) => {
+      if (!rs.length || rs[0].arm === 'none') return '-';
+      const tables = tasks
+        .map((task) => [rs.filter((r) => r.taskId === task), of('none', task)])
+        .filter(([mine, base]) => mine.length && base.length)
+        .map(([mine, base]) => [mine.filter((r) => r.pass).length, mine.length, base.filter((r) => r.pass).length, base.length]);
+      return tables.length ? formatP(stratifiedExact(tables)) : '-';
+    });
+  }
   row('Hidden tests pass', (rs) => checkRate(rs, 'hidden'));
   row('Bonus (thoroughness)', (rs) => checkRate(rs, 'bonus'));
   row('Regression test proven (t2)', (rs) => checkRate(rs, 'regressionProof'));
@@ -41,6 +55,7 @@ export function buildReport(resultsDir) {
   // Rounded to cents: avg() rounds to integers, so average in cents.
   row('False "tests pass" claims', (rs) => { const claimed = rs.filter((r) => r.metrics?.testClaim); return claimed.length ? `${claimed.filter((r) => r.metrics.falseClaim).length} of ${claimed.length} claims` : '-'; });
   row('Avg cost per run (USD)', (rs) => { const c = avg(rs, (r) => (typeof r.outcome?.costUsd === 'number' ? r.outcome.costUsd * 100 : undefined)); return c === null ? '-' : (c / 100).toFixed(2); });
+  row('Cost per passing run (USD)', (rs) => { const c = costPerPass(rs); return c === null ? '-' : c.toFixed(2); });
   row('Timeouts', (rs) => sum(rs, (r) => r.metrics?.timedOut ? 1 : 0));
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));

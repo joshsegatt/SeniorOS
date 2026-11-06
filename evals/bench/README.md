@@ -317,8 +317,12 @@ on Opus alone (3 trials) kept the three tasks it failed every time; the other fi
 | `o17-kiosk-checkin`: kiosk can't find a guest; the channel sync stores names in decomposed Unicode | 0/5 | 0/5 | 5/5 |
 | `o19-category-filter`: a category page misses products; renames don't refresh the path copied on products | 0/5 | 0/5 | 5/5 |
 | `o20-trial-reminders`: no trial reminder; the sales back office opens accounts with no trial end | 0/5 | 0/5 | 5/5 |
+| Overall | 0/15 | 0/15 | **15/15** |
+| 95% interval (Wilson) | 0–20% | 0–20% | 80–100% |
 | Avg duration (s) | 38 | 52 | 76 |
 | Avg cost per run (USD) | 0.25 | 0.35 | 0.41 |
+
+SeniorOS against either other arm, compared task by task (exact test): p < 0.001.
 
 - Every arm found the cause. `none` and `superpowers` (which loaded `systematic-debugging` in all 15 runs) fixed it
   where the report pointed, so the other paths the same cause breaks stayed broken. `senioros` loaded
@@ -348,8 +352,17 @@ solved `o34` and `o35` 3/3 and `o39` 2/3. Opus, 5 trials, every arm in the same 
 | `o37-refund-report`: refunds report short; the support tool stores euros as a string, not `amountCents` | 0/5 | 0/5 | 0/5 | 1/5 | **5/5** |
 | `o38-tag-filter`: tag page misses posts; the bulk editor saves tags as typed | 2/5 | 5/5 | 5/5 | 5/5 | 5/5 |
 | Overall | 2/15 | 5/15 | 5/15 | 6/15 | **10/15** |
+| 95% interval (Wilson) | 4–38% | 15–58% | 15–58% | 20–64% | 42–85% |
+| vs `none`, p (exact, by task) | - | 0.17 | 0.17 | 0.08 | **<0.001** |
 | Avg duration (s) | 41 | 54 | 46 | 49 | 69 |
 | Avg cost per run (USD) | 0.27 | 0.39 | 0.30 | 0.31 | 0.43 |
+| Cost per passing run (USD) | 2.04 | 1.17 | 0.90 | 0.78 | **0.65** |
+
+- Only SeniorOS is separable from Opus alone at these sample sizes (p < 0.001, below the 0.0125 that four packs
+  compared at 0.05 need); the three other packs are not (p = 0.08 to 0.17). SeniorOS against compound, the next
+  pack, is not separable after that correction (p = 0.048, from `o37` alone): this round shows SeniorOS ahead of the
+  model alone, not yet ahead of every pack.
+- It costs the most per run and the least per passing run.
 
 - SeniorOS loaded `senior-debugging` in 15 of 15 runs, Superpowers `systematic-debugging` in 15 of 15; `pocock` and
   `compound` loaded no skill, as before.
@@ -572,5 +585,11 @@ and `manual` (prints each prompt and waits for you).
 ## Reading the results
 
 Two trials per cell is enough to spot large differences, not small ones. Before claiming one pack beats another,
-rerun the cells that differ with more trials. A change to a SeniorOS skill counts as an improvement only when it
-wins on the same tasks it previously lost, without losing elsewhere.
+rerun the cells that differ with more trials. The report shows each arm's pass rate with its 95% Wilson interval, a
+two-sided exact p against `none` when the model alone ran, and the cost per passing run (every run's cost over the
+passes; a timeout without a cost counts at the arm's most expensive run), so a cheap arm that rarely passes does
+not look cheap. The p compares the arms task by task, on the tasks both ran (an exact test conditional on each
+task's totals), so an easy and a hard task are not pooled as one pass rate. Call two arms different only when p is
+below 0.05 divided by the number of packs compared against `none` (Bonferroni: 0.0125 for four); otherwise say they
+are not separable at that sample size. A change to a SeniorOS skill counts as an improvement only when it wins on
+the same tasks it previously lost, without losing elsewhere.
