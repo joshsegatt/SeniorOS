@@ -319,6 +319,9 @@ on Opus alone (3 trials) kept the three tasks it failed every time; the other fi
 | `o20-trial-reminders`: no trial reminder; the sales back office opens accounts with no trial end | 0/5 | 0/5 | 5/5 |
 | Avg duration (s) | 38 | 52 | 76 |
 | Avg cost per run (USD) | 0.25 | 0.35 | 0.41 |
+| 95% interval (Wilson) | 0–20% | 0–20% | 80–100% |
+
+SeniorOS against either other arm: Fisher p < 0.0001 (15/15 against 0/15).
 
 - Every arm found the cause. `none` and `superpowers` (which loaded `systematic-debugging` in all 15 runs) fixed it
   where the report pointed, so the other paths the same cause breaks stayed broken. `senioros` loaded
@@ -348,8 +351,16 @@ solved `o34` and `o35` 3/3 and `o39` 2/3. Opus, 5 trials, every arm in the same 
 | `o37-refund-report`: refunds report short; the support tool stores euros as a string, not `amountCents` | 0/5 | 0/5 | 0/5 | 1/5 | **5/5** |
 | `o38-tag-filter`: tag page misses posts; the bulk editor saves tags as typed | 2/5 | 5/5 | 5/5 | 5/5 | 5/5 |
 | Overall | 2/15 | 5/15 | 5/15 | 6/15 | **10/15** |
+| 95% interval (Wilson) | 4–38% | 15–58% | 15–58% | 20–64% | 42–85% |
+| vs `none`, Fisher p (two-sided) | - | 0.39 | 0.39 | 0.22 | **0.008** |
 | Avg duration (s) | 41 | 54 | 46 | 49 | 69 |
 | Avg cost per run (USD) | 0.27 | 0.39 | 0.30 | 0.31 | 0.43 |
+| Cost per passing run (USD) | 2.04 | 1.17 | 0.90 | 0.78 | **0.65** |
+
+- Only SeniorOS is separable from Opus alone at these sample sizes (p = 0.008); the three other packs are not
+  (p = 0.22 to 0.39). SeniorOS against compound, the next pack, is not separable either (10/15 against 6/15,
+  p = 0.27): this round shows SeniorOS ahead of the model alone, not yet ahead of every pack.
+- It costs the most per run and the least per passing run.
 
 - SeniorOS loaded `senior-debugging` in 15 of 15 runs, Superpowers `systematic-debugging` in 15 of 15; `pocock` and
   `compound` loaded no skill, as before.
@@ -572,5 +583,8 @@ and `manual` (prints each prompt and waits for you).
 ## Reading the results
 
 Two trials per cell is enough to spot large differences, not small ones. Before claiming one pack beats another,
-rerun the cells that differ with more trials. A change to a SeniorOS skill counts as an improvement only when it
+rerun the cells that differ with more trials. The report shows each arm's pass rate with its 95% Wilson interval, a
+two-sided Fisher exact p against `none` when the model alone ran, and the cost per passing run (the average cost
+per run times the runs, over the passes), so a cheap arm that rarely passes does not look cheap. Call two arms
+different only when p is small (below 0.05); otherwise say they are not separable at that sample size. A change to a SeniorOS skill counts as an improvement only when it
 wins on the same tasks it previously lost, without losing elsewhere.

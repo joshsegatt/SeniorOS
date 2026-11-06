@@ -118,3 +118,27 @@ test('the debug-leftover check flags prints and pauses, not error reporting', as
     assert.doesNotMatch(line, DEBUG_LINE, line);
   }
 });
+
+test('the report statistics match known values', async () => {
+  const s = (await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'stats.mjs')).href)) as {
+    wilson: (k: number, n: number) => [number, number];
+    fisher: (a: number, n1: number, b: number, n2: number) => number;
+    passWithInterval: (k: number, n: number) => string;
+    costPerPass: (runs: Array<{ pass: boolean; outcome?: { costUsd?: number } }>) => number | null;
+  };
+  const near = (x: number, y: number, eps = 1e-3) => assert.ok(Math.abs(x - y) < eps, `${x} vs ${y}`);
+  const [lo, hi] = s.wilson(10, 15);
+  near(lo, 0.4171);
+  near(hi, 0.8482);
+  assert.deepEqual(s.wilson(0, 0), [0, 1]);
+  assert.equal(s.wilson(0, 15)[0], 0);
+  assert.equal(s.wilson(15, 15)[1], 1);
+  near(s.fisher(3, 3, 0, 3), 0.1);
+  near(s.fisher(10, 15, 6, 15), 0.2723);
+  near(s.fisher(10, 15, 2, 15), 0.00778, 1e-4);
+  near(s.fisher(2, 2, 2, 2), 1);
+  assert.equal(s.passWithInterval(10, 15), '10/15 (42–85%)');
+  // A run with no cost counts at the average: (0.4 + 0.2) / 2 * 3 runs / 1 pass.
+  near(s.costPerPass([{ pass: true, outcome: { costUsd: 0.4 } }, { pass: false, outcome: { costUsd: 0.2 } }, { pass: false }]) ?? 0, 0.9);
+  assert.equal(s.costPerPass([{ pass: false, outcome: { costUsd: 0.4 } }]), null);
+});

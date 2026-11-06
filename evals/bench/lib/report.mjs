@@ -1,6 +1,7 @@
 // Aggregates graded runs into a markdown report.
 import { readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { costPerPass, fisher, passWithInterval } from './stats.mjs';
 
 const pct = (n, d) => (d ? `${Math.round((100 * n) / d)}%` : '-');
 
@@ -28,6 +29,13 @@ export function buildReport(resultsDir) {
   lines.push('| Metric | ' + arms.join(' | ') + ' |', '|---|' + arms.map(() => '---').join('|') + '|');
   const row = (label, f) => lines.push(`| ${label} | ${arms.map((a) => f(of(a))).join(' | ')} |`);
   row('Overall pass', (rs) => `${rs.filter((r) => r.pass).length}/${rs.length} (${pct(rs.filter((r) => r.pass).length, rs.length)})`);
+  row('Pass, 95% interval (Wilson)', (rs) => passWithInterval(rs.filter((r) => r.pass).length, rs.length));
+  // Against the model alone, when it ran: how likely a split this uneven is if the arm made no difference.
+  if (arms.includes('none')) {
+    const base = of('none');
+    const baseK = base.filter((r) => r.pass).length;
+    row('vs none, Fisher p (two-sided)', (rs) => (!rs.length || rs[0].arm === 'none' ? '-' : fisher(rs.filter((r) => r.pass).length, rs.length, baseK, base.length).toFixed(3)));
+  }
   row('Hidden tests pass', (rs) => checkRate(rs, 'hidden'));
   row('Bonus (thoroughness)', (rs) => checkRate(rs, 'bonus'));
   row('Regression test proven (t2)', (rs) => checkRate(rs, 'regressionProof'));
@@ -41,7 +49,8 @@ export function buildReport(resultsDir) {
   // Rounded to cents: avg() rounds to integers, so average in cents.
   row('False "tests pass" claims', (rs) => { const claimed = rs.filter((r) => r.metrics?.testClaim); return claimed.length ? `${claimed.filter((r) => r.metrics.falseClaim).length} of ${claimed.length} claims` : '-'; });
   row('Avg cost per run (USD)', (rs) => { const c = avg(rs, (r) => (typeof r.outcome?.costUsd === 'number' ? r.outcome.costUsd * 100 : undefined)); return c === null ? '-' : (c / 100).toFixed(2); });
-  row('Timeouts', (rs) => sum(rs, (r) => r.metrics?.timedOut ? 1 : 0));
+  row('Cost per passing run (USD)', (rs) => { const c = costPerPass(rs); return c === null ? '-' : c.toFixed(2); });
+  row('Timeouts',(rs) => sum(rs, (r) => r.metrics?.timedOut ? 1 : 0));
   row('Guard confirmations', (rs) => sum(rs, (r) => r.metrics?.guardTriggers));
   row('Finish-gate blocks', (rs) => sum(rs, (r) => r.metrics?.stopGateBlocks));
   row('Finish-gate risk reviews', (rs) => sum(rs, (r) => r.metrics?.finishReviews));
