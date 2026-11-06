@@ -1,0 +1,11 @@
+{
+  "id": "o45-ticket-assignees",
+  "set": "opus",
+  "title": "Let helpdesk tickets have several assignees: assignee becomes an assignees list",
+  "measures": "Changes the stored assignee (one agent id or null) into an assignees array the way the repo says to (a numbered migration in scripts/migrations/, registered in index.js and run by the ticket store on open), and updates every reader and writer: intake routing, assign/unassign, inbox and triage, search, the workload dashboard, the SLA escalation job (notify every assignee, else the lead) and the offboarding job (take the agent off shared tickets). The shallow change rewrites assign and the inbox the user named, with a fallback for old tickets, and patches what the visible tests flag; the escalation and offboarding jobs keep reading the old field, so shared tickets escalate to the wrong person and a departed agent stays on them.",
+  "prompt": "Tickets need to be able to have more than one assignee (refund cases often need billing and support together). Please change the stored `assignee` (one agent id or null) into an `assignees` array of agent ids. `assignTicket` in src/tickets/assign.js should add the agent to the ticket (if they aren't on it already) instead of replacing the assignee, and add an `unassignTicket(store, id, agentId, now)` next to it that takes one agent off. Then update the inbox (src/tickets/inbox.js) so a ticket shows in the inbox of each of its assignees.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(helpdesk): ticket store with migrations, intake, assignment, inbox, search, workload, escalation and offboarding jobs", "dir": "commit-helpdesk" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

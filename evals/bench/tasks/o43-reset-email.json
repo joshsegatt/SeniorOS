@@ -1,0 +1,11 @@
+{
+  "id": "o43-reset-email",
+  "set": "opus",
+  "title": "Flaky password-reset test exposes an unawaited email send: false 202s and escaped rejections when the relay is slow or down",
+  "measures": "Traces the flake to requestPasswordReset calling sendTemplate without await, so the endpoint answers before the email reaches the transport (the test's outbox check races the audit-log write), and fixes the product by awaiting the send, which also makes a relay failure reach the existing EmailUnavailableError -> 503 handling instead of a false 202 plus an unhandled rejection. The same pattern in resendVerification is a bonus. Shallow fixes wait or poll in the test, retry it, or keep the send in the background with a .catch that swallows the error.",
+  "prompt": "test/password-reset.test.js › 'emails a reset link to a known address' keeps flaking: green locally most of the time, but on CI it fails about a third of the runs with `expected 1, got 0` on the outbox length. Please make it stop flaking, I don't want to just retry it.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(account): sign-up, password reset and verification emails with audit log", "dir": "commit-account" }] },
+  "allowedPaths": ["src/**", "test/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

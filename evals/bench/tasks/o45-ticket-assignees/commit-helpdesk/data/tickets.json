@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "tickets": [
+    { "id": "T-1041", "subject": "Lid cracked on arrival", "requester": "customer-2207@example.test", "status": "open", "priority": "high", "assignee": "lena", "createdAt": "2026-11-02T08:00:00Z", "updatedAt": "2026-11-02T08:30:00Z", "firstResponseAt": "2026-11-02T08:30:00Z", "escalatedAt": null, "tags": ["damaged"] },
+    { "id": "T-1042", "subject": "Refund not received", "requester": "customer-1984@example.test", "status": "open", "priority": "normal", "assignee": "marco", "createdAt": "2026-11-03T10:00:00Z", "updatedAt": "2026-11-03T10:00:00Z", "firstResponseAt": null, "escalatedAt": null, "tags": ["refund"] },
+    { "id": "T-1043", "subject": "Change delivery address", "requester": "customer-3120@example.test", "status": "pending", "priority": "low", "assignee": "lena", "createdAt": "2026-11-01T15:20:00Z", "updatedAt": "2026-11-02T09:00:00Z", "firstResponseAt": "2026-11-01T16:00:00Z", "escalatedAt": null, "tags": [] },
+    { "id": "T-1044", "subject": "Wrong colour sent", "requester": "customer-0451@example.test", "status": "open", "priority": "normal", "assignee": null, "createdAt": "2026-11-04T09:00:00Z", "updatedAt": "2026-11-04T09:00:00Z", "firstResponseAt": null, "escalatedAt": null, "tags": [] },
+    { "id": "T-1045", "subject": "Invoice copy please", "requester": "customer-2207@example.test", "status": "solved", "priority": "normal", "assignee": "priya", "createdAt": "2026-10-28T11:00:00Z", "updatedAt": "2026-10-28T12:10:00Z", "firstResponseAt": "2026-10-28T11:40:00Z", "escalatedAt": null, "tags": ["billing"] },
+    { "id": "T-1046", "subject": "Charged twice for one order", "requester": "customer-0777@example.test", "status": "open", "priority": "high", "assignee": null, "createdAt": "2026-11-05T07:00:00Z", "updatedAt": "2026-11-05T07:00:00Z", "firstResponseAt": null, "escalatedAt": null, "tags": ["billing"] },
+    { "id": "T-1047", "subject": "Kettle whistle missing", "requester": "customer-1310@example.test", "status": "open", "priority": "low", "assignee": "marco", "createdAt": "2026-11-04T13:30:00Z", "updatedAt": "2026-11-04T13:30:00Z", "firstResponseAt": null, "escalatedAt": null, "tags": [] },
+    { "id": "T-1048", "subject": "Refund for returned pan", "requester": "customer-0451@example.test", "status": "closed", "priority": "high", "assignee": "lena", "createdAt": "2026-10-20T09:00:00Z", "updatedAt": "2026-10-22T09:00:00Z", "firstResponseAt": "2026-10-20T09:30:00Z", "escalatedAt": null, "tags": ["refund"] }
+  ]
+}

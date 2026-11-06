@@ -1,0 +1,4 @@
+{"at":"2026-11-03T18:22:04.118Z","method":"POST","path":"/checkout","idempotencyKey":"7d1c9e2a-5b0f-4c61-9a7e-2f3b8d4e6a10","customer":"c-2207","status":201,"order":"o-70412","durationMs":1934,"app":"ios 5.12.0"}
+{"at":"2026-11-03T18:22:05.640Z","method":"POST","path":"/checkout","idempotencyKey":"7d1c9e2a-5b0f-4c61-9a7e-2f3b8d4e6a10","customer":"c-2207","status":201,"order":"o-70413","durationMs":1102,"app":"ios 5.12.0"}
+{"at":"2026-11-03T18:24:51.007Z","method":"GET","path":"/orders/o-70413","customer":"c-2207","status":200,"durationMs":12,"app":"ios 5.12.0"}
+{"at":"2026-11-03T18:31:12.450Z","method":"POST","path":"/checkout","idempotencyKey":"0a4f61b8-93c2-4e07-b5d1-7c8e2a9f3b44","customer":"c-1984","status":201,"order":"o-70414","durationMs":388,"app":"android 5.11.2"}

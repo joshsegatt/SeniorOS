@@ -1,0 +1,6 @@
+Subject: Welcome to the shop
+Hi {{name}},
+
+Your account is ready. Confirm your email address with this link:
+
+{{link}}

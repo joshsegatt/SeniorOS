@@ -1,0 +1,8 @@
+[
+  { "sku": "MUG-01", "title": "Stoneware mug", "priceCents": 1490, "weightKg": 0.42, "hsCode": "691200", "originCountry": "PT", "active": true, "updatedAt": "2026-02-11T09:12:00Z" },
+  { "sku": "KTL-02", "title": "Enamel kettle", "priceCents": 4900, "weightKg": 1.35, "hsCode": "732393", "originCountry": "PL", "active": true, "updatedAt": "2026-04-02T14:40:00Z" },
+  { "sku": "BRD-03", "title": "Oak cutting board", "price": "29.90", "weightKg": 2.1, "hsCode": "441990", "originCountry": "DE", "active": true, "updatedAt": "2024-11-20T08:05:00Z" },
+  { "sku": "TEA-04", "title": "Loose leaf tea tin", "priceCents": 890, "weightKg": 0.125, "hsCode": "090240", "originCountry": "LK", "active": true, "updatedAt": "2026-06-30T16:21:00Z" },
+  { "sku": "PAN-05", "title": "Cast iron pan", "priceCents": 6900, "weightKg": 3.6, "hsCode": "732591", "originCountry": "PL", "active": true, "updatedAt": "2026-08-14T10:00:00Z" },
+  { "sku": "CRF-06", "title": "Glass carafe", "priceCents": 2200, "weightKg": 0.9, "hsCode": "701349", "originCountry": "CZ", "active": false, "updatedAt": "2025-12-01T12:30:00Z" }
+]

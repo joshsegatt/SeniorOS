@@ -1,0 +1,11 @@
+{
+  "id": "o44-weight-grams",
+  "set": "opus",
+  "title": "Store product weights as integer grams instead of float kilograms",
+  "measures": "Changes the stored weight field from weightKg (float) to weightGrams (integer) and, following the repo's documented convention, upgrades old records in readProduct so every reader works with both shapes; updates both writers (the admin form and the supplier CSV import) and every reader (shipping quote, carrier labels, customs declarations, merchant feed). The shallow change updates only the form and the quote the user named: new products then show NaN weights on labels, customs forms and the feed, and the import keeps saving kilograms.",
+  "prompt": "Let's store product weights as integer grams, the way we store prices in cents. Summing float kilograms gives us weights like 2.6100000000000003 kg, and the warehouse scale reports grams anyway. Please change the saved field from `weightKg` to `weightGrams` (an integer) in the product form handler (src/catalog/products.js) and use it in the shipping quote (src/shipping/quote.js). Staff keep typing kilograms in the admin form.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(catalog): product admin, supplier import, merchant feed, shipping quotes, labels and customs", "dir": "commit-catalog" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,0 +1,21 @@
+{
+  "GC-7Q2M": {
+    "code": "GC-7Q2M",
+    "balanceCents": 1000,
+    "currency": "EUR",
+    "status": "active",
+    "history": [
+      { "at": "2026-09-12T15:20:00.000Z", "kind": "issue", "amountCents": 5000, "ref": "sale-8812" },
+      { "at": "2026-11-04T19:41:07.389Z", "kind": "redeem", "amountCents": -4000, "ref": "o-61378" }
+    ]
+  },
+  "GC-H4NA": {
+    "code": "GC-H4NA",
+    "balanceCents": 2500,
+    "currency": "EUR",
+    "status": "active",
+    "history": [
+      { "at": "2026-10-02T09:00:00.000Z", "kind": "issue", "amountCents": 2500, "ref": "sale-8790" }
+    ]
+  }
+}
