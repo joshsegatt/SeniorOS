@@ -570,7 +570,7 @@ guard answer without a decision blocks every command; both are fixed and covered
 node evals/bench/bench.mjs run --arms none,superpowers,senioros --trials 2
 ```
 
-3 arms x 11 tasks x 2 trials = 66 conversations, several hours; pick a set with `--tasks core` or `--tasks hard`.
+Without `--tasks` this runs every task (64), 3 arms x 64 x 2 trials = 384 conversations, many hours; pick a set with `--tasks core`, `--tasks hard` or `--tasks opus`, or a list of task ids.
 Arm order rotates per task so no arm always runs first. `--parallel <n>` (agentapi only) runs up to `n`
 conversations at once within an arm, one arm after another, since the arm is global Antigravity config; each run
 follows its own conversation id, and hook events are attributed by conversation. A fake-agentapi test ran 12 runs in

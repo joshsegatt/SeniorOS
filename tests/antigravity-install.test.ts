@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { antigravityPaths, installAntigravity, uninstallAntigravity } from '../src/core/antigravity.js';
@@ -113,6 +114,34 @@ test('hand-made hooks are kept, and a --force install is undone by uninstall', a
     await uninstallAntigravity(paths);
     assert.deepEqual(await json(paths.hooksJson), { 'senioros-guard': manualGuard }, 'the replaced block is restored');
     assert.equal(await readFile(path.join(paths.hooks, 'guard.mjs'), 'utf8'), '// my own guard\n', 'the replaced scripts are restored');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('rules markers that do not pair up are left alone, on install and uninstall', async () => {
+  const broken = '# Mine\n<!-- senioros:start -->\nold rules, end marker deleted\n# More of mine\n';
+  const dir = await geminiHome({ 'GEMINI.md': broken });
+  const paths = antigravityPaths(dir);
+  try {
+    const report = await installAntigravity({}, paths);
+    assert.ok(report.warnings.some((w) => /do not pair up/.test(w)), report.warnings.join('\n'));
+    assert.equal(await readFile(paths.rules, 'utf8'), broken);
+    const removed = await uninstallAntigravity(paths);
+    assert.ok(removed.warnings.some((w) => /do not pair up/.test(w)), removed.warnings.join('\n'));
+    assert.equal(await readFile(paths.rules, 'utf8'), broken);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('uninstall removes a GEMINI.md the install created and left empty', async () => {
+  const dir = await geminiHome({});
+  const paths = antigravityPaths(dir);
+  try {
+    await installAntigravity({}, paths);
+    await uninstallAntigravity(paths);
+    assert.ok(!existsSync(paths.rules));
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
