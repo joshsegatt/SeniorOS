@@ -1,0 +1,11 @@
+{
+  "id": "o35-reminder-hour",
+  "set": "opus",
+  "title": "Wrong hour in an SMS reminder caused by the online booking widget saving local time",
+  "measures": "Traces the wrong hour to the online booking widget, which saves startsAt as the clinic's wall-clock time with no offset while the reception desk and the calendar sync save UTC, instead of reading offset-less times as clinic time inside reminderText (which fixes the SMS but leaves the day schedule, the no-show job and the double-booking check wrong for online bookings). Bookings made at reception, the natural reproduction, never show the bug.",
+  "prompt": "Mrs. Okafor's appointment is at 09:30 on Thursday but her SMS reminder said 11:30. There's an export of the appointments in data/appointments-export.json. Please fix reminderText in src/clinic/reminders.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(clinic): appointments, online booking, calendar sync, reminders, day schedule, no-shows", "dir": "commit-clinic" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

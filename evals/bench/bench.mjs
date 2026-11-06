@@ -14,7 +14,7 @@ import { BENCH_HOME, BENCH_SRC, GEMINI_HOME, HOOK_LOG, git, loadTasks } from './
 
 const USAGE = `Usage: node evals/bench/bench.mjs <command>
 
-  selftest                      Grade the reference good/bad solutions (validates the grader; no model needed)
+  selftest [task ids]           Grade the reference good/bad solutions (validates the grader; no model needed)
   probe                         One live harness check inside Antigravity (run this first)
   isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
@@ -47,9 +47,10 @@ function pickTasks(list) {
   return all.filter((t) => ids.includes(t.id));
 }
 
-async function selftest() {
+async function selftest(only = []) {
   let mismatches = 0;
-  for (const task of loadTasks()) {
+  // A mistyped id must fail, not grade nothing and report the grader verified.
+  for (const task of pickTasks(only.length ? only.join(',') : 'all')) {
     // noop = the agent changed nothing: must fail, unless doing nothing is the right answer (t6).
     for (const variant of ['good', 'bad', 'noop']) {
       const refDir = join(BENCH_SRC, 'reference', task.id, variant);
@@ -254,7 +255,7 @@ async function runBench(args) {
 
 const [command, ...args] = process.argv.slice(2);
 try {
-  if (command === 'selftest') await selftest();
+  if (command === 'selftest') await selftest(process.argv.slice(3));
   else if (command === 'probe') await probe();
   else if (command === 'isolation') {
     const { answer, clean, why } = checkIsolation(option(args, 'model', 'sonnet'));

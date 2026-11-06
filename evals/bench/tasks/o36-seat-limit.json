@@ -1,0 +1,11 @@
+{
+  "id": "o36-seat-limit",
+  "set": "opus",
+  "title": "Seat limit reached caused by SCIM deprovisioning leaving removedAt empty",
+  "measures": "Traces the full seat count to the SCIM deprovisioning from the identity provider, which sets status 'deprovisioned' but leaves removedAt null, instead of also excluding that status inside seatsUsed (which lets Acme invite again but leaves deprovisioned users on the monthly invoice, in the members API and blocked from being invited back). Removing a member from the admin UI, the natural reproduction, never shows the bug.",
+  "prompt": "Acme (workspace w-88) has 10 seats and only 7 active members on their members page, but inviting someone fails with \"seat limit reached\". There's a support export in data/workspace-w-88.json. Please fix seatsUsed in src/teams/seats.js.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(teams): workspaces, invites, seats, SCIM provisioning, billing, members API and page", "dir": "commit-teams" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

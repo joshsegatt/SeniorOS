@@ -1,0 +1,151 @@
+{
+  "exportedAt": "2026-11-05T15:02:11.000Z",
+  "workspace": {
+    "id": "w-88",
+    "name": "Acme",
+    "seats": 10
+  },
+  "members": [
+    {
+      "id": "m-301",
+      "workspaceId": "w-88",
+      "email": "dana.whitfield@acme.io",
+      "name": "Dana Whitfield",
+      "role": "owner",
+      "status": "active",
+      "invitedAt": "2026-03-02T09:14:00.000Z",
+      "joinedAt": "2026-03-02T09:14:00.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-302",
+      "workspaceId": "w-88",
+      "email": "raj.patel@acme.io",
+      "name": "Raj Patel",
+      "role": "admin",
+      "status": "active",
+      "invitedAt": "2026-03-02T09:20:11.000Z",
+      "joinedAt": "2026-03-02T10:02:45.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-317",
+      "workspaceId": "w-88",
+      "email": "lena.fischer@acme.io",
+      "name": "Lena Fischer",
+      "role": "member",
+      "status": "removed",
+      "invitedAt": "2026-03-09T14:31:07.000Z",
+      "joinedAt": "2026-03-09T15:00:12.000Z",
+      "removedAt": "2026-06-30T16:45:00.000Z"
+    },
+    {
+      "id": "m-344",
+      "workspaceId": "w-88",
+      "email": "tom.becker@acme.io",
+      "name": "Tom Becker",
+      "role": "member",
+      "status": "active",
+      "scimId": "00u8k2qf1aZ4",
+      "invitedAt": "2026-07-14T08:00:03.000Z",
+      "joinedAt": "2026-07-14T08:00:03.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-345",
+      "workspaceId": "w-88",
+      "email": "priya.nair@acme.io",
+      "name": "Priya Nair",
+      "role": "member",
+      "status": "active",
+      "scimId": "00u8k2qf3bX9",
+      "invitedAt": "2026-07-14T08:00:04.000Z",
+      "joinedAt": "2026-07-14T08:00:04.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-346",
+      "workspaceId": "w-88",
+      "email": "sam.okafor@acme.io",
+      "name": "Sam Okafor",
+      "role": "member",
+      "status": "deprovisioned",
+      "scimId": "00u8k2qf5cK1",
+      "invitedAt": "2026-07-14T08:00:04.000Z",
+      "joinedAt": "2026-07-14T08:00:04.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-347",
+      "workspaceId": "w-88",
+      "email": "julia.romero@acme.io",
+      "name": "Julia Romero",
+      "role": "member",
+      "status": "active",
+      "scimId": "00u8k2qf7dL3",
+      "invitedAt": "2026-07-14T08:00:05.000Z",
+      "joinedAt": "2026-07-14T08:00:05.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-348",
+      "workspaceId": "w-88",
+      "email": "marco.bianchi@acme.io",
+      "name": "Marco Bianchi",
+      "role": "member",
+      "status": "deprovisioned",
+      "scimId": "00u8k2qf9eM6",
+      "invitedAt": "2026-07-14T08:00:05.000Z",
+      "joinedAt": "2026-07-14T08:00:05.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-361",
+      "workspaceId": "w-88",
+      "email": "nina.kowalski@acme.io",
+      "name": "Nina Kowalski",
+      "role": "member",
+      "status": "active",
+      "scimId": "00u9a1rh2fN8",
+      "invitedAt": "2026-08-21T12:40:19.000Z",
+      "joinedAt": "2026-08-21T12:40:19.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-372",
+      "workspaceId": "w-88",
+      "email": "chris.doyle@acme.io",
+      "name": "Chris Doyle",
+      "role": "member",
+      "status": "removed",
+      "scimId": "00u9a1rh4gP2",
+      "invitedAt": "2026-09-03T07:55:41.000Z",
+      "joinedAt": "2026-09-03T07:55:41.000Z",
+      "removedAt": "2026-09-29T11:12:30.000Z"
+    },
+    {
+      "id": "m-388",
+      "workspaceId": "w-88",
+      "email": "yuki.tanaka@acme.io",
+      "name": "Yuki Tanaka",
+      "role": "member",
+      "status": "active",
+      "scimId": "00u9c7tj6hQ5",
+      "invitedAt": "2026-09-22T10:05:56.000Z",
+      "joinedAt": "2026-09-22T10:05:56.000Z",
+      "removedAt": null
+    },
+    {
+      "id": "m-391",
+      "workspaceId": "w-88",
+      "email": "omar.haddad@acme.io",
+      "name": "Omar Haddad",
+      "role": "member",
+      "status": "deprovisioned",
+      "scimId": "00u9c7tj8jR7",
+      "invitedAt": "2026-09-24T13:18:02.000Z",
+      "joinedAt": "2026-09-24T13:18:02.000Z",
+      "removedAt": null
+    }
+  ]
+}

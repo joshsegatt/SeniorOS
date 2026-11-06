@@ -1,0 +1,13 @@
+[
+  { "id": "rf-8812", "paymentId": "pay-7730", "orderId": "o-50211", "customerId": "c-2207", "amountCents": 24900, "source": "checkout", "reason": "order cancelled", "createdAt": "2026-10-02T09:14:52.000Z" },
+  { "id": "rf-8815", "paymentId": "pay-7741", "orderId": "o-50236", "customerId": "c-1984", "amount": "37.85", "source": "support", "agent": "lena", "note": "lid cracked in transit", "createdAt": "2026-10-04T13:02:11.000Z" },
+  { "id": "rf-8819", "paymentId": "pay-7702", "orderId": "o-50177", "customerId": "c-3120", "amountCents": 12950, "source": "provider", "providerRefundId": "re_3Q8kZt2eNv", "createdAt": "2026-10-07T16:40:03.000Z" },
+  { "id": "rf-8826", "paymentId": "pay-7768", "orderId": "o-50290", "customerId": "c-0451", "amountCents": 31500, "source": "checkout", "reason": "order cancelled", "createdAt": "2026-10-11T08:21:47.000Z" },
+  { "id": "rf-8830", "paymentId": "pay-7771", "orderId": "o-50298", "customerId": "c-2207", "amount": "120.00", "source": "support", "agent": "marco", "note": "delivered 9 days late", "createdAt": "2026-10-13T10:55:30.000Z" },
+  { "id": "rf-8834", "paymentId": "pay-7785", "orderId": "o-50322", "customerId": "c-4416", "amountCents": 8900, "source": "checkout", "reason": "out of stock", "createdAt": "2026-10-16T14:09:12.000Z" },
+  { "id": "rf-8841", "paymentId": "pay-7790", "orderId": "o-50337", "customerId": "c-1189", "amountCents": 19900, "source": "provider", "providerRefundId": "re_3QBx7Lm0Ra", "createdAt": "2026-10-20T11:33:58.000Z" },
+  { "id": "rf-8845", "paymentId": "pay-7804", "orderId": "o-50361", "customerId": "c-3377", "amount": "45.65", "source": "support", "agent": "lena", "note": "missing accessory", "createdAt": "2026-10-22T15:47:20.000Z" },
+  { "id": "rf-8850", "paymentId": "pay-7812", "orderId": "o-50380", "customerId": "c-0926", "amountCents": 4500, "source": "provider", "providerRefundId": "re_3QDp1Wc8Hs", "createdAt": "2026-10-25T09:18:41.000Z" },
+  { "id": "rf-8856", "paymentId": "pay-7829", "orderId": "o-50414", "customerId": "c-2650", "amountCents": 21350, "source": "checkout", "reason": "order cancelled", "createdAt": "2026-10-28T17:26:05.000Z" },
+  { "id": "rf-8859", "paymentId": "pay-7833", "orderId": "o-50421", "customerId": "c-1984", "amount": "175.00", "source": "support", "agent": "marco", "note": "wrong size, customer keeps item", "createdAt": "2026-10-30T12:12:36.000Z" }
+]

@@ -337,6 +337,39 @@ refactor, a security fix with sibling paths, an internal API migration with a su
 24/24 over 3 trials. On these kinds of work it needs no pack; the measured wins stay where the cause of a reported
 bug is elsewhere and where the real volume is in the repository.
 
+Fifth blind round (`o34`–`o39`, November 2026), written by agents that saw neither SeniorOS nor the earlier results,
+of the class where SeniorOS won: a bug reported in one reader whose cause is another writer of the same data, and a
+prompt that names the reader. Calibration on Opus alone (3 trials) kept the three tasks it failed every time; it
+solved `o34` and `o35` 3/3 and `o39` 2/3. Opus, 5 trials, every arm in the same batch:
+
+| Task | `none` | `superpowers` | `pocock` | `compound` | `senioros` |
+|---|---|---|---|---|---|
+| `o36-seat-limit`: seat limit reached; identity-provider deprovisioning leaves `removedAt` empty | 0/5 | 0/5 | 0/5 | 0/5 | 0/5 |
+| `o37-refund-report`: refunds report short; the support tool stores euros as a string, not `amountCents` | 0/5 | 0/5 | 0/5 | 1/5 | **5/5** |
+| `o38-tag-filter`: tag page misses posts; the bulk editor saves tags as typed | 2/5 | 5/5 | 5/5 | 5/5 | 5/5 |
+| Overall | 2/15 | 5/15 | 5/15 | 6/15 | **10/15** |
+| Avg duration (s) | 41 | 54 | 46 | 49 | 69 |
+| Avg cost per run (USD) | 0.27 | 0.39 | 0.30 | 0.31 | 0.43 |
+
+- SeniorOS loaded `senior-debugging` in 15 of 15 runs, Superpowers `systematic-debugging` in 15 of 15; `pocock` and
+  `compound` loaded no skill, as before.
+- `o37` separates the arms as `o17`–`o20` did: SeniorOS fixed the writer in all five runs and compound in one; the
+  other 19 runs converted the amount inside the report and left the ledger, the payout reconciliation and the refund
+  limits wrong.
+- `o36`: no arm passed in 25 runs. Every run fixed the count in `seatsUsed` and none set `removedAt` in the SCIM
+  writer: the code treats a deprovisioned user as suspended and reactivates it later, which makes an empty
+  `removedAt` look intended. Almost every report, in every arm, named billing and the members API as still counting
+  those users and left them for the user to decide. The hidden tests assert one product reading of an ambiguous state,
+  so this task weighs less than `o37`; it stays in the table because it was chosen before the runs.
+- `o38` did not hold its calibration (Opus alone 0/3, then 2/5), and every pack passed it 5/5: the bulk editor sits
+  next to a `normalizeTag` helper every other writer already calls.
+- Nothing was tuned between calibration and these runs.
+
+Finish-gate review threshold (cost): the risk review fires on medium and high risk. Over the 24 `senioros` runs with
+a review still on disk, 4 led to a fix: 2 on high-risk changes (`o13` twice) and 2 on medium (`o9`, `x1`). Firing on
+high risk alone would save the review (about $0.08) in 19 of 24 runs and lose half of the fixes, so the threshold
+stays. In the fifth round the review fired 5 times and led to 1 fix.
+
 Discipline on Opus (core set `t1`–`t8`, 3 trials, 72 runs):
 
 | | none | superpowers | senioros |
