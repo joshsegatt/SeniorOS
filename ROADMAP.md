@@ -105,8 +105,8 @@ Order matters: the pack changes in step 2, so step 3 measures the pack that step
       Measured: the first context is the same as the model alone's, so the extra is turns (a regression test seen
       failing before the fix, the finish-gate review). The review threshold was measured and
       kept: 5 of 58 reviews led to a fix, about $0.93 per bug. Still open: cut turns that do not move the score
-- [ ] 3. Other models: the Opus set on Sonnet, and a Codex runner (`codex exec`) to measure a GPT-class model, after
-      step 2
+- [ ] 3. Other models: Sonnet 5.5 on the cause-elsewhere tasks done (SeniorOS 12/20, Superpowers and Sonnet alone
+      0/20); still open: a Codex runner (`codex exec`) to measure a GPT-class model
 - [ ] Never worse: every pack change re-runs `o9`–`o16` (and the core set) before it is kept
 
 ## Phase 6 — Measurement anyone can trust
