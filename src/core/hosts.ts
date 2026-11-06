@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { antigravityPaths } from './antigravity.js';
+import { grokHomeDir, pluginListed } from './grok.js';
 
 /** `unknown` when the files that would say are missing or unreadable: never a guess. */
 export type Tri = 'yes' | 'no' | 'unknown';
@@ -43,7 +44,7 @@ export const defaultEnvironment = (root: string): HostEnvironment => ({ home: os
 export const geminiHome = (e: HostEnvironment) => e.env.SENIOROS_GEMINI_HOME ?? path.join(e.home, '.gemini');
 
 /** Grok's folder, as the Grok installer resolves it. */
-export const grokHome = (e: HostEnvironment) => e.env.SENIOROS_GROK_HOME ?? e.env.GROK_HOME ?? path.join(e.home, '.grok');
+export const grokHome = (e: HostEnvironment) => grokHomeDir(e.env, e.home);
 
 const isDir = (p: string) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const read = (p: string): string | null => { try { return readFileSync(p, 'utf8'); } catch { return null; } };
@@ -260,7 +261,7 @@ function grok(e: HostEnvironment): HostStatus {
   const present = presence(['grok'], home, e);
   const dir = path.join(home, 'plugins', 'senioros');
   const config = path.join(home, 'config.toml');
-  const enabled = /^\s*enabled\s*=\s*\[[^\]]*["']senioros["']/m.test(read(config) ?? '');
+  const enabled = pluginListed(read(config) ?? '');
   let plugin: Finding;
   if (!isDir(dir)) plugin = { state: 'no', evidence: `no ${tilde(dir, e.home)}` };
   else if (!enabled) plugin = { state: 'no', evidence: `${tilde(dir, e.home)} exists but "senioros" is not enabled in ${tilde(config, e.home)}` };

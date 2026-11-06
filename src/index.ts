@@ -250,7 +250,10 @@ async function main(): Promise<void> {
   }
 
   if (command === 'install' && valueAfter(args, '--target') === 'grok') {
-    printInstallReport('Installed SeniorOS for Grok CLI.', await installGrok({ force: hasFlag(args, '--force') }));
+    const report = await installGrok({ force: hasFlag(args, '--force'), hasCli: Boolean(onPath('senior')) });
+    printInstallReport(report.warnings.length ? 'Installed SeniorOS for Grok CLI, with steps left (see the warnings).' : 'Installed SeniorOS for Grok CLI.', report);
+    // A step left undone means Grok may not load SeniorOS: scripts must see it.
+    if (report.warnings.length) process.exitCode = 1;
     if (!onPath('senior')) console.warn('\nNote: the `senior` command is not on PATH, so the finish gate lets the agent finish without running checks. Install it with: npm install -g senioros');
     console.log('\nStart a new Grok session for the changes to apply.');
     return;

@@ -2,7 +2,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from
 import path from 'node:path';
 import { antigravityPaths, installAntigravity } from './antigravity.js';
 import { grokPaths, installGrok } from './grok.js';
-import { defaultEnvironment, detectHosts, geminiHome, grokHome, opencodeConfigFiles, opencodeEditBlocked, type HostEnvironment, type HostStatus } from './hosts.js';
+import { defaultEnvironment, detectHosts, geminiHome, grokHome, onPath, opencodeConfigFiles, opencodeEditBlocked, type HostEnvironment, type HostStatus } from './hosts.js';
 
 export interface SetupReport {
   hosts: HostStatus[];
@@ -58,7 +58,7 @@ export async function setup(root: string, options: { apply?: boolean } = {}, e: 
         }
       } else if (host.id === 'grok' && host.steps.length) {
         try {
-          const report = await installGrok({}, grokPaths(grokHome(e)));
+          const report = await installGrok({ hasCli: Boolean(onPath('senior', e.env)) }, grokPaths(grokHome(e)));
           applied.push(...report.actions.map((a) => `Grok: ${a}`));
           skipped.push(...report.warnings.map((w) => `Grok: ${w}`));
         } catch (error) {
