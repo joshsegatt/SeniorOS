@@ -20,6 +20,7 @@
     "test": "npm run build --silent && node --test dist/tests/*.test.js",
     "validate:skills": "npm run build --silent && node dist/scripts/validate-skills.js",
     "validate:evals": "npm run build --silent && node dist/scripts/validate-evals.js",
+    "gen:rules": "npm run build --silent && node dist/scripts/gen-rules.js",
     "check": "npm run typecheck && npm run validate:skills && npm run validate:evals && npm test",
     "prepack": "npm run build"
   },

@@ -2,9 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, existsSync } from 'node:fs';
 import path from 'node:path';
+import { generateRules } from '../scripts/gen-rules.js';
 
-// The routing rules are copied into every host's adapter. A routing fix made in one copy and missed in another makes
-// the same task route differently per host, so the parts that decide routing are checked here.
+// The routing rules reach every host's adapter. A routing fix made in one copy and missed in another makes the same
+// task route differently per host: the copies come from rules/core.md, and the parts that decide routing are checked.
 const root = process.cwd();
 const files = [
   'rules/senioros.md',
@@ -41,4 +42,8 @@ test('hosts other than Antigravity share the low-risk and routing bullets word f
       assert.equal(bullet(text, name), bullet(first, name), `${shared[i + 1]}: ${name}`);
     }
   }
+});
+
+test('generated rules match rules/core.md (edit the template, then npm run gen:rules)', () => {
+  assert.deepEqual(generateRules(root, true), []);
 });

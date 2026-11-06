@@ -1,0 +1,8 @@
+{
+  "rules/senioros.md": "SeniorOS skills (`senior-*`) are installed. Activate one when its trigger applies.",
+  "adapters/claude-code/rules.md": "SeniorOS skills are installed (`senioros:senior-*`). Load one with the Skill tool when its trigger applies.",
+  "adapters/codex/rules.md": "SeniorOS skills (`senior-*`) are installed. When a skill's trigger applies, read its `SKILL.md` and follow it.",
+  "adapters/cursor/rules.md": "SeniorOS skills (`senior-*`) are installed. When a skill's trigger applies, read its `SKILL.md` and follow it.",
+  "adapters/grok/rules.md": "SeniorOS skills (`senior-*`) are installed. Load at most one per task, when its trigger applies: `senior-debugging` for a reported bug or failing test, otherwise `senior-engineering`. Load `senior-finish`, `senior-code-review` or `senior-project-intelligence` only when the user asks for a finish report, a review or a project map, and start no review subagents: when you stop, the SeniorOS finish gate runs the checks and asks for the risk review itself.",
+  "adapters/opencode/rules.md": "SeniorOS skills (`senior-*`) are installed. When a skill's trigger applies, load it with the `skill` tool and follow it."
+}
