@@ -24,13 +24,14 @@ test('nothing installed: no host is found, and what cannot be known says unknown
   const m = machine();
   try {
     const hosts = detectHosts(m.root, m.e);
-    assert.deepEqual(hosts.map((h) => h.present.state), ['no', 'no', 'no', 'no', 'no']);
+    assert.deepEqual(hosts.map((h) => h.present.state), ['no', 'no', 'no', 'no', 'no', 'no']);
     // No plugin record at all is not proof of absence.
     assert.equal(m.host('claude').plugin.state, 'unknown');
     assert.equal(m.host('codex').plugin.state, 'unknown');
     assert.equal(m.host('cursor').plugin.state, 'unknown');
     assert.equal(m.host('opencode').plugin.state, 'no');
     assert.equal(m.host('antigravity').plugin.state, 'no');
+    assert.equal(m.host('grok').plugin.state, 'no');
   } finally {
     m.done();
   }
@@ -48,6 +49,9 @@ test('everything installed: each host shows the evidence and has no step left', 
     mkdirSync(path.join(m.home, '.gemini', 'antigravity'), { recursive: true });
     m.put('.gemini/config/senioros/install.json', '{}');
     m.put('.gemini/config/hooks.json', JSON.stringify({ hooks: [{ command: 'node hooks/senioros/guard.mjs' }] }));
+    mkdirSync(path.join(m.home, '.grok', 'plugins', 'senioros'), { recursive: true });
+    m.put('.grok/config.toml', '[plugins]\nenabled = ["senioros"]\n');
+    m.put('.grok/AGENTS.md', '## SeniorOS: engineering harness\n\n- **Routing:** x\n');
 
     for (const host of detectHosts(m.root, m.e)) {
       assert.equal(host.present.state, 'yes', host.name);
@@ -57,6 +61,7 @@ test('everything installed: each host shows the evidence and has no step left', 
     assert.equal(m.host('codex').hooks?.state, 'yes');
     assert.match(m.host('codex').hooks?.evidence ?? '', /3 SeniorOS hooks/);
     assert.equal(m.host('antigravity').hooks?.state, 'yes');
+    assert.equal(m.host('grok').hooks?.state, 'yes');
   } finally {
     m.done();
   }

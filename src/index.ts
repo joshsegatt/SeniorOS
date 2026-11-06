@@ -10,9 +10,10 @@ import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
 import { installAntigravity, uninstallAntigravity, type AntigravityReport } from './core/antigravity.js';
+import { installGrok, uninstallGrok } from './core/grok.js';
 import { spawnSync } from 'node:child_process';
 import { doctor } from './core/doctor.js';
-import { formatHosts } from './core/hosts.js';
+import { formatHosts, onPath } from './core/hosts.js';
 import { setup } from './core/setup.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
 import { proveRegression, restoreInterruptedProof, type ProofPhase, type RegressionReport } from './core/regression.js';
@@ -229,7 +230,7 @@ async function main(): Promise<void> {
     const report = await setup(root, { apply });
     if (json) { console.log(JSON.stringify(report, null, 2)); if (report.skipped.length) process.exitCode = 1; return; }
     const found = report.hosts.filter((h) => h.present.state === 'yes');
-    console.log(found.length ? formatHosts(report.hosts, { onlyPresent: true }) : 'No supported host found on this machine (Claude Code, Codex, Cursor, OpenCode, Antigravity).');
+    console.log(found.length ? formatHosts(report.hosts, { onlyPresent: true }) : 'No supported host found on this machine (Claude Code, Codex, Cursor, OpenCode, Antigravity, Grok CLI).');
     for (const line of report.applied) console.log(`applied: ${line}`);
     for (const line of report.skipped) console.warn(`not applied: ${line}`);
     // A step --apply could not do leaves setup incomplete: scripts must see it.
@@ -241,16 +242,31 @@ async function main(): Promise<void> {
   }
 
   if (command === 'install' && valueAfter(args, '--target') === 'antigravity') {
-    printAntigravityReport('Installed SeniorOS for Google Antigravity.', await installAntigravity({ turbo: hasFlag(args, '--turbo'), force: hasFlag(args, '--force') }));
+    printInstallReport('Installed SeniorOS for Google Antigravity.', await installAntigravity({ turbo: hasFlag(args, '--turbo'), force: hasFlag(args, '--force') }));
     const cli = spawnSync('senior --version', { shell: true, encoding: 'utf8', windowsHide: true });
     if (cli.status !== 0) console.warn('\nNote: the `senior` command is not on PATH, so the finish gate lets the agent finish without running checks. Install it with: npm install -g senioros');
     console.log('\nOpen a new Antigravity conversation for the changes to apply.');
     return;
   }
 
+  if (command === 'install' && valueAfter(args, '--target') === 'grok') {
+    const report = await installGrok({ force: hasFlag(args, '--force'), hasCli: Boolean(onPath('senior')) });
+    printInstallReport(report.warnings.length ? 'Installed SeniorOS for Grok CLI, with steps left (see the warnings).' : 'Installed SeniorOS for Grok CLI.', report);
+    // A step left undone means Grok may not load SeniorOS: scripts must see it.
+    if (report.warnings.length) process.exitCode = 1;
+    if (!onPath('senior')) console.warn('\nNote: the `senior` command is not on PATH, so the finish gate lets the agent finish without running checks. Install it with: npm install -g senioros');
+    console.log('\nStart a new Grok session for the changes to apply.');
+    return;
+  }
+
+  if (command === 'uninstall' && valueAfter(args, '--target') === 'grok') {
+    printInstallReport('Removed SeniorOS from Grok CLI.', await uninstallGrok());
+    return;
+  }
+
   if (command === 'uninstall') {
-    if (valueAfter(args, '--target') !== 'antigravity') throw new Error('uninstall supports --target antigravity; skills installed for other targets are plain folders you can delete');
-    printAntigravityReport('Removed SeniorOS from Google Antigravity.', await uninstallAntigravity());
+    if (valueAfter(args, '--target') !== 'antigravity') throw new Error('uninstall supports --target antigravity|grok; skills installed for other targets are plain folders you can delete');
+    printInstallReport('Removed SeniorOS from Google Antigravity.', await uninstallAntigravity());
     return;
   }
 
@@ -258,7 +274,7 @@ async function main(): Promise<void> {
     const target = valueAfter(args, '--target') as InstallTarget | undefined;
     const scope = (valueAfter(args, '--scope') ?? 'project') as InstallScope;
     const force = hasFlag(args, '--force');
-    if (!target || !['claude', 'codex', 'generic'].includes(target)) throw new Error('install requires --target claude|codex|generic|antigravity');
+    if (!target || !['claude', 'codex', 'generic'].includes(target)) throw new Error('install requires --target claude|codex|generic|antigravity|grok');
     if (!['project', 'user'].includes(scope)) throw new Error('--scope must be project or user');
     const installed = await installSkills(root, target, scope, force);
     console.log(`Installed ${installed.length} skills for ${target} (${scope}).`);
@@ -275,7 +291,7 @@ async function main(): Promise<void> {
   throw new Error(`Unknown command: ${command}`);
 }
 
-function printAntigravityReport(title: string, report: AntigravityReport): void {
+function printInstallReport(title: string, report: AntigravityReport): void {
   console.log(title);
   for (const action of report.actions) console.log(`- ${action}`);
   if (!report.actions.length) console.log('- nothing to change');

@@ -5,12 +5,17 @@ one part that differs: the routing rules.
 
 ## Install
 
+```bash
+npx senioros install --target grok
+```
+
+It does the three steps below and backs up each file it changes; `senior uninstall --target grok` undoes them. By hand:
+
 1. Copy the repository's `.claude-plugin/`, `hooks/`, `adapters/`, `skills/` and `rules/` into
    `~/.grok/plugins/senioros/`.
 2. Enable it with `[plugins] enabled = ["senioros"]` in `~/.grok/config.toml`.
 3. Put [`rules.md`](rules.md) in `~/.grok/AGENTS.md`. Grok's session-start hooks cannot add context, so this is how the
-   rules reach the agent. Leave out the `Project state` line when the project has no `.senior/` folder, and the last
-   line when the `senior` CLI is not installed, as the Claude Code session start does.
+   rules reach the agent. Leave out the last line when the `senior` CLI is not installed (the installer does).
 
 ## Why Grok has its own rules
 

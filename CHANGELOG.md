@@ -4,9 +4,14 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- `senior install --target grok` sets up Grok CLI in one command: the plugin in `~/.grok/plugins/senioros/`, the entry in `~/.grok/config.toml` and the Grok routing rules in a marked block of `~/.grok/AGENTS.md`, each file backed up once. `senior uninstall --target grok` removes them, `senior setup` and `senior doctor` report Grok, and `senior setup --apply` installs it. The npm package now ships the plugin parts Grok loads (`.claude-plugin/`, `hooks/`, `rules/`).
+
 ### Changed
 
 - Bench: a fifth blind round of the cause-elsewhere class (`o34`–`o39`), and `selftest` takes task ids. Opus, the three tasks Opus alone always failed in calibration, 5 trials: SeniorOS 10/15, compound-engineering 6/15, Superpowers and mattpocock/skills 5/15, Opus alone 2/15. The finish-gate review threshold was measured and kept: half of the reviews that led to a fix were on medium-risk changes.
+- The routing rules come from one template, `rules/core.md`. `npm run gen:rules` writes `rules/senioros.md` and the Claude Code, Codex, Cursor, Grok and OpenCode rules from it, each with its own first line from `rules/hosts.json`, and `npm test` fails when a generated file is out of date. The text each host loads is unchanged. Antigravity keeps its hand-written rules.
 - Grok gets its own routing rules, `adapters/grok/rules.md`, to put in `~/.grok/AGENTS.md`. They load at most one skill per task and start no review subagents, leaving the checks and the risk review to the finish gate. With the general rules Grok loaded four or five skills per task. On the bench (13 tasks, 2 trials, against the previous rules in the same batch) the score held at 20/26, the 12-minute timeouts fell from 7 to 0, and the time per task from 366 s to 226 s.
 - The bench measures `mattpocock/skills` and compound-engineering as rival arms, counts finish-gate reviews that led to a fix, and has a hygiene task for debug leftovers and copied secrets.
 

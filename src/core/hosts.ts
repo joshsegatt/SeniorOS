@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { antigravityPaths } from './antigravity.js';
+import { grokHomeDir, pluginListed } from './grok.js';
 
 /** `unknown` when the files that would say are missing or unreadable: never a guess. */
 export type Tri = 'yes' | 'no' | 'unknown';
@@ -12,7 +13,7 @@ export interface Finding {
   evidence: string;
 }
 
-export type HostId = 'claude' | 'codex' | 'cursor' | 'opencode' | 'antigravity';
+export type HostId = 'claude' | 'codex' | 'cursor' | 'opencode' | 'antigravity' | 'grok';
 
 export interface HostStatus {
   id: HostId;
@@ -41,6 +42,9 @@ export const defaultEnvironment = (root: string): HostEnvironment => ({ home: os
 
 /** Antigravity's folder (`~/.gemini`), as the installer resolves it. */
 export const geminiHome = (e: HostEnvironment) => e.env.SENIOROS_GEMINI_HOME ?? path.join(e.home, '.gemini');
+
+/** Grok's folder, as the Grok installer resolves it. */
+export const grokHome = (e: HostEnvironment) => grokHomeDir(e.env, e.home);
 
 const isDir = (p: string) => { try { return statSync(p).isDirectory(); } catch { return false; } };
 const read = (p: string): string | null => { try { return readFileSync(p, 'utf8'); } catch { return null; } };
@@ -252,9 +256,27 @@ function antigravity(e: HostEnvironment): HostStatus {
   return { id: 'antigravity', name: 'Antigravity', present, plugin, hooks, steps };
 }
 
+function grok(e: HostEnvironment): HostStatus {
+  const home = grokHome(e);
+  const present = presence(['grok'], home, e);
+  const dir = path.join(home, 'plugins', 'senioros');
+  const config = path.join(home, 'config.toml');
+  const enabled = pluginListed(read(config) ?? '');
+  let plugin: Finding;
+  if (!isDir(dir)) plugin = { state: 'no', evidence: `no ${tilde(dir, e.home)}` };
+  else if (!enabled) plugin = { state: 'no', evidence: `${tilde(dir, e.home)} exists but "senioros" is not enabled in ${tilde(config, e.home)}` };
+  else plugin = { state: 'yes', evidence: `${tilde(dir, e.home)}, enabled in ${tilde(config, e.home)}` };
+  // Grok's session start cannot add context: without the rules in AGENTS.md the skills are not routed.
+  const agents = path.join(home, 'AGENTS.md');
+  const routed = /SeniorOS[\s\S]*\*\*Routing:\*\*/.test(read(agents) ?? '');
+  const hooks = { label: 'rules', state: routed ? 'yes' : 'no', evidence: routed ? `SeniorOS rules in ${tilde(agents, e.home)}` : `no SeniorOS rules in ${tilde(agents, e.home)}` } as const;
+  const steps = plugin.state === 'yes' && routed ? [] : ['npx senioros install --target grok (senior setup --apply does it)'];
+  return { id: 'grok', name: 'Grok CLI', present, plugin, hooks, steps };
+}
+
 /** Every host SeniorOS supports, as found on this machine. */
 export function detectHosts(root: string, e: HostEnvironment = defaultEnvironment(root)): HostStatus[] {
-  return [claude(e), codex(e), cursor(e), opencode(e), antigravity(e)];
+  return [claude(e), codex(e), cursor(e), opencode(e), antigravity(e), grok(e)];
 }
 
 const MARK: Record<Tri, string> = { yes: 'yes', no: 'no', unknown: 'unknown' };
