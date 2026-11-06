@@ -378,6 +378,36 @@ solved `o34` and `o35` 3/3 and `o39` 2/3. Opus, 5 trials, every arm in the same 
   next to a `normalizeTag` helper every other writer already calls.
 - Nothing was tuned between calibration and these runs.
 
+Sixth blind round (`o40`–`o47`, November 2026), on kinds of work not tried before, two tasks each, written by agents
+that saw neither SeniorOS nor the earlier results: concurrency (`o40-gift-card-balance`, a balance updated from a
+stale read; `o41-checkout-retry`, an idempotency key saved only after the handler finished), flaky tests
+(`o42-rate-limit-window`, a clock-aligned window that a rolling-second rule forbids; `o43-reset-email`, an email
+sent without `await`), a change to the shape of stored data (`o44-weight-grams`, `o45-ticket-assignees`, with old
+records and readers the prompt does not name) and a dependency upgrade with a silent behavior change
+(`o46-rowlark-upgrade`, `o47-centwise-upgrade`, a vendored library whose changelog lists it). Opus, 3 trials:
+
+| | `none` | `senioros` |
+|---|---|---|
+| Overall | 23/24 | 24/24 |
+| 95% interval (Wilson) | 80–99% | 86–100% |
+| Avg duration (s) | 72 | 112 |
+| Avg cost per run (USD) | 0.37 | 0.53 |
+| Cost per passing run (USD) | 0.38 | 0.53 |
+
+- Opus alone solved every task at least twice out of three (its one miss: `o40`, which fixed the redemption and
+  left the refund credit racing), so none was kept for a held-out comparison and no pack can be shown to win here,
+  as in the fourth round. No skill was written for these kinds of work: there is nothing for it to fix.
+- SeniorOS did not lose a run (p = 1.0, not separable), so these tasks now serve as a "never worse" check. It costs
+  45% more per run, above the 20% the roadmap allows where the model alone already succeeds. The extra is turns
+  (16.3 against 9.7; the first context is the same 40k tokens in both arms, so it is not the rules text): a
+  regression test written and seen failing before the fix, and the finish-gate risk review, which fired in 15 of 24
+  runs (payment and login code are rated medium risk) and led to no fix. With the earlier counts (4 fixes in 38
+  reviewed runs, 1 in 5 in the fifth round), 5 of 58 reviews led to a fix: at about $0.08 a review, $0.93 per bug
+  caught before "done". The review stays.
+- `o42` and `o43` first failed every Opus-alone run on a protected-file check: the agent fixed the product code and
+  made the flaky test deterministic with an injected clock, which strengthens it. That check was dropped from both
+  tasks (the hidden tests still fail the shallow fixes) and those runs were regraded before any `senioros` run.
+
 Finish-gate review threshold (cost): the risk review fires on medium and high risk. Over the 24 `senioros` runs with
 a review still on disk, 4 led to a fix: 2 on high-risk changes (`o13` twice) and 2 on medium (`o9`, `x1`). Firing on
 high risk alone would save the review (about $0.08) in 19 of 24 runs and lose half of the fixes, so the threshold

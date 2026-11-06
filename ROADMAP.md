@@ -93,13 +93,17 @@ Order matters: the pack changes in step 2, so step 3 measures the pack that step
       an internal API migration): Opus alone 24/24, so no pack can win there
 - [x] Fifth blind round (`o34`–`o39`, the cause-elsewhere class): SeniorOS 10/15, compound-engineering 6/15,
       Superpowers and mattpocock/skills 5/15, Opus alone 2/15; cost per pass $0.65 against $0.78 to $1.17
-- [ ] 1. Wider proof: a sixth blind round on kinds of work not tried yet (a data migration or backfill, a dependency
-      upgrade, performance at the real volume, concurrency), calibrated on Opus alone; where Opus fails, find the
-      pack's weak spot, fix it on tuning tasks, prove on held-out ones
-- [ ] 2. Cost: SeniorOS runs cost about 60% more than Opus alone on the Opus set. Find where the extra goes (skill
-      reads, finish-gate review, extra checks) and cut what does not move the score; target the Superpowers cost
-      with the same score. The finish-gate review threshold was measured and kept: half of the reviews that led to a
-      fix were on medium-risk changes
+- [x] Sixth blind round (`o40`–`o47`: concurrency, flaky tests, a change to stored data, a dependency upgrade):
+      Opus alone 23/24, so no pack can win there; SeniorOS 24/24 at 45% more cost per run. Kept as a "never worse"
+      check
+- [ ] 1. Wider proof: kinds of work where Opus alone still fails in calibration. Tried and solved by the model alone:
+      features with an invariant, refactors, security fixes, API migrations, concurrency, flaky tests, stored-data
+      changes, dependency upgrades. Next to try: performance at the real volume, multi-step work across a long
+      session, and tasks in Python and Go
+- [ ] 2. Cost: SeniorOS runs cost about 60% more than Opus alone on the Opus set (45% on the sixth round), and the
+      least per passing run. Measured: the first context is the same as the model alone's, so the extra is turns (a
+      regression test seen failing before the fix, the finish-gate review). The review threshold was measured and
+      kept: 5 of 58 reviews led to a fix, about $0.93 per bug. Still open: cut turns that do not move the score
 - [ ] 3. Other models: the Opus set on Sonnet, and a Codex runner (`codex exec`) to measure a GPT-class model, after
       step 2
 - [ ] Never worse: every pack change re-runs `o9`–`o16` (and the core set) before it is kept
