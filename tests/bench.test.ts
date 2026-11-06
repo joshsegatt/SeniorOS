@@ -125,6 +125,8 @@ test('the report statistics match known values', async () => {
     fisher: (a: number, n1: number, b: number, n2: number) => number;
     passWithInterval: (k: number, n: number) => string;
     costPerPass: (runs: Array<{ pass: boolean; outcome?: { costUsd?: number } }>) => number | null;
+    stratifiedExact: (tables: Array<[number, number, number, number]>) => number;
+    formatP: (p: number) => string;
   };
   const near = (x: number, y: number, eps = 1e-3) => assert.ok(Math.abs(x - y) < eps, `${x} vs ${y}`);
   const [lo, hi] = s.wilson(10, 15);
@@ -138,7 +140,38 @@ test('the report statistics match known values', async () => {
   near(s.fisher(10, 15, 2, 15), 0.00778, 1e-4);
   near(s.fisher(2, 2, 2, 2), 1);
   assert.equal(s.passWithInterval(10, 15), '10/15 (42–85%)');
-  // A run with no cost counts at the average: (0.4 + 0.2) / 2 * 3 runs / 1 pass.
-  near(s.costPerPass([{ pass: true, outcome: { costUsd: 0.4 } }, { pass: false, outcome: { costUsd: 0.2 } }, { pass: false }]) ?? 0, 0.9);
+  // A run with no cost (a timeout) counts at the arm's most expensive run: (0.4 + 0.2 + 0.4) / 1 pass.
+  near(s.costPerPass([{ pass: true, outcome: { costUsd: 0.4 } }, { pass: false, outcome: { costUsd: 0.2 } }, { pass: false }]) ?? 0, 1);
   assert.equal(s.costPerPass([{ pass: false, outcome: { costUsd: 0.4 } }]), null);
+  // One task: the same as Fisher. Tasks every arm passes or fails add nothing, instead of diluting the difference.
+  near(s.stratifiedExact([[3, 3, 0, 3]]), 0.1);
+  near(s.stratifiedExact([[0, 5, 0, 5], [5, 5, 1, 5], [5, 5, 5, 5]]), s.fisher(5, 5, 1, 5));
+  near(s.stratifiedExact([[0, 5, 0, 5], [5, 5, 0, 5], [5, 5, 2, 5]]), 0.000661, 1e-5);
+  assert.throws(() => s.fisher(15, 10, 0, 10), /bad counts/);
+  assert.throws(() => s.stratifiedExact([[1.5, 3, 0, 3]]), /bad counts/);
+  assert.equal(s.formatP(1.2e-8), '<0.001');
+  assert.equal(s.formatP(0.0476), '0.048');
+});
+
+test('the report compares each pack with the model alone task by task, and only on the tasks both ran', async () => {
+  const { buildReport } = (await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'report.mjs')).href)) as { buildReport: (dir: string) => string };
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'sobr-'));
+  try {
+    const { writeFileSync } = await import('node:fs');
+    let n = 0;
+    const put = (arm: string, taskId: string, pass: boolean, costUsd: number) => {
+      n++;
+      writeFileSync(path.join(dir, `${taskId}--${arm}--${n}.json`), JSON.stringify({ runId: `${taskId}--${arm}--${n}`, arm, taskId, pass, failed: pass ? [] : ['hidden'], checks: {}, metrics: {}, outcome: { costUsd } }));
+    };
+    for (let i = 0; i < 3; i++) { put('none', 'a', false, 0.1); put('pack', 'a', true, 0.2); }
+    // Only the pack ran task b: it must not count in the comparison.
+    for (let i = 0; i < 3; i++) put('pack', 'b', false, 0.2);
+    const md = buildReport(dir);
+    const row = md.split('\n').find((l) => l.startsWith('| vs none')) ?? '';
+    assert.match(md, /\| Metric \| none \| pack \|/);
+    assert.equal(row, '| vs none, p (exact, by task) | - | 0.100 |');
+    assert.match(md, /\| Cost per passing run \(USD\) \| - \| 0\.40 \|/);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
