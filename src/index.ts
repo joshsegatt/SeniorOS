@@ -5,11 +5,12 @@ import { initProject } from './core/project-state.js';
 import { getChangeSet, getRepositoryRoot, type ChangeScope } from './core/git.js';
 import path from 'node:path';
 import { mkdir, writeFile } from 'node:fs/promises';
-import { realpathSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { assessRisk } from './core/risk-engine.js';
 import { runProof } from './core/proof-engine.js';
 import { destinationFor, findLegacySkills, installSkills, type InstallScope, type InstallTarget } from './core/install.js';
-import { installAntigravity, uninstallAntigravity, type AntigravityReport } from './core/antigravity.js';
+import { installAntigravity, uninstallAntigravity } from './core/antigravity.js';
+import { packageRoot, type InstallReport } from './core/install-shared.js';
 import { installGrok, uninstallGrok } from './core/grok.js';
 import { spawnSync } from 'node:child_process';
 import { doctor } from './core/doctor.js';
@@ -18,10 +19,19 @@ import { setup } from './core/setup.js';
 import { CONFIG_PATH, loadConfig } from './core/config.js';
 import { proveRegression, restoreInterruptedProof, type ProofPhase, type RegressionReport } from './core/regression.js';
 
-const VERSION = '0.9.0';
+function readVersion(): string {
+  try {
+    return (JSON.parse(readFileSync(path.join(packageRoot(), 'package.json'), 'utf8')) as { version: string }).version;
+  } catch {
+    // A copy of the CLI without its package.json still runs; only the version is unknown.
+    return 'unknown';
+  }
+}
+
+const VERSION = readVersion();
 
 function usage(): void {
-  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--record] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior setup [--apply] [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior uninstall --target antigravity\n`);
+  console.log(`SeniorOS ${VERSION}\n\nUsage:\n  senior init\n  senior inspect [--json]\n  senior risk [--base <ref>] [--json]\n  senior finish [--all] [--record] [--json]\n  senior prove --regression --test "<command>" [--base <ref>] [--fix <path>]... [--expect-failure <regex>] [--timeout <seconds>] [--json]\n  senior prove --restore\n  senior doctor [--json]\n  senior setup [--apply] [--json]\n  senior install --target <claude|codex|generic> [--scope <project|user>] [--force]\n  senior install --target antigravity [--turbo] [--force]\n  senior install --target grok [--force]\n  senior uninstall --target <antigravity|grok>\n`);
 }
 
 /**
@@ -242,7 +252,7 @@ async function main(): Promise<void> {
   }
 
   if (command === 'install' && valueAfter(args, '--target') === 'antigravity') {
-    printInstallReport('Installed SeniorOS for Google Antigravity.', await installAntigravity({ turbo: hasFlag(args, '--turbo'), force: hasFlag(args, '--force') }));
+    printInstallReport('Installed SeniorOS for Google Antigravity', await installAntigravity({ turbo: hasFlag(args, '--turbo'), force: hasFlag(args, '--force') }));
     const cli = spawnSync('senior --version', { shell: true, encoding: 'utf8', windowsHide: true });
     if (cli.status !== 0) console.warn('\nNote: the `senior` command is not on PATH, so the finish gate lets the agent finish without running checks. Install it with: npm install -g senioros');
     console.log('\nOpen a new Antigravity conversation for the changes to apply.');
@@ -250,23 +260,20 @@ async function main(): Promise<void> {
   }
 
   if (command === 'install' && valueAfter(args, '--target') === 'grok') {
-    const report = await installGrok({ force: hasFlag(args, '--force'), hasCli: Boolean(onPath('senior')) });
-    printInstallReport(report.warnings.length ? 'Installed SeniorOS for Grok CLI, with steps left (see the warnings).' : 'Installed SeniorOS for Grok CLI.', report);
-    // A step left undone means Grok may not load SeniorOS: scripts must see it.
-    if (report.warnings.length) process.exitCode = 1;
+    printInstallReport('Installed SeniorOS for Grok CLI', await installGrok({ force: hasFlag(args, '--force'), hasCli: Boolean(onPath('senior')) }));
     if (!onPath('senior')) console.warn('\nNote: the `senior` command is not on PATH, so the finish gate lets the agent finish without running checks. Install it with: npm install -g senioros');
     console.log('\nStart a new Grok session for the changes to apply.');
     return;
   }
 
   if (command === 'uninstall' && valueAfter(args, '--target') === 'grok') {
-    printInstallReport('Removed SeniorOS from Grok CLI.', await uninstallGrok());
+    printInstallReport('Removed SeniorOS from Grok CLI',await uninstallGrok());
     return;
   }
 
   if (command === 'uninstall') {
     if (valueAfter(args, '--target') !== 'antigravity') throw new Error('uninstall supports --target antigravity|grok; skills installed for other targets are plain folders you can delete');
-    printInstallReport('Removed SeniorOS from Google Antigravity.', await uninstallAntigravity());
+    printInstallReport('Removed SeniorOS from Google Antigravity',await uninstallAntigravity());
     return;
   }
 
@@ -291,8 +298,10 @@ async function main(): Promise<void> {
   throw new Error(`Unknown command: ${command}`);
 }
 
-function printInstallReport(title: string, report: AntigravityReport): void {
-  console.log(title);
+/** Prints what an installer did. A step left undone (a warning) exits 1, so scripts do not read it as done. */
+function printInstallReport(title: string, report: InstallReport): void {
+  console.log(report.warnings.length ? `${title}, with steps left (see the warnings).` : `${title}.`);
+  if (report.warnings.length) process.exitCode = 1;
   for (const action of report.actions) console.log(`- ${action}`);
   if (!report.actions.length) console.log('- nothing to change');
   for (const warning of report.warnings) console.warn(`Warning: ${warning}`);

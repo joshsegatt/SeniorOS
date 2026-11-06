@@ -1,14 +1,12 @@
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { copyFile, cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { exists } from './fs-utils.js';
+import { backupOnce, packageRoot, removeRulesBlock, upsertRulesBlock, type InstallReport } from './install-shared.js';
 
 // Grok CLI loads the Claude Code plugin from ~/.grok/plugins/, so the skills, guard and finish gate are the same.
 // Its session-start hooks cannot add context, so the routing rules go in ~/.grok/AGENTS.md.
 
-const RULES_START = '<!-- senioros:start -->';
-const RULES_END = '<!-- senioros:end -->';
 const PLUGIN = 'senioros';
 /** The plugin parts Grok needs, as the bench installs them (evals/bench/lib/grok.mjs). */
 const PARTS = ['.claude-plugin', 'hooks', 'adapters', 'skills', 'rules'];
@@ -21,10 +19,7 @@ export interface GrokPaths {
   agents: string;
 }
 
-export interface GrokReport {
-  actions: string[];
-  warnings: string[];
-}
+export type GrokReport = InstallReport;
 
 /** Grok's home: `GROK_HOME` as Grok reads it, else `~/.grok`; `SENIOROS_GROK_HOME` overrides both (tests). */
 export function grokHomeDir(env: NodeJS.ProcessEnv = process.env, home = os.homedir()): string {
@@ -33,18 +28,6 @@ export function grokHomeDir(env: NodeJS.ProcessEnv = process.env, home = os.home
 
 export function grokPaths(home = grokHomeDir()): GrokPaths {
   return { home, plugin: path.join(home, 'plugins', PLUGIN), config: path.join(home, 'config.toml'), agents: path.join(home, 'AGENTS.md') };
-}
-
-function packageRoot(): string {
-  return path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
-}
-
-async function backupOnce(file: string, report: GrokReport): Promise<void> {
-  const backup = `${file}.bak-senioros`;
-  if ((await exists(file)) && !(await exists(backup))) {
-    await copyFile(file, backup);
-    report.actions.push(`backed up ${file} to ${backup}`);
-  }
 }
 
 const SECTION = /^\s*\[\s*plugins\s*\]\s*(#.*)?$/;
@@ -107,19 +90,6 @@ export function editPluginList(toml: string, add: boolean): string {
   return lines.join(eol);
 }
 
-const count = (text: string, mark: string) => text.split(mark).length - 1;
-
-/** `text` without the installer's rules block, or null when the markers are not one start and one end in order. */
-function stripRulesBlock(text: string): string | null {
-  const starts = count(text, RULES_START);
-  const ends = count(text, RULES_END);
-  if (starts === 0 && ends === 0) return text;
-  const start = text.indexOf(RULES_START);
-  const end = text.indexOf(RULES_END);
-  if (starts !== 1 || ends !== 1 || end < start) return null;
-  return (text.slice(0, start).trimEnd() + '\n' + text.slice(end + RULES_END.length).trimStart()).trimEnd() + '\n';
-}
-
 /** The Grok rules without the CLI line when `senior` is not installed, as the Claude Code session start drops it. */
 export function grokRules(rules: string, hasCli: boolean): string {
   return rules.split('\n').filter((line) => hasCli || !line.startsWith('If the `senior` CLI is on PATH')).join('\n').trim();
@@ -174,22 +144,7 @@ export async function installGrok(options: { force?: boolean; hasCli: boolean },
 
   // 3. The rules, one marked block in AGENTS.md, replaced on reinstall.
   const rules = grokRules(await readFile(path.join(source, 'adapters', 'grok', 'rules.md'), 'utf8'), options.hasCli);
-  const current = (await exists(paths.agents)) ? await readFile(paths.agents, 'utf8') : '';
-  const base = stripRulesBlock(current);
-  if (base === null) {
-    report.warnings.push(`${paths.agents} has SeniorOS block markers that do not pair up; left it unchanged (fix or remove them, then run the install again)`);
-  } else if (current.includes('SeniorOS') && !current.includes(RULES_START) && !force) {
-    report.warnings.push(`${paths.agents} already mentions SeniorOS outside an installer block; left it unchanged (run with --force to add the installer's rules as well)`);
-  } else {
-    const kept = base.trimEnd();
-    const next = `${kept ? `${kept}\n\n` : ''}${RULES_START}\n${rules}\n${RULES_END}\n`;
-    if (next !== current) {
-      await backupOnce(paths.agents, report);
-      await mkdir(paths.home, { recursive: true });
-      await writeFile(paths.agents, next);
-      report.actions.push(`added the SeniorOS rules to ${paths.agents}`);
-    }
-  }
+  await upsertRulesBlock(paths.agents, rules, force, report);
   return report;
 }
 
@@ -219,16 +174,6 @@ export async function uninstallGrok(paths = grokPaths()): Promise<GrokReport> {
       report.warnings.push(`${(error as Error).message}; remove "${PLUGIN}" from it by hand`);
     }
   }
-  if (await exists(paths.agents)) {
-    const current = await readFile(paths.agents, 'utf8');
-    const next = stripRulesBlock(current);
-    if (next === null) {
-      report.warnings.push(`${paths.agents} has SeniorOS block markers that do not pair up; remove the rules by hand`);
-    } else if (next !== current) {
-      if (!next.trim() && (await created(paths.agents))) await rm(paths.agents);
-      else await writeFile(paths.agents, next.trim() ? next : '');
-      report.actions.push(`removed the SeniorOS rules from ${paths.agents}`);
-    }
-  }
+  await removeRulesBlock(paths.agents, report);
   return report;
 }

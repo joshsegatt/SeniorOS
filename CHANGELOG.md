@@ -10,11 +10,17 @@ All notable changes to SeniorOS will be documented here.
 
 ### Changed
 
+- Bench reports give each arm's pass rate with a 95% Wilson interval, a two-sided exact p against the model alone compared task by task, and the cost per passing run (`evals/bench/lib/stats.mjs`). On the fifth round, SeniorOS is the only pack separable from Opus alone (p < 0.001; the others p ≥ 0.08) and has the lowest cost per passing run ($0.65, against $0.78 to $2.04); its lead over compound-engineering (10/15 against 6/15) is not separable at 5 trials.
 - Bench: a fifth blind round of the cause-elsewhere class (`o34`–`o39`), and `selftest` takes task ids. Opus, the three tasks Opus alone always failed in calibration, 5 trials: SeniorOS 10/15, compound-engineering 6/15, Superpowers and mattpocock/skills 5/15, Opus alone 2/15. The finish-gate review threshold was measured and kept: half of the reviews that led to a fix were on medium-risk changes.
 - The routing rules come from one template, `rules/core.md`. `npm run gen:rules` writes `rules/senioros.md` and the Claude Code, Codex, Cursor, Grok and OpenCode rules from it, each with its own first line from `rules/hosts.json`, and `npm test` fails when a generated file is out of date. The text each host loads is unchanged. Antigravity keeps its hand-written rules.
 - The README is half as long (821 to 445 lines): it keeps the results, the demo, the install and the skills, and links to `docs/cli.md` (every command, proof order, regression proof, project config), `docs/hosts.md` (each host install) and `docs/concepts.md` (proof engine, project memory, evals, architecture, design principles). No text was dropped; stale counts in the evals section were updated.
 - Grok gets its own routing rules, `adapters/grok/rules.md`, to put in `~/.grok/AGENTS.md`. They load at most one skill per task and start no review subagents, leaving the checks and the risk review to the finish gate. With the general rules Grok loaded four or five skills per task. On the bench (13 tasks, 2 trials, against the previous rules in the same batch) the score held at 20/26, the 12-minute timeouts fell from 7 to 0, and the time per task from 366 s to 226 s.
 - The bench measures `mattpocock/skills` and compound-engineering as rival arms, counts finish-gate reviews that led to a fix, and has a hygiene task for debug leftovers and copied secrets.
+- The Antigravity and Grok installers share one module for the rules block, backups and the package root (`src/core/install-shared.ts`). `senior --version` reads the version from `package.json`, and `senior help` lists `install --target grok` and `uninstall --target grok`.
+
+### Fixed
+
+- `senior install --target antigravity` no longer adds a second rules block to `~/.gemini/GEMINI.md` when the existing block has lost a marker: like the Grok installer, it leaves the file as it is and says so, and `uninstall` does the same. Like the Grok installer, it now exits 1 when a step was left undone, and `uninstall` deletes a `GEMINI.md` the install created and left empty.
 
 ## [0.9.0] - 2026-11-04
 
