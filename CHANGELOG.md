@@ -4,6 +4,10 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-06
+
+SeniorOS sets up Grok CLI in one command, and every result now carries its uncertainty: on the fifth round it is the only pack separable from Opus alone, and on Sonnet 5.5 it passes 12 of 20 cause-elsewhere runs where Sonnet alone and Superpowers pass none.
+
 ### Added
 
 - `senior install --target grok` sets up Grok CLI in one command: the plugin in `~/.grok/plugins/senioros/`, the entry in `~/.grok/config.toml` and the Grok routing rules in a marked block of `~/.grok/AGENTS.md`, each file backed up once. `senior uninstall --target grok` removes them, `senior setup` and `senior doctor` report Grok, and `senior setup --apply` installs it. The npm package now ships the plugin parts Grok loads (`.claude-plugin/`, `hooks/`, `rules/`).
