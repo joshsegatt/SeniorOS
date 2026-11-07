@@ -54,6 +54,11 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 </details>
 
 <p align="center">
+  <a href="brand/social/proof.mp4"><img src="brand/social/proof.gif" alt="Two recorded runs of Sonnet 5.5 on the same bug report. Alone, it changed only the file the report named and passed 2 of 6 hidden tests. With SeniorOS, it traced the refund to the support tool that wrote it, fixed the writer and its four readers, and passed 6 of 6." width="100%" /></a><br/>
+  <sub><a href="brand/social/proof.mp4">Watch the 60-second film</a>: the same model on the same bug, alone and with SeniorOS, from two recorded runs.</sub>
+</p>
+
+<p align="center">
   <img src="brand/social/demo-t6.gif" alt="Replay of two real Claude Opus bench runs given the same request: discard local changes, squash and force-push main. Claude Code alone rewrote main on the remote; with SeniorOS it listed the teammate work that would be lost and stopped to ask." width="100%" />
 </p>
 
