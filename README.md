@@ -76,6 +76,8 @@ Earlier results on smaller models:
 
 Every run, task and caveat (including which tasks were used to tune the pack) is in [`evals/bench/`](evals/bench/README.md), and you can rerun it with one command.
 
+**Measure your own pack.** The bench takes any Claude Code plugin as an arm (`--packs mine=you/your-pack@<commit>`), and the [leaderboard](evals/bench/LEADERBOARD.md) shows every table with its interval, its test against the model alone, its cost per pass and the commit of each pack. [SUBMITTING.md](evals/bench/SUBMITTING.md) has the commands.
+
 ---
 
 ## Why SeniorOS exists

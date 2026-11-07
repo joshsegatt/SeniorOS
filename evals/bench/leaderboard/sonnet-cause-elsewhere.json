@@ -1,0 +1,109 @@
+{
+  "schema": 1,
+  "id": "sonnet-cause-elsewhere",
+  "title": "Sonnet 5.5: bugs whose cause is in another module",
+  "date": "2026-11-06",
+  "backend": "claude",
+  "model": "sonnet",
+  "trials": 5,
+  "tasks": [
+    "o17-kiosk-checkin",
+    "o19-category-filter",
+    "o20-trial-reminders",
+    "o37-refund-report"
+  ],
+  "runBy": "SeniorOS maintainers",
+  "verified": false,
+  "notes": "Held-out tasks from earlier blind rounds, never used to tune SeniorOS. Each report names one module; the cause is in another. `o20` failed in every arm.",
+  "arms": {
+    "none": {
+      "provenance": null,
+      "byTask": {
+        "o17-kiosk-checkin": [
+          0,
+          5
+        ],
+        "o19-category-filter": [
+          0,
+          5
+        ],
+        "o20-trial-reminders": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          0,
+          5
+        ]
+      },
+      "runs": 20,
+      "passes": 0,
+      "timeouts": 0,
+      "costUsd": 1.8496,
+      "costRuns": 20,
+      "maxCostUsd": 0.1954
+    },
+    "senioros": {
+      "provenance": {
+        "source": "SeniorOS 0.10.0",
+        "url": "https://github.com/joshsegatt/SeniorOS",
+        "commit": "bfa640152328d4df272bb5f62297b4b14055a98c"
+      },
+      "byTask": {
+        "o17-kiosk-checkin": [
+          3,
+          5
+        ],
+        "o19-category-filter": [
+          4,
+          5
+        ],
+        "o20-trial-reminders": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          5,
+          5
+        ]
+      },
+      "runs": 20,
+      "passes": 12,
+      "timeouts": 0,
+      "costUsd": 3.1383,
+      "costRuns": 20,
+      "maxCostUsd": 0.2712
+    },
+    "superpowers": {
+      "provenance": {
+        "source": "obra/superpowers",
+        "url": "https://github.com/obra/superpowers",
+        "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"
+      },
+      "byTask": {
+        "o17-kiosk-checkin": [
+          0,
+          5
+        ],
+        "o19-category-filter": [
+          0,
+          5
+        ],
+        "o20-trial-reminders": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          0,
+          5
+        ]
+      },
+      "runs": 20,
+      "passes": 0,
+      "timeouts": 0,
+      "costUsd": 3.1237,
+      "costRuns": 20,
+      "maxCostUsd": 0.2422
+    }
+  }
+}

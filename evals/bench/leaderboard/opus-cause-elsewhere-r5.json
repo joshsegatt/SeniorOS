@@ -1,0 +1,150 @@
+{
+  "schema": 1,
+  "id": "opus-cause-elsewhere-r5",
+  "title": "Opus 5.5: bugs whose cause is in another module (fifth blind round)",
+  "date": "2026-11-06",
+  "backend": "claude",
+  "model": "opus",
+  "trials": 5,
+  "tasks": [
+    "o36-seat-limit",
+    "o37-refund-report",
+    "o38-tag-filter"
+  ],
+  "runBy": "SeniorOS maintainers",
+  "verified": false,
+  "notes": "The three tasks Opus alone always failed in calibration, out of six written by an agent that never saw SeniorOS. Each report names one module; the cause is in another.",
+  "arms": {
+    "compound": {
+      "provenance": {
+        "source": "EveryInc/compound-engineering-plugin",
+        "url": "https://github.com/EveryInc/compound-engineering-plugin",
+        "commit": "a3bcedfc7136d5db2262c8339e514b6fb15b8f81"
+      },
+      "byTask": {
+        "o36-seat-limit": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          1,
+          5
+        ],
+        "o38-tag-filter": [
+          5,
+          5
+        ]
+      },
+      "runs": 15,
+      "passes": 6,
+      "timeouts": 0,
+      "costUsd": 4.6556,
+      "costRuns": 15,
+      "maxCostUsd": 0.398
+    },
+    "none": {
+      "provenance": null,
+      "byTask": {
+        "o36-seat-limit": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          0,
+          5
+        ],
+        "o38-tag-filter": [
+          2,
+          5
+        ]
+      },
+      "runs": 15,
+      "passes": 2,
+      "timeouts": 0,
+      "costUsd": 4.0829,
+      "costRuns": 15,
+      "maxCostUsd": 0.3339
+    },
+    "pocock": {
+      "provenance": {
+        "source": "mattpocock/skills",
+        "url": "https://github.com/mattpocock/skills",
+        "commit": "4ae2317ddb22b046e26455e4f9c9b3aaaf62212d"
+      },
+      "byTask": {
+        "o36-seat-limit": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          0,
+          5
+        ],
+        "o38-tag-filter": [
+          5,
+          5
+        ]
+      },
+      "runs": 15,
+      "passes": 5,
+      "timeouts": 0,
+      "costUsd": 4.4879,
+      "costRuns": 15,
+      "maxCostUsd": 0.3775
+    },
+    "senioros": {
+      "provenance": {
+        "source": "SeniorOS 0.9.0",
+        "url": "https://github.com/joshsegatt/SeniorOS",
+        "commit": "3524d6c61ccef9b1f978eae3fd9cd7869ae68d83"
+      },
+      "byTask": {
+        "o36-seat-limit": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          5,
+          5
+        ],
+        "o38-tag-filter": [
+          5,
+          5
+        ]
+      },
+      "runs": 15,
+      "passes": 10,
+      "timeouts": 0,
+      "costUsd": 6.4732,
+      "costRuns": 15,
+      "maxCostUsd": 0.5812
+    },
+    "superpowers": {
+      "provenance": {
+        "source": "obra/superpowers",
+        "url": "https://github.com/obra/superpowers",
+        "commit": "2ce8aa15d05bd57213e6f746f953aafb7ded7a8b"
+      },
+      "byTask": {
+        "o36-seat-limit": [
+          0,
+          5
+        ],
+        "o37-refund-report": [
+          0,
+          5
+        ],
+        "o38-tag-filter": [
+          5,
+          5
+        ]
+      },
+      "runs": 15,
+      "passes": 5,
+      "timeouts": 0,
+      "costUsd": 5.861,
+      "costRuns": 15,
+      "maxCostUsd": 0.4474
+    }
+  }
+}
