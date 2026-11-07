@@ -16,6 +16,12 @@ SeniorOS uses a restrained engineering identity: clear typography, dark neutral 
 - `social/demo-t6.gif` — README demo: two real Opus runs of bench task t6, replayed. Re-record with
   `vhs brand/demo/t6.tape` (needs [VHS](https://github.com/charmbracelet/vhs) and ttyd); the content is in
   `brand/demo/t6-replay.mjs`, quoted from the run transcripts.
+- `social/proof.mp4` — the 60-second film: two recorded Sonnet 5.5 runs of bench task `o37-refund-report` (alone
+  and with SeniorOS), their hidden tests, then the measured bench. Every line of agent text and every command on
+  screen is quoted from the run transcripts (`none--2`, `senioros--2`); the hidden-test names and changed files were
+  re-checked against both runs' code. `social/proof.gif` is its 25–45 s cut for the README and
+  `social/proof-poster.png` its verdict frame. The source is `film/proof/` (the shot list and critique log are in
+  its `docs/`); it renders with the motion-reel skill (`render.mjs --film proof`), Inter and JetBrains Mono.
 - `social/demo-approval-boundary.svg` — the earlier animated demo (Claude Haiku runs), kept for reference.
 - `brand-board.svg` — visual system reference.
 - `skills/*.svg` — animated skill icons.
