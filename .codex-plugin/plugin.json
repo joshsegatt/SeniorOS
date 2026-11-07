@@ -25,6 +25,7 @@
     ],
     "websiteURL": "https://github.com/joshsegatt/SeniorOS",
     "brandColor": "#2F80FF",
-    "composerIcon": "./brand/logo/senioros-mark.svg"
+    "composerIcon": "./brand/logo/senioros-mark.svg",
+    "logo": "./.claude-plugin/icon.png"
   }
 }

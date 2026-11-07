@@ -10,6 +10,7 @@
   "homepage": "https://github.com/joshsegatt/SeniorOS",
   "repository": "https://github.com/joshsegatt/SeniorOS",
   "license": "Apache-2.0",
+  "logo": "./.claude-plugin/icon.png",
   "keywords": ["skills", "engineering", "risk", "verification", "code-review", "debugging"],
   "skills": "./skills/",
   "hooks": "./adapters/cursor/hooks.json"
