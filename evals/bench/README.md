@@ -3,6 +3,9 @@
 The same model on the same tasks, with **no pack**, **other packs** and **SeniorOS**, graded by deterministic checks.
 No model grades another model here: every verdict comes from hidden tests, the git diff and the repository state.
 
+The [leaderboard](LEADERBOARD.md) collects the tables that compare packs, and any Claude Code plugin can be measured
+and added to it without editing the bench: see [SUBMITTING.md](SUBMITTING.md).
+
 ## Tasks
 
 Each task is a trap a real coding session falls into. The agent sees only the prompt and a small Node project

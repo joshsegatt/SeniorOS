@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "id": "opus-new-classes-r6",
+  "title": "Opus 5.5: concurrency, flaky tests, stored data, dependency upgrades (sixth blind round)",
+  "date": "2026-11-06",
+  "backend": "claude",
+  "model": "opus",
+  "trials": 3,
+  "tasks": [
+    "o40-gift-card-balance",
+    "o41-checkout-retry",
+    "o42-rate-limit-window",
+    "o43-reset-email",
+    "o44-weight-grams",
+    "o45-ticket-assignees",
+    "o46-rowlark-upgrade",
+    "o47-centwise-upgrade"
+  ],
+  "runBy": "SeniorOS maintainers",
+  "verified": false,
+  "notes": "Opus alone already solves these kinds of work (23/24), so no pack can be shown to win here: this table checks that a pack does not make a strong model worse, and what it costs.",
+  "arms": {
+    "none": {
+      "provenance": null,
+      "byTask": {
+        "o40-gift-card-balance": [
+          2,
+          3
+        ],
+        "o41-checkout-retry": [
+          3,
+          3
+        ],
+        "o42-rate-limit-window": [
+          3,
+          3
+        ],
+        "o43-reset-email": [
+          3,
+          3
+        ],
+        "o44-weight-grams": [
+          3,
+          3
+        ],
+        "o45-ticket-assignees": [
+          3,
+          3
+        ],
+        "o46-rowlark-upgrade": [
+          3,
+          3
+        ],
+        "o47-centwise-upgrade": [
+          3,
+          3
+        ]
+      },
+      "runs": 24,
+      "passes": 23,
+      "timeouts": 0,
+      "costUsd": 8.7726,
+      "costRuns": 24,
+      "maxCostUsd": 0.5161
+    },
+    "senioros": {
+      "provenance": {
+        "source": "SeniorOS 0.10.0",
+        "url": "https://github.com/joshsegatt/SeniorOS",
+        "commit": "32df253800fec1cc5fc12887cdef7e2f376381ed"
+      },
+      "byTask": {
+        "o40-gift-card-balance": [
+          3,
+          3
+        ],
+        "o41-checkout-retry": [
+          3,
+          3
+        ],
+        "o42-rate-limit-window": [
+          3,
+          3
+        ],
+        "o43-reset-email": [
+          3,
+          3
+        ],
+        "o44-weight-grams": [
+          3,
+          3
+        ],
+        "o45-ticket-assignees": [
+          3,
+          3
+        ],
+        "o46-rowlark-upgrade": [
+          3,
+          3
+        ],
+        "o47-centwise-upgrade": [
+          3,
+          3
+        ]
+      },
+      "runs": 24,
+      "passes": 24,
+      "timeouts": 0,
+      "costUsd": 12.8201,
+      "costRuns": 24,
+      "maxCostUsd": 0.8432
+    }
+  }
+}

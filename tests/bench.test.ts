@@ -175,3 +175,85 @@ test('the report compares each pack with the model alone task by task, and only 
     rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('a pack source is a plugin folder or a repository pinned to a full commit', async () => {
+  const { parsePacks } = (await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'packs.mjs')).href)) as {
+    parsePacks: (spec: string, reserved?: string[]) => { name: string; kind: string; url?: string; commit?: string; subdir?: string }[];
+  };
+  const sha = 'a'.repeat(40);
+  const parsed = parsePacks(`mine=../my-plugin, theirs=owner/repo@${sha},deep=https://gitlab.com/o/r.git@${sha}#plugins/deep`);
+  assert.equal(parsed.length, 3);
+  const [local, repo, sub] = parsed as [typeof parsed[0], typeof parsed[0], typeof parsed[0]];
+  assert.deepEqual([local.name, local.kind], ['mine', 'local']);
+  assert.deepEqual([repo.kind, repo.url, repo.commit], ['git', 'https://github.com/owner/repo.git', sha]);
+  assert.deepEqual([sub.url, sub.subdir], ['https://gitlab.com/o/r.git', 'plugins/deep']);
+  // A branch or short commit would not name the code that ran.
+  assert.throws(() => parsePacks('x=owner/repo@main'), /full 40-character commit/);
+  assert.throws(() => parsePacks('x=owner/repo@abc1234'), /full 40-character commit/);
+  assert.throws(() => parsePacks(`x=owner/repo@${sha}#../out`), /inside the repository/);
+  assert.throws(() => parsePacks(`x=git@github.com:o/r@${sha}`), /https/);
+  assert.throws(() => parsePacks('senioros=../x', ['senioros']), /built-in arm/);
+  assert.throws(() => parsePacks('Bad Name=../x'), /lowercase/);
+  assert.throws(() => parsePacks('a=../x,a=../y'), /twice/);
+  assert.throws(() => parsePacks('nosource'), /name=source/);
+  // An existing folder whose path holds "@" is a local plugin, not a repository.
+  const at = mkdtempSync(path.join(os.tmpdir(), 'sob@scope-'));
+  try {
+    assert.equal(parsePacks(`scoped=${at}`)[0]?.kind, 'local');
+  } finally {
+    rmSync(at, { recursive: true, force: true });
+  }
+});
+
+test('a leaderboard submission rebuilds the report figures from counts alone', async () => {
+  const lb = (await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'leaderboard.mjs')).href)) as {
+    summarize: (dirs: string[], opts: { id: string; title: string; model?: string }) => any;
+    renderLeaderboard: (subs: any[]) => string;
+  };
+  const dir = mkdtempSync(path.join(os.tmpdir(), 'sobl-'));
+  try {
+    const { writeFileSync } = await import('node:fs');
+    let n = 0;
+    const put = (arm: string, taskId: string, pass: boolean, costUsd?: number) => {
+      n++;
+      writeFileSync(path.join(dir, `${taskId}--${arm}--${n}.json`), JSON.stringify({ runId: `${taskId}--${arm}--${n}`, arm, taskId, pass, gradedAt: '2026-11-07T10:00:00Z', metrics: { timedOut: costUsd === undefined }, outcome: costUsd === undefined ? {} : { costUsd } }));
+    };
+    for (let i = 0; i < 3; i++) { put('none', 'a', false, 0.1); put('pack', 'a', true, 0.2); }
+    // A timeout has no cost: it counts at the arm's top cost.
+    put('pack', 'b', false);
+    put('pack', 'b', true, 0.4);
+    writeFileSync(path.join(dir, 'bench.json'), JSON.stringify({ backend: 'claude', model: 'opus', arms: { none: null, pack: { source: `o/r@${'b'.repeat(40)}`, url: 'https://github.com/o/r.git', commit: 'b'.repeat(40) } } }));
+    // A run the host ended says nothing about the pack: left out, and counted as dropped.
+    writeFileSync(path.join(dir, 'b--pack--limit.json'), JSON.stringify({ runId: 'b--pack--limit', arm: 'pack', taskId: 'b', pass: false, outcome: { error: 'usage_limit' } }));
+    assert.throws(() => lb.summarize([dir], { id: 'Bad id', title: 't' }), /lowercase/);
+    // The same folder twice must not count every run twice.
+    const s = lb.summarize([dir, `${dir}${path.sep}`], { id: 'demo', title: 'Demo board' });
+    assert.equal(s.model, 'opus');
+    assert.deepEqual(s.arms.pack.byTask, { a: [3, 3], b: [1, 2] });
+    assert.equal(s.arms.pack.timeouts, 1);
+    assert.equal(s.arms.pack.droppedRuns, 1);
+    const md = lb.renderLeaderboard([{ ...s, file: path.join(root, 'evals', 'bench', 'leaderboard', 'demo.json') }]);
+    const row = md.split('\n').find((l) => l.startsWith('| **pack**')) ?? '';
+    // Same p as the report: task a only, since none never ran b. Cost: (0.6 + 0.4 + 0.4 for the timeout) / 4 passes.
+    assert.match(row, /\| 4\/5 \(\d+–\d+%\) \| p 0\.100 \| no \| \$0\.35 \| \[`bbbbbbb`\]\(https:\/\/github\.com\/o\/r\/tree\/b{40}\) \|/);
+    assert.match(md, /\| \*\*model alone\*\* \| 0\/3/);
+    assert.match(md, /Source: \[demo\.json\]\(leaderboard\/demo\.json\)/);
+    assert.match(md, /Left out: .*1 of pack\./);
+    // Two folders where the same arm ran different commits cannot share one table.
+    const other = mkdtempSync(path.join(os.tmpdir(), 'sobl-'));
+    try {
+      writeFileSync(path.join(other, 'a--pack--9.json'), JSON.stringify({ runId: 'a--pack--9', arm: 'pack', taskId: 'a', pass: true, outcome: { costUsd: 0.2 } }));
+      writeFileSync(path.join(other, 'bench.json'), JSON.stringify({ backend: 'claude', model: 'opus', arms: { pack: { commit: 'c'.repeat(40) } } }));
+      assert.throws(() => lb.summarize([dir, other], { id: 'mixed', title: 't' }), /different code/);
+    } finally {
+      rmSync(other, { recursive: true, force: true });
+    }
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('LEADERBOARD.md is current with the submissions', () => {
+  const result = spawnSync(process.execPath, [path.join(root, 'evals', 'bench', 'bench.mjs'), 'leaderboard', '--check'], { cwd: root, encoding: 'utf8' });
+  assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
+});

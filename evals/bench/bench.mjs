@@ -10,7 +10,9 @@ import { buildReport } from './lib/report.mjs';
 import { CLAUDE_ARMS, checkIsolation } from './lib/claude.mjs';
 import { GROK_ARMS } from './lib/grok.mjs';
 import { runConversation } from './lib/runner.mjs';
-import { BENCH_HOME, BENCH_SRC, GEMINI_HOME, HOOK_LOG, git, loadTasks } from './lib/util.mjs';
+import { BENCH_HOME, BENCH_SRC, COMPOUND_DIR, GEMINI_HOME, HOOK_LOG, POCOCK_DIR, REPO_ROOT, SUPERPOWERS_DIR, git, loadTasks } from './lib/util.mjs';
+import { gitProvenance, parsePacks, resolvePack } from './lib/packs.mjs';
+import { leaderboardPath, summarize, writeLeaderboard, LEADERBOARD_DIR } from './lib/leaderboard.mjs';
 
 const USAGE = `Usage: node evals/bench/bench.mjs <command>
 
@@ -19,12 +21,18 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
   isolation [--model sonnet]    One Claude run that must see no user-level instructions (run before a claude bench)
   run [options]                 Run the bench and write a report
       --arms none,superpowers,senioros   (also: senioros-skills, senioros-baseline; claude only: pocock, compound)
+      --packs name=source,...            claude only: any Claude Code plugin as an arm named <name>; a source is a
+                                         plugin folder or owner/repo@<full commit>[#subfolder] (see SUBMITTING.md)
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
       --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros|senioros-baseline)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
+  submit <resultsDir...> --id <id> --title "<title>" [--by <who ran it>] [--notes "<text>"] [--force]
+                                (results older than bench.json also need --model and --backend)
+                                Summarize results into evals/bench/leaderboard/<id>.json and rebuild LEADERBOARD.md
+  leaderboard [--check]         Rebuild LEADERBOARD.md from the submissions (--check: fail if it is out of date)
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)
   tasks                         List tasks
 
@@ -161,11 +169,34 @@ async function pool(items, limit, worker) {
   if (failure) throw failure;
 }
 
+/** Where a built-in arm's pack came from, for the results manifest; null for no pack. */
+function builtinProvenance(arm) {
+  const version = () => JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).version;
+  if (arm === 'superpowers') return { ...gitProvenance(SUPERPOWERS_DIR, 'obra/superpowers'), url: 'https://github.com/obra/superpowers' };
+  if (arm === 'pocock') return { ...gitProvenance(POCOCK_DIR, 'mattpocock/skills'), url: 'https://github.com/mattpocock/skills' };
+  if (arm === 'compound') return { ...gitProvenance(COMPOUND_DIR, 'EveryInc/compound-engineering-plugin'), url: 'https://github.com/EveryInc/compound-engineering-plugin' };
+  if (arm === 'senioros' || arm === 'senioros-skills') return { ...gitProvenance(REPO_ROOT, `SeniorOS ${version()}${arm === 'senioros-skills' ? ', skills only' : ''}`), url: 'https://github.com/joshsegatt/SeniorOS' };
+  if (arm === 'senioros-baseline' && process.env.SENIOROS_BENCH_BASELINE) return gitProvenance(process.env.SENIOROS_BENCH_BASELINE, 'SeniorOS baseline');
+  return null;
+}
+
 async function runBench(args) {
-  const arms = option(args, 'arms', 'none,superpowers,senioros').split(',');
+  const backend = /** @type {any} */ (option(args, 'backend', 'agentapi'));
+  const packSpec = option(args, 'packs', '');
+  if (packSpec && backend !== 'claude') throw new Error('--packs needs --backend claude: a pack is loaded as a Claude Code plugin.');
+  const packs = parsePacks(packSpec, Object.keys(CLAUDE_ARMS));
+  const arms = option(args, 'arms', packs.length ? ['none', 'senioros', ...packs.map((p) => p.name)].join(',') : 'none,superpowers,senioros').split(',');
+  for (const p of packs) if (!arms.includes(p.name)) throw new Error(`Pack "${p.name}" is not in --arms (${arms.join(',')}).`);
   const tasks = pickTasks(option(args, 'tasks', 'all'));
   const trials = Number(option(args, 'trials', '2'));
-  const backend = /** @type {any} */ (option(args, 'backend', 'agentapi'));
+  // Cloned only once the arms and tasks are known to be valid.
+  /** @type {Record<string, any>} */
+  const provenance = {};
+  for (const pack of packs) {
+    const { dir, provenance: from } = resolvePack(pack);
+    CLAUDE_ARMS[pack.name] = ['--plugin-dir', dir];
+    provenance[pack.name] = from;
+  }
   // Claude Code and Grok arms are per run (flags or a run's own home); every other backend swaps the global Antigravity config.
   const perProcessArms = backend === 'claude' || backend === 'grok';
   const known = backend === 'grok' ? GROK_ARMS : perProcessArms ? CLAUDE_ARMS : ARMS;
@@ -183,6 +214,9 @@ async function runBench(args) {
   }
   const resultsDir = join(BENCH_HOME, 'results', new Date().toISOString().replace(/[:.]/g, '-'));
   mkdirSync(resultsDir, { recursive: true });
+  // What ran, so a summary for the leaderboard can name each pack's exact code (`submit`).
+  for (const a of arms) if (!(a in provenance)) provenance[a] = builtinProvenance(a);
+  writeFileSync(join(resultsDir, 'bench.json'), JSON.stringify({ startedAt: new Date().toISOString(), backend, model, trials, tasks: tasks.map((t) => t.id), arms: provenance }, null, 2));
   const total = trials * tasks.length * arms.length;
   console.log(`Bench: ${tasks.length} task(s) x ${arms.length} arm(s) x ${trials} trial(s) = ${total} runs, backend ${backend}, model ${model}.`);
   if (parallel > 1) console.log(`Parallel: up to ${parallel} conversations at once${perProcessArms ? ', arms interleaved' : ', one arm at a time'}.`);
@@ -264,6 +298,28 @@ try {
   }
   else if (command === 'run') await runBench(args);
   else if (command === 'report' && args[0]) console.log(buildReport(args[0]));
+  else if (command === 'submit' && args[0] && !args[0].startsWith('--')) {
+    const firstOption = args.findIndex((a) => a.startsWith('--'));
+    const dirs = firstOption < 0 ? args : args.slice(0, firstOption);
+    const submission = summarize(dirs, { id: option(args, 'id', ''), title: option(args, 'title', ''), model: option(args, 'model', undefined), backend: option(args, 'backend', undefined), notes: option(args, 'notes', undefined), runBy: option(args, 'by', undefined) });
+    mkdirSync(LEADERBOARD_DIR, { recursive: true });
+    const file = join(LEADERBOARD_DIR, `${submission.id}.json`);
+    // A published table is replaced only on purpose: a new version of a pack is a new submission.
+    if (existsSync(file) && !args.includes('--force')) throw new Error(`${file} already exists: pick a new --id, or pass --force to replace it.`);
+    writeFileSync(file, `${JSON.stringify(submission, null, 2)}\n`);
+    writeLeaderboard();
+    console.log(`Wrote ${file} and ${leaderboardPath()}.`);
+  }
+  else if (command === 'leaderboard') {
+    if (args.includes('--check')) {
+      const ok = writeLeaderboard({ check: true });
+      console.log(ok ? `${leaderboardPath()} is current.` : `${leaderboardPath()} is out of date: run node evals/bench/bench.mjs leaderboard.`);
+      if (!ok) process.exitCode = 1;
+    } else {
+      writeLeaderboard();
+      console.log(`Wrote ${leaderboardPath()}.`);
+    }
+  }
   else if (command === 'arm' && args[0] === 'restore') console.log(restoreArms() ? 'Restored your Antigravity config.' : 'Nothing to restore.');
   else if (command === 'arm' && args[0] === 'status') console.log(JSON.stringify(armState() ?? { arm: null }, null, 2));
   else if (command === 'arm' && args[0]) { applyArm(args[0]); console.log(`Arm "${args[0]}" applied. Run "arm restore" to put your config back.`); }
