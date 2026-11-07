@@ -196,6 +196,13 @@ test('a pack source is a plugin folder or a repository pinned to a full commit',
   assert.throws(() => parsePacks('Bad Name=../x'), /lowercase/);
   assert.throws(() => parsePacks('a=../x,a=../y'), /twice/);
   assert.throws(() => parsePacks('nosource'), /name=source/);
+  // An existing folder whose path holds "@" is a local plugin, not a repository.
+  const at = mkdtempSync(path.join(os.tmpdir(), 'sob@scope-'));
+  try {
+    assert.equal(parsePacks(`scoped=${at}`)[0]?.kind, 'local');
+  } finally {
+    rmSync(at, { recursive: true, force: true });
+  }
 });
 
 test('a leaderboard submission rebuilds the report figures from counts alone', async () => {
@@ -216,17 +223,31 @@ test('a leaderboard submission rebuilds the report figures from counts alone', a
     put('pack', 'b', false);
     put('pack', 'b', true, 0.4);
     writeFileSync(path.join(dir, 'bench.json'), JSON.stringify({ backend: 'claude', model: 'opus', arms: { none: null, pack: { source: `o/r@${'b'.repeat(40)}`, url: 'https://github.com/o/r.git', commit: 'b'.repeat(40) } } }));
+    // A run the host ended says nothing about the pack: left out, and counted as dropped.
+    writeFileSync(path.join(dir, 'b--pack--limit.json'), JSON.stringify({ runId: 'b--pack--limit', arm: 'pack', taskId: 'b', pass: false, outcome: { error: 'usage_limit' } }));
     assert.throws(() => lb.summarize([dir], { id: 'Bad id', title: 't' }), /lowercase/);
-    const s = lb.summarize([dir], { id: 'demo', title: 'Demo board' });
+    // The same folder twice must not count every run twice.
+    const s = lb.summarize([dir, `${dir}${path.sep}`], { id: 'demo', title: 'Demo board' });
     assert.equal(s.model, 'opus');
     assert.deepEqual(s.arms.pack.byTask, { a: [3, 3], b: [1, 2] });
     assert.equal(s.arms.pack.timeouts, 1);
+    assert.equal(s.arms.pack.droppedRuns, 1);
     const md = lb.renderLeaderboard([{ ...s, file: path.join(root, 'evals', 'bench', 'leaderboard', 'demo.json') }]);
     const row = md.split('\n').find((l) => l.startsWith('| **pack**')) ?? '';
     // Same p as the report: task a only, since none never ran b. Cost: (0.6 + 0.4 + 0.4 for the timeout) / 4 passes.
     assert.match(row, /\| 4\/5 \(\d+–\d+%\) \| p 0\.100 \| no \| \$0\.35 \| \[`bbbbbbb`\]\(https:\/\/github\.com\/o\/r\/tree\/b{40}\) \|/);
     assert.match(md, /\| \*\*model alone\*\* \| 0\/3/);
     assert.match(md, /Source: \[demo\.json\]\(leaderboard\/demo\.json\)/);
+    assert.match(md, /Left out: .*1 of pack\./);
+    // Two folders where the same arm ran different commits cannot share one table.
+    const other = mkdtempSync(path.join(os.tmpdir(), 'sobl-'));
+    try {
+      writeFileSync(path.join(other, 'a--pack--9.json'), JSON.stringify({ runId: 'a--pack--9', arm: 'pack', taskId: 'a', pass: true, outcome: { costUsd: 0.2 } }));
+      writeFileSync(path.join(other, 'bench.json'), JSON.stringify({ backend: 'claude', model: 'opus', arms: { pack: { commit: 'c'.repeat(40) } } }));
+      assert.throws(() => lb.summarize([dir, other], { id: 'mixed', title: 't' }), /different code/);
+    } finally {
+      rmSync(other, { recursive: true, force: true });
+    }
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

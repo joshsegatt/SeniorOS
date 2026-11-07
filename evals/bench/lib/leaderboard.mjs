@@ -6,7 +6,7 @@
 // figure on the board (Wilson interval, the exact test against the model alone, cost per passing run). A submission
 // is marked verified only when someone other than its submitter re-ran it and got a result inside its interval.
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { BENCH_SRC, REPO_ROOT } from './util.mjs';
 import { formatP, stratifiedExact, wilson } from './stats.mjs';
 
@@ -36,14 +36,21 @@ function readManifest(dir) {
 export function summarize(dirs, opts) {
   if (!ID.test(opts.id)) throw new Error(`Submission id "${opts.id}": use lowercase letters, digits and dashes.`);
   if (!opts.title) throw new Error('A submission needs --title.');
+  // The same folder given twice would count every run twice and narrow every interval.
+  dirs = [...new Set(dirs.map((d) => resolve(d)))];
   const manifests = dirs.map(readManifest);
-  const results = readResults(dirs);
+  const all = readResults(dirs);
+  // A run the host or the network ended (a usage limit, an API error) says nothing about the pack: it is left out
+  // and counted, so the board can say how many were dropped.
+  const broken = (r) => Boolean(r.outcome?.error || r.outcome?.apiError);
+  const results = all.filter((r) => !broken(r));
   if (!results.length) throw new Error(`No graded runs in ${dirs.join(', ')}.`);
-  const model = opts.model ?? manifests.find(Boolean)?.model;
-  const backend = opts.backend ?? manifests.find(Boolean)?.backend ?? 'claude';
-  if (!model) throw new Error('These results have no bench.json (they predate it): give --model.');
-  for (const m of manifests) {
-    if (m && (m.model !== model || m.backend !== backend)) throw new Error(`Results mix models or backends (${m.backend}/${m.model} against ${backend}/${model}).`);
+  const known = manifests.filter(Boolean);
+  const model = opts.model ?? known[0]?.model;
+  const backend = opts.backend ?? known[0]?.backend;
+  if (!model || !backend) throw new Error('These results have no bench.json (they predate it): give --model and --backend.');
+  for (const m of known) {
+    if (m.model !== model || m.backend !== backend) throw new Error(`Results mix models or backends (${m.backend}/${m.model} against ${backend}/${model}).`);
   }
   const tasks = [...new Set(results.map((r) => r.taskId))].sort();
   const armNames = [...new Set(results.map((r) => r.arm))].sort();
@@ -51,6 +58,10 @@ export function summarize(dirs, opts) {
   const arms = {};
   for (const name of armNames) {
     const rs = results.filter((r) => r.arm === name);
+    const sources = known.map((m) => m.arms?.[name]).filter((p) => p !== undefined);
+    if (new Set(sources.map((p) => JSON.stringify(p && { commit: p.commit, dirty: p.dirty }))).size > 1) {
+      throw new Error(`Arm "${name}" ran different code across these folders (${sources.map((p) => p?.commit?.slice(0, 7) ?? 'none').join(', ')}): submit them separately.`);
+    }
     const costs = rs.map((r) => r.outcome?.costUsd).filter((c) => typeof c === 'number');
     /** @type {Record<string, [number, number]>} */
     const byTask = {};
@@ -58,11 +69,13 @@ export function summarize(dirs, opts) {
       const mine = rs.filter((r) => r.taskId === t);
       if (mine.length) byTask[t] = [mine.filter((r) => r.pass).length, mine.length];
     }
-    const provenance = manifests.map((m) => m?.arms?.[name]).find((p) => p !== undefined) ?? null;
+    const provenance = sources[0] ?? null;
+    const dropped = all.filter((r) => r.arm === name && broken(r)).length;
     arms[name] = {
       provenance,
       byTask,
       runs: rs.length,
+      ...(dropped ? { droppedRuns: dropped } : {}),
       passes: rs.filter((r) => r.pass).length,
       timeouts: rs.filter((r) => r.metrics?.timedOut).length,
       costUsd: round(costs.reduce((s, c) => s + c, 0)),
@@ -171,6 +184,8 @@ export function renderLeaderboard(submissions) {
       lines.push(`| ${n === 'none' ? '**model alone**' : `**${label(n)}**`} | ${a.passes}/${a.runs} (${Math.round(lo * 100)}–${Math.round(hi * 100)}%) | ` +
         `${p === null ? '-' : `p ${formatP(p)}`} | ${p === null ? '-' : p < alpha ? 'yes' : 'no'} | ${cpp === null ? '-' : `$${cpp.toFixed(2)}`} | ${commitCell(a.provenance)} |`);
     }
+    const dropped = rows.filter(({ a }) => a.droppedRuns).map(({ n, a }) => `${a.droppedRuns} of ${label(n)}`);
+    if (dropped.length) lines.push('', `Left out: runs the host or the network ended (a usage limit, an API error), ${dropped.join(', ')}.`);
     lines.push('');
   }
   return lines.join('\n');

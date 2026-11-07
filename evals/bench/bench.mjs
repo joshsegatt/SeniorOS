@@ -29,7 +29,8 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
       --backend agentapi|agy|claude|grok|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros|senioros-baseline)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
-  submit <resultsDir...> --id <id> --title "<title>" [--by <who ran it>] [--model opus] [--notes "<text>"]
+  submit <resultsDir...> --id <id> --title "<title>" [--by <who ran it>] [--notes "<text>"] [--force]
+                                (results older than bench.json also need --model and --backend)
                                 Summarize results into evals/bench/leaderboard/<id>.json and rebuild LEADERBOARD.md
   leaderboard [--check]         Rebuild LEADERBOARD.md from the submissions (--check: fail if it is out of date)
   arm <name>|restore|status     Switch the global Antigravity config by hand (restore puts yours back)
@@ -170,11 +171,11 @@ async function pool(items, limit, worker) {
 
 /** Where a built-in arm's pack came from, for the results manifest; null for no pack. */
 function builtinProvenance(arm) {
-  const version = JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).version;
+  const version = () => JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).version;
   if (arm === 'superpowers') return { ...gitProvenance(SUPERPOWERS_DIR, 'obra/superpowers'), url: 'https://github.com/obra/superpowers' };
   if (arm === 'pocock') return { ...gitProvenance(POCOCK_DIR, 'mattpocock/skills'), url: 'https://github.com/mattpocock/skills' };
   if (arm === 'compound') return { ...gitProvenance(COMPOUND_DIR, 'EveryInc/compound-engineering-plugin'), url: 'https://github.com/EveryInc/compound-engineering-plugin' };
-  if (arm === 'senioros' || arm === 'senioros-skills') return { ...gitProvenance(REPO_ROOT, `SeniorOS ${version}${arm === 'senioros-skills' ? ', skills only' : ''}`), url: 'https://github.com/joshsegatt/SeniorOS' };
+  if (arm === 'senioros' || arm === 'senioros-skills') return { ...gitProvenance(REPO_ROOT, `SeniorOS ${version()}${arm === 'senioros-skills' ? ', skills only' : ''}`), url: 'https://github.com/joshsegatt/SeniorOS' };
   if (arm === 'senioros-baseline' && process.env.SENIOROS_BENCH_BASELINE) return gitProvenance(process.env.SENIOROS_BENCH_BASELINE, 'SeniorOS baseline');
   return null;
 }
@@ -184,6 +185,11 @@ async function runBench(args) {
   const packSpec = option(args, 'packs', '');
   if (packSpec && backend !== 'claude') throw new Error('--packs needs --backend claude: a pack is loaded as a Claude Code plugin.');
   const packs = parsePacks(packSpec, Object.keys(CLAUDE_ARMS));
+  const arms = option(args, 'arms', packs.length ? ['none', 'senioros', ...packs.map((p) => p.name)].join(',') : 'none,superpowers,senioros').split(',');
+  for (const p of packs) if (!arms.includes(p.name)) throw new Error(`Pack "${p.name}" is not in --arms (${arms.join(',')}).`);
+  const tasks = pickTasks(option(args, 'tasks', 'all'));
+  const trials = Number(option(args, 'trials', '2'));
+  // Cloned only once the arms and tasks are known to be valid.
   /** @type {Record<string, any>} */
   const provenance = {};
   for (const pack of packs) {
@@ -191,10 +197,6 @@ async function runBench(args) {
     CLAUDE_ARMS[pack.name] = ['--plugin-dir', dir];
     provenance[pack.name] = from;
   }
-  const arms = option(args, 'arms', packs.length ? ['none', 'senioros', ...packs.map((p) => p.name)].join(',') : 'none,superpowers,senioros').split(',');
-  for (const p of packs) if (!arms.includes(p.name)) throw new Error(`Pack "${p.name}" is not in --arms (${arms.join(',')}).`);
-  const tasks = pickTasks(option(args, 'tasks', 'all'));
-  const trials = Number(option(args, 'trials', '2'));
   // Claude Code and Grok arms are per run (flags or a run's own home); every other backend swaps the global Antigravity config.
   const perProcessArms = backend === 'claude' || backend === 'grok';
   const known = backend === 'grok' ? GROK_ARMS : perProcessArms ? CLAUDE_ARMS : ARMS;
@@ -299,9 +301,11 @@ try {
   else if (command === 'submit' && args[0] && !args[0].startsWith('--')) {
     const firstOption = args.findIndex((a) => a.startsWith('--'));
     const dirs = firstOption < 0 ? args : args.slice(0, firstOption);
-    const submission = summarize(dirs, { id: option(args, 'id', ''), title: option(args, 'title', ''), model: option(args, 'model', undefined), notes: option(args, 'notes', undefined), runBy: option(args, 'by', undefined) });
+    const submission = summarize(dirs, { id: option(args, 'id', ''), title: option(args, 'title', ''), model: option(args, 'model', undefined), backend: option(args, 'backend', undefined), notes: option(args, 'notes', undefined), runBy: option(args, 'by', undefined) });
     mkdirSync(LEADERBOARD_DIR, { recursive: true });
     const file = join(LEADERBOARD_DIR, `${submission.id}.json`);
+    // A published table is replaced only on purpose: a new version of a pack is a new submission.
+    if (existsSync(file) && !args.includes('--force')) throw new Error(`${file} already exists: pick a new --id, or pass --force to replace it.`);
     writeFileSync(file, `${JSON.stringify(submission, null, 2)}\n`);
     writeLeaderboard();
     console.log(`Wrote ${file} and ${leaderboardPath()}.`);

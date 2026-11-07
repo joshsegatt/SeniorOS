@@ -32,8 +32,8 @@ export function parsePacks(spec, reserved = []) {
     if (reserved.includes(name)) throw new Error(`Pack name "${name}" is a built-in arm; pick another name.`);
     if (packs.some((p) => p.name === name)) throw new Error(`Pack name "${name}" is given twice.`);
     const git = /^(?<repo>.+)@(?<commit>[^@#]+)(?:#(?<subdir>.+))?$/.exec(source);
-    // A Windows path never has "@", so "@" marks a pinned repository.
-    if (git?.groups) {
+    // An existing folder wins: a path may hold "@" too (node_modules/@scope/plugin, a@corp).
+    if (git?.groups && !existsSync(source)) {
       const { repo, commit, subdir } = git.groups;
       if (!COMMIT.test(commit)) throw new Error(`Pack "${name}": pin a full 40-character commit after "@", not "${commit}", so the result names the code that ran.`);
       if (subdir && (isAbsolute(subdir) || subdir.split(/[\\/]/).includes('..'))) throw new Error(`Pack "${name}": the folder after "#" must stay inside the repository.`);
@@ -69,12 +69,19 @@ export function resolvePack(pack) {
   let provenance;
   if (pack.kind === 'git') {
     root = join(BENCH_HOME, 'packs', `${pack.name}-${pack.commit.slice(0, 12)}`);
-    if (!existsSync(join(root, '.git'))) {
+    // A clone counts only once its commit is fetched: a failed fetch (network, unknown commit) leaves nothing behind
+    // for the next run to mistake for a clone.
+    if (git(root, ['cat-file', '-e', `${pack.commit}^{commit}`], false)?.code !== 0) {
       rmSync(root, { recursive: true, force: true });
       mkdirSync(root, { recursive: true });
-      git(root, ['init', '-q']);
-      git(root, ['remote', 'add', 'origin', pack.url]);
-      git(root, ['fetch', '-q', '--depth', '1', 'origin', pack.commit]);
+      try {
+        git(root, ['init', '-q']);
+        git(root, ['remote', 'add', 'origin', pack.url]);
+        git(root, ['fetch', '-q', '--depth', '1', 'origin', pack.commit]);
+      } catch (err) {
+        rmSync(root, { recursive: true, force: true });
+        throw err;
+      }
     }
     git(root, ['checkout', '-q', '--force', pack.commit]);
     git(root, ['clean', '-q', '-fdx']);
