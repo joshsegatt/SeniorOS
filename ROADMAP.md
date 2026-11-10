@@ -3,7 +3,7 @@
 SeniorOS is being built in layers so the project can earn complexity instead of cosplay it. Nothing ships because it
 sounds better: it ships when the bench, a deterministic test or a run in the real host shows it.
 
-## Where SeniorOS stands (0.10.0)
+## Where SeniorOS stands (0.10.1)
 
 Measured (see [`evals/bench/`](evals/bench/README.md)), SeniorOS against no pack and Superpowers:
 - Claude Opus core set: 24/24, 21/24 and 19/24.

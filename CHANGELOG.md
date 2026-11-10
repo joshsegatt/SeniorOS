@@ -4,6 +4,8 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-11-11
+
 ### Added
 
 - Bench: a Codex backend, `--backend codex --model <name>`, with the arms `none` and `senioros`. Each run is one `codex exec` in the run's repository with Codex's sandbox on, from the bench's own Codex home and login, so the user's `~/.codex` is never read. The bench stops before any run when that login is missing or when `~/.agents/skills` would load the user's own skills into every run. Codex's sandbox keeps `.git` read-only, so tasks about destructive git commands cannot tell the arms apart there. No results are published for it yet.
