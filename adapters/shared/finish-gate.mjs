@@ -1,13 +1,15 @@
 // Host-neutral finish gate: when the agent tries to finish with changed code, run `senior finish`. On a failing check
 // it returns a reason to send the agent back, at most MAX_BLOCKS times per change set, so it cannot loop. Passing
 // results are cached per change set. Once per session and repository, a medium-or-higher-risk change whose checks
-// pass is sent back for senior-finish's risk review. Fails open: no git repository, no proof source, or no runnable CLI.
+// pass is sent back for senior-finish's risk review. A run that verified nothing (a timeout, no readable report, no
+// check that proves the change) never blocks, but is never saved as a pass: the agent is told once. No git repository
+// or no proof source: the gate does nothing.
 // Each host adapter (Claude Code, Cursor) maps its own Stop payload and response onto `evaluate`.
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FINISH_TIMEOUT_MS, MIN_RUN_MS, baselineProven, finishGateNextStep, finishReviewMessage, finishTimeoutMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
+import { FINISH_TIMEOUT_MS, MIN_RUN_MS, NOT_VERIFIED, baselineProven, finishGateNextStep, finishNotVerifiedMessage, finishReviewMessage, hasProofSource, needsFinishReview, runSenior, sh, tail } from '../antigravity/hooks/lib.mjs';
 
 export const MAX_BLOCKS = 2;
 /** Identity of a repository path: Windows paths are case-insensitive, POSIX paths are not. */
@@ -65,15 +67,15 @@ export function evaluate(input) {
 }
 
 /**
- * Like `evaluate`, but says what kind of request it is: `fail` (the checks fail), `timeout` (they did not finish in
- * time, so nothing is verified) or `review` (the checks pass on a medium-or-higher-risk change). A review or a
- * timeout counts as sent only once `accept()` is called; until then it stays due for this change set and the next
+ * Like `evaluate`, but says what kind of request it is: `fail` (the checks fail), `timeout`, `unreadable` or `unproven`
+ * (they did not finish in time, gave no readable report, or none of them proves the change: nothing is verified) or `review` (the checks pass on a medium-or-higher-risk change). A review or a
+ * not-verified notice counts as sent only once `accept()` is called; until then it stays due for this change set and the next
  * call returns it again from the saved result, without running the checks. A host checking several repositories uses
  * this to send failures first and the review only when none fails, with one `deadline` for all of them.
  * `lastMessage` is the agent's final reply, when the host sends it: a proven change whose reply already names its
  * residual risks and a ship status gets no review, since the review would ask for the same text again.
  * @param {{ cwd?: string, sessionId?: string, host: string, deadline?: number, lastMessage?: string }} input
- * @returns {{ kind: 'fail' | 'timeout' | 'review', reason: string, accept?: () => void } | null}
+ * @returns {{ kind: 'fail' | 'timeout' | 'unreadable' | 'unproven' | 'review', reason: string, accept?: () => void } | null}
  */
 export function assess({ cwd, sessionId, host, deadline, lastMessage }) {
   const top = sh('git rev-parse --show-toplevel', cwd ?? process.cwd(), 10_000);
@@ -98,13 +100,14 @@ export function assess({ cwd, sessionId, host, deadline, lastMessage }) {
     return { kind: 'review', reason: finishReviewMessage(proven), accept: () => save({ fingerprint, result: 'pass', reviewed: true }) };
   };
   /** Nothing verified: due until accepted, so a hook killed before it answers still tells the agent next time. */
-  const timeout = (entry) => {
+  const notVerified = (entry) => {
     save({ ...entry, notified: false });
-    return { kind: 'timeout', reason: finishTimeoutMessage(), accept: () => save({ ...entry, notified: true }) };
+    return { kind: entry.result, reason: finishNotVerifiedMessage(entry.result), accept: () => save({ ...entry, notified: true }) };
   };
-  // A timeout is reported once per change set: running a suite that slow again on every stop would hold the agent.
-  if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || prev.result === 'timeout' || prev.blocks >= MAX_BLOCKS)) {
-    if (prev.result === 'timeout' && !prev.notified) return timeout({ fingerprint: prev.fingerprint, result: 'timeout', reviewed: Boolean(prev.reviewed), ...(typeof prev.pendingReview === 'boolean' ? { pendingReview: prev.pendingReview } : {}) });
+  // A run that verified nothing is reported once per change set: running a suite that slow again on every stop would
+  // hold the agent.
+  if (prev?.fingerprint === changes.fingerprint && (prev.result === 'pass' || NOT_VERIFIED.has(prev.result) || prev.blocks >= MAX_BLOCKS)) {
+    if (NOT_VERIFIED.has(prev.result) && !prev.notified) return notVerified({ fingerprint: prev.fingerprint, result: prev.result, reviewed: Boolean(prev.reviewed), ...(typeof prev.pendingReview === 'boolean' ? { pendingReview: prev.pendingReview } : {}) });
     // A review kept back (by a failure elsewhere, or behind a timeout message) goes out now.
     return prev.result !== 'fail' && typeof prev.pendingReview === 'boolean' && !prev.reviewed ? review(prev.fingerprint, prev.pendingReview) : null;
   }
@@ -119,24 +122,25 @@ export function assess({ cwd, sessionId, host, deadline, lastMessage }) {
   // review of senior-finish: passing checks show only the cases they cover.
   const reviewed = Boolean(prev?.reviewed);
 
-  // A slow suite never holds the agent hostage, but its silence is not a pass: the agent is told, once, that nothing
-  // was verified.
+  // A slow suite or a broken CLI never holds the agent hostage, but its silence is not a pass: the agent is told, once,
+  // that nothing was verified.
   // A risk review that is due follows on a later stop, as NOT PROVEN since nothing ran to the end.
-  if (run.timedOut) {
+  if (run.timedOut || !report) {
     const due = !reviewed && needsFinishReview(root);
-    return timeout({ fingerprint: changes.fingerprint, result: 'timeout', reviewed, ...(due ? { pendingReview: false } : {}) });
+    return notVerified({ fingerprint: changes.fingerprint, result: run.timedOut ? 'timeout' : 'unreadable', reviewed, ...(due ? { pendingReview: false } : {}) });
   }
 
-  // An unreadable report never holds the agent hostage either.
-  if (!report || failed.length === 0) {
-    if (!reviewed && report && needsFinishReview(root)) {
-      const proven = baselineProven(report);
+  if (failed.length === 0) {
+    const proven = baselineProven(report);
+    if (!reviewed && needsFinishReview(root)) {
       if (proven && reportCoversReview(lastMessage)) {
         save({ fingerprint: changes.fingerprint, result: 'pass', reviewed: true });
         return null;
       }
       return review(changes.fingerprint, proven);
     }
+    // No review is due (low risk, or already reviewed), and no check proves the change: say so instead of passing.
+    if (!proven) return notVerified({ fingerprint: changes.fingerprint, result: 'unproven', reviewed });
     save({ fingerprint: changes.fingerprint, result: 'pass', reviewed });
     return null;
   }
