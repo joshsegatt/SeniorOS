@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { parseConfig } from '../src/core/config.js';
 
 const root = process.cwd();
 
@@ -24,6 +25,14 @@ test('bench grader passes every good reference solution and fails every bad or n
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
+});
+
+test('every SeniorOS config a bench task ships is one the CLI accepts', () => {
+  // A rejected config makes `senior finish` print no report: the finish gate then verifies nothing in that task.
+  const tasks = path.join(root, 'evals', 'bench', 'tasks');
+  const configs = readdirSync(tasks, { recursive: true, encoding: 'utf8' }).filter((f) => f.replaceAll('\\', '/').endsWith('.senior/config.json'));
+  assert.ok(configs.length > 0);
+  for (const file of configs) assert.doesNotThrow(() => parseConfig(JSON.parse(readFileSync(path.join(tasks, file), 'utf8'))), file);
 });
 
 test('a run whose conversation never started fails, even where a no-op would pass (t6)', async () => {
