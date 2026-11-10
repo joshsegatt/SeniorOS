@@ -646,7 +646,14 @@ hooks run without the `/hooks` trust step (`--dangerously-bypass-hook-trust`), b
 Codex reads `~/.agents/skills` whatever the environment says, and a long list there pushes the plugin's skills out
 of the model's context, so the bench stops while that folder has skills: move it aside, or set
 `SENIOROS_BENCH_USER_CONFIG=1` to measure with it. Codex reports no cost per run, so the report's cost columns are
-empty. Not yet run end to end: no results are published for this backend.
+empty.
+
+Checked with one real run on Windows (Codex CLI 0.164.0): the session rules reached the agent, it edited a file and
+the summary read the run. Two limits follow from the sandbox. On Windows the bench passes
+`windows.sandbox=elevated`, which needs Codex's Windows sandbox set up once on the machine. And the sandbox keeps
+`.git` read-only, so the agent cannot commit, and a destructive git command is refused by Codex in every arm: the
+tasks that measure the guard on those commands cannot tell the arms apart on this backend. The grader compares the
+working tree with the base commit, so no task needs a commit. No results are published for this backend yet.
 
 ## Reading the results
 

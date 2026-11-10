@@ -116,7 +116,10 @@ export function runCodex({ prompt, repo, runDir, arm, model, timeoutMs }) {
   if (!Object.hasOwn(CODEX_ARMS, arm)) throw new Error(`Arm "${arm}" is not available for the codex backend (use ${Object.keys(CODEX_ARMS).join(', ')}).`);
   // The sandbox stays on (writes only inside the repository). Hook trust is skipped because nobody is there to open
   // `/hooks`: the only hooks in the bench home are the plugin's, installed from this checkout.
-  const args = ['exec', '--json', '--ephemeral', '-s', 'workspace-write', '--dangerously-bypass-hook-trust', '-m', model, ...CODEX_ARMS[arm]];
+  // On Windows a new Codex home has no sandbox chosen and every command is refused ("blocked by policy"), so the
+  // bench names the one Codex sets up on first use there.
+  const sandbox = ['-s', 'workspace-write', ...(process.platform === 'win32' ? ['-c', 'windows.sandbox=elevated'] : [])];
+  const args = ['exec', '--json', '--ephemeral', ...sandbox, '--dangerously-bypass-hook-trust', '-m', model, ...CODEX_ARMS[arm]];
   return new Promise((resolve) => {
     const child = spawn(...command(args), { cwd: repo, env: codexEnv(), shell: SHELL, windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
     // A run that could not start closes stdin first; the `error` or `close` below reports it.
