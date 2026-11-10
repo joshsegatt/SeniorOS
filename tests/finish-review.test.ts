@@ -27,13 +27,70 @@ function repoWith(file: string) {
 }
 
 /** Stops a Claude Code session through the real hook script. */
-function claudeStop(dir: string, session: string) {
+function claudeStop(dir: string, session: string, hookEnv = env) {
   const r = spawnSync(process.execPath, [path.join(root, 'adapters', 'claude-code', 'hooks', 'stop-gate.mjs')], {
-    input: JSON.stringify({ cwd: dir, session_id: session }), encoding: 'utf8', env, timeout: 240_000,
+    input: JSON.stringify({ cwd: dir, session_id: session }), encoding: 'utf8', env: hookEnv, timeout: 240_000,
   });
   assert.equal(r.status, 0, r.stderr);
   return r.stdout ? (JSON.parse(r.stdout) as { decision: string; reason: string }) : null;
 }
+
+/** Stops an Antigravity conversation that edited `file`, through the real hook scripts. */
+function antigravityStop(dir: string, conversationId: string, file: string, hookEnv = env) {
+  const log = path.join(dir, '..', `${path.basename(dir)}.log`);
+  const hook = (script: string, input: object) => {
+    const r = spawnSync(process.execPath, [path.join(root, 'adapters', 'antigravity', 'hooks', script)], {
+      input: JSON.stringify(input), encoding: 'utf8', env: { ...hookEnv, SENIOROS_HOOK_LOG: log }, timeout: 240_000,
+    });
+    assert.equal(r.status, 0, r.stderr);
+    return JSON.parse(r.stdout || '{}') as { decision?: string; reason?: string };
+  };
+  try {
+    hook('track.mjs', { conversationId, workspacePaths: [], toolCall: { name: 'replace_file_content', args: { Path: path.join(dir, file) } } });
+    return hook('stop-gate.mjs', { conversationId, workspacePaths: [], terminationReason: 'NO_TOOL_CALL' });
+  } finally {
+    rmSync(log, { force: true });
+  }
+}
+
+test('a low-risk change that no check proves is reported once as NOT PROVEN, never passed in silence', () => {
+  const dir = repoWith('src/format.js');
+  // No test file at all, so `node --test` reports 0 tests.
+  rmSync(path.join(dir, 'test'), { recursive: true, force: true });
+  try {
+    const first = claudeStop(dir, `lnp${process.pid}`);
+    assert.equal(first?.decision, 'block');
+    assert.match(first?.reason ?? '', /proof baseline is NOT PROVEN/);
+    assert.doesNotMatch(first?.reason ?? '', /medium risk or higher/);
+    assert.equal(claudeStop(dir, `lnp${process.pid}`), null, 'told once: the same change then finishes');
+
+    const agy = antigravityStop(dir, `agylnp${process.pid}`, 'src/format.js');
+    assert.equal(agy.decision, 'continue');
+    assert.match(agy.reason ?? '', /proof baseline is NOT PROVEN/);
+    assert.deepEqual(antigravityStop(dir, `agylnp${process.pid}`, 'src/format.js'), {});
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('a `senior finish` that gives no readable report is reported once as NOT VERIFIED, never saved as a pass', () => {
+  const dir = repoWith('src/format.js');
+  // A CLI that exits without a report, as a broken install or an invalid .senior/config.json does.
+  const broken = { ...env, SENIOROS_CLI: `"${process.execPath}" -e "process.exit(1)"` } as NodeJS.ProcessEnv;
+  try {
+    const first = claudeStop(dir, `unr${process.pid}`, broken);
+    assert.equal(first?.decision, 'block');
+    assert.match(first?.reason ?? '', /gave no readable report, so this change is NOT VERIFIED/);
+    assert.equal(claudeStop(dir, `unr${process.pid}`, broken), null, 'told once: the same change then finishes');
+
+    const agy = antigravityStop(dir, `agyunr${process.pid}`, 'src/format.js', broken);
+    assert.equal(agy.decision, 'continue');
+    assert.match(agy.reason ?? '', /gave no readable report \(.+\), so this change is NOT VERIFIED/);
+    assert.deepEqual(antigravityStop(dir, `agyunr${process.pid}`, 'src/format.js', broken), {});
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 test('a medium-risk change with passing checks goes back once for the senior-finish risk review', () => {
   const dir = repoWith('src/auth/policy.js');

@@ -9,6 +9,10 @@ All notable changes to SeniorOS will be documented here.
 - Bench: any Claude Code plugin is an arm with `--packs name=source`, where a source is a plugin folder or a repository pinned to a full commit (`owner/repo@<commit>[#subfolder]`), cloned once into the bench home. Each run writes `bench.json` with the model and the commit of every arm.
 - Bench: a public leaderboard, `evals/bench/LEADERBOARD.md`, generated from submissions in `evals/bench/leaderboard/` (`bench.mjs submit` writes one from results folders, `bench.mjs leaderboard` rebuilds the board, and `npm test` fails when it is out of date). Each table shows the pass rate with its Wilson interval, the exact test against the model alone, whether it holds after correcting for the packs compared, the cost per pass and each pack's commit, and says who ran it and whether anyone else re-ran it. It starts with the fifth round on Opus, Sonnet on the cause-elsewhere tasks and the sixth round. `evals/bench/SUBMITTING.md` explains how to measure a pack and submit it.
 
+### Fixed
+
+- Finish gate: a run that verified nothing is no longer saved as a pass. When `senior finish` gives no readable report (a broken install, an invalid `.senior/config.json`) the agent is told once that the change is NOT VERIFIED; when no review is due and no check proves the change (no tests ran, checks skipped) it is told once that the baseline is NOT PROVEN. Before, both finished in silence. Neither blocks more than once per change set.
+
 ## [0.10.0] - 2026-11-06
 
 SeniorOS sets up Grok CLI in one command, and every result now carries its uncertainty: on the fifth round it is the only pack separable from Opus alone, and on Sonnet 5.5 it passes 12 of 20 cause-elsewhere runs where Sonnet alone and Superpowers pass none.

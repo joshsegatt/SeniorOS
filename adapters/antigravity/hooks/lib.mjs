@@ -256,6 +256,28 @@ export function finishTimeoutMessage(projects = []) {
     '.senior/config.json lets the gate verify a suite this slow.';
 }
 
+/** Saved results that verified nothing: the checks timed out, their report could not be read, or none proved the change. */
+export const NOT_VERIFIED = new Set(['timeout', 'unreadable', 'unproven']);
+
+const NOT_PROVEN =
+  'no check failed, but the proof baseline is NOT PROVEN (no tests ran or checks were skipped), so do not say the checks pass. Add or run a check that exercises this change, or report the status as NOT PROVEN.';
+
+/**
+ * Sent once per change set when the gate ran and verified nothing. Saving such a run as a pass would let the agent
+ * report checks that never ran as passing.
+ * @param {string} result a member of NOT_VERIFIED
+ * @param {string[]} [projects] the projects it applies to, when there are several
+ */
+export function finishNotVerifiedMessage(result, projects = []) {
+  if (result === 'timeout') return finishTimeoutMessage(projects);
+  const where = projects.length ? ` (${projects.join(', ')})` : '';
+  return result === 'unproven'
+    ? `SeniorOS finish gate${where}: ${NOT_PROVEN}`
+    : `SeniorOS finish gate: \`senior finish\` gave no readable report${where}, so this change is NOT VERIFIED. Do not ` +
+      'say the checks pass. Run the checks that cover the change yourself and report what ran and its result; if you ' +
+      'cannot, report the status as NOT VERIFIED. `senior doctor` shows what is wrong with the setup.';
+}
+
 // Copies of PROJECT_MANIFESTS, IGNORED_DIRS and MAX_DEPTH in src/core/ecosystems.ts, which plans the checks of these
 // projects. The installed hooks run without that module; tests/proof-ecosystems.test.ts keeps the copies equal.
 export const PROJECT_MANIFESTS = ['pyproject.toml', 'setup.py', 'setup.cfg', 'requirements.txt', 'go.mod', 'Cargo.toml'];
@@ -321,9 +343,7 @@ export function baselineProven(report) {
  * @param {boolean} [proven]
  */
 export function finishReviewMessage(proven = true) {
-  const status = proven
-    ? 'SeniorOS finish gate: the checks pass.'
-    : 'SeniorOS finish gate: no check failed, but the proof baseline is NOT PROVEN (no tests ran or checks were skipped), so do not say the checks pass. Add or run a check that exercises this change, or report the status as NOT PROVEN.';
+  const status = proven ? 'SeniorOS finish gate: the checks pass.' : `SeniorOS finish gate: ${NOT_PROVEN}`;
   return [
     `${status} This change is medium risk or higher, so before reporting it as done, apply senior-finish step 4:`,
     'name the two most likely ways it is still wrong (a case the tests do not reach, a caller or copy you did not update, an environment difference such as timezone or OS, behavior the change removed) and the evidence that rules each out: a command and its result, or the code that handles it.',
