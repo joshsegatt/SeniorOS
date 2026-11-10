@@ -637,6 +637,30 @@ Backends: `agentapi` (default; needs `ANTIGRAVITY_LS_ADDRESS`, which Antigravity
 `agy` (the Antigravity CLI, `agy -p`, run inside each task repo; adjust flags with `SENIOROS_BENCH_AGY_ARGS`),
 and `manual` (prints each prompt and waits for you).
 
+**Codex** (`--backend codex --model <name>`, arms `none` and `senioros`; list models with `codex debug models`). Each
+run is one `codex exec --json` inside its repository, with Codex's `workspace-write` sandbox on. The bench has its
+own Codex home, `~/senioros-bench/codex-home`, with its own login: log in once with `CODEX_HOME` set to that folder
+(`codex login`). Your `~/.codex` is never read, so a run cannot rotate your login. The `senioros` arm is this checkout
+installed there as a Codex plugin, reinstalled at the start of each bench; `none` runs with plugins off. The plugin's
+hooks run without the `/hooks` trust step (`--dangerously-bypass-hook-trust`), because no one is there to answer it.
+Codex reads `~/.agents/skills` whatever the environment says, and a long list there pushes the plugin's skills out
+of the model's context, so the bench stops while that folder has skills: move it aside, or set
+`SENIOROS_BENCH_USER_CONFIG=1` to measure with it. Codex reports no cost per run, so the report's cost columns are
+empty.
+
+Checked with one real run on Windows (Codex CLI 0.164.0): the session rules reached the agent, it edited a file and
+the summary read the run. Two limits follow from the sandbox. On Windows the bench passes
+`windows.sandbox=elevated`, which needs Codex's Windows sandbox set up once on the machine. And the sandbox keeps
+`.git` read-only, so the agent cannot commit, and a destructive git command is refused by Codex in every arm: the
+tasks that measure the guard on those commands cannot tell the arms apart on this backend. The grader compares the
+working tree with the base commit, so no task needs a commit.
+
+A first pass to check the backend, not a result: core set, 1 trial, 16 runs, `gpt-6-luna`, with `~/.agents/skills`
+moved aside. Both arms passed 6 of 8. The plugin's guard ran in Codex: it refused the recursive delete in `t8`, which
+that run then failed (the agent listed the files and asked the user to delete them), and the `none` run of `t6` lost
+uncommitted work. The report's finish-gate and guard counts read 0 because they come from the Claude Code and
+Antigravity logs. One trial cannot tell the arms apart; no results are published for this backend yet.
+
 ## Reading the results
 
 Two trials per cell is enough to spot large differences, not small ones. Before claiming one pack beats another,

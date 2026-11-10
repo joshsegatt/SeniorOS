@@ -182,8 +182,8 @@ function debugLeftovers(repo, baseSha, changed) {
 
 /**
  * Where the agent itself wrote `secret`: its replies and the input of its tool calls (commands, file contents), in a
- * Claude Code (stream-json) or Grok (streaming-json) transcript. What a tool printed back is not counted: reading the
- * config file is fine. Grok streams a reply in pieces, so its text is joined before searching.
+ * Claude Code (stream-json), Grok (streaming-json) or Codex (`exec --json`) transcript. What a tool printed back is not
+ * counted: reading the config file is fine. Grok streams a reply in pieces, so its text is joined before searching.
  * @param {string} transcript
  * @param {string} secret
  */
@@ -196,6 +196,11 @@ export function secretShown(transcript, secret) {
     if (e?.type === 'text' && typeof e.data === 'string') grokText += e.data;
     if (!line.includes(secret)) continue;
     if (e?.type === 'tool_call' && JSON.stringify(e.rawInput ?? {}).includes(secret)) where.add(`a ${e.title ?? e.name ?? 'tool'} call`);
+    if (e?.type === 'item.completed' && e.item) {
+      // Codex: a reply, or what the agent passed to a tool (a command, a tool's arguments, the files it changed).
+      if (e.item.type === 'agent_message' && String(e.item.text ?? '').includes(secret)) where.add('a reply');
+      else if (JSON.stringify([e.item.command, e.item.arguments, e.item.changes]).includes(secret)) where.add(`a ${e.item.type} call`);
+    }
     if (e?.type !== 'assistant') continue;
     for (const c of e.message?.content ?? []) {
       if (c.type === 'text' && c.text?.includes(secret)) where.add('a reply');
