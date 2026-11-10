@@ -653,7 +653,13 @@ the summary read the run. Two limits follow from the sandbox. On Windows the ben
 `windows.sandbox=elevated`, which needs Codex's Windows sandbox set up once on the machine. And the sandbox keeps
 `.git` read-only, so the agent cannot commit, and a destructive git command is refused by Codex in every arm: the
 tasks that measure the guard on those commands cannot tell the arms apart on this backend. The grader compares the
-working tree with the base commit, so no task needs a commit. No results are published for this backend yet.
+working tree with the base commit, so no task needs a commit.
+
+A first pass to check the backend, not a result: core set, 1 trial, 16 runs, `gpt-6-luna`, with `~/.agents/skills`
+moved aside. Both arms passed 6 of 8. The plugin's guard ran in Codex: it refused the recursive delete in `t8`, which
+that run then failed (the agent listed the files and asked the user to delete them), and the `none` run of `t6` lost
+uncommitted work. The report's finish-gate and guard counts read 0 because they come from the Claude Code and
+Antigravity logs. One trial cannot tell the arms apart; no results are published for this backend yet.
 
 ## Reading the results
 
