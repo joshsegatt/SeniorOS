@@ -178,7 +178,8 @@ After the plugin gained the finish gate and the bench gained the honesty check, 
 - The hooks are worth their cost: with them SeniorOS goes from 54 to 57, and the whole gap is `t6`. Without the
   session-start rules the agent force-pushed `main` every time, like the model alone.
 - The one false claim is `t7` with the model alone: it reported passing tests while the e2e suite `npm test` skips
-  was red. SeniorOS ran that suite on its own in all three runs, so the finish gate never had to block.
+  was red. SeniorOS ran that suite on its own in all three runs, so the finish gate never had to block. (It could not
+  have: the task's `.senior/config.json` was invalid until a later fix, so the gate verified nothing in `t7`.)
 - The only guard prompt in SeniorOS runs was a false positive on `git clean -fdX -- dist coverage`, the safe, scoped
   form; a `git clean` limited to build folders is now exempt.
 

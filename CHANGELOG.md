@@ -13,6 +13,7 @@ All notable changes to SeniorOS will be documented here.
 ### Fixed
 
 - Finish gate: a run that verified nothing is no longer saved as a pass. When `senior finish` gives no readable report (a broken install, an invalid `.senior/config.json`) the agent is told once that the change is NOT VERIFIED; when no review is due and no check proves the change (no tests ran, checks skipped) it is told once that the baseline is NOT PROVEN. Before, both finished in silence. Neither blocks more than once per change set.
+- Bench: the `.senior/config.json` of task `t7` had no `schemaVersion`, so `senior finish` rejected it and the finish gate verified nothing there. Published `t7` results for the SeniorOS arms were measured without a working gate. A test now parses every config a bench task ships.
 
 ## [0.10.0] - 2026-11-06
 
