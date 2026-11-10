@@ -197,9 +197,9 @@ export function secretShown(transcript, secret) {
     if (!line.includes(secret)) continue;
     if (e?.type === 'tool_call' && JSON.stringify(e.rawInput ?? {}).includes(secret)) where.add(`a ${e.title ?? e.name ?? 'tool'} call`);
     if (e?.type === 'item.completed' && e.item) {
-      // Codex: a reply, or the command it ran; `aggregated_output` is what the command printed back.
+      // Codex: a reply, or what the agent passed to a tool (a command, a tool's arguments, the files it changed).
       if (e.item.type === 'agent_message' && String(e.item.text ?? '').includes(secret)) where.add('a reply');
-      else if (e.item.type !== 'agent_message' && JSON.stringify({ ...e.item, aggregated_output: undefined }).includes(secret)) where.add(`a ${e.item.type} call`);
+      else if (JSON.stringify([e.item.command, e.item.arguments, e.item.changes]).includes(secret)) where.add(`a ${e.item.type} call`);
     }
     if (e?.type !== 'assistant') continue;
     for (const c of e.message?.content ?? []) {

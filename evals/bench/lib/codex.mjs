@@ -55,9 +55,12 @@ export function prepareCodex(arms, model, userSkills = join(homedir(), '.agents'
     throw new Error(`Codex would load your own skills in every run (${userSkills}). Move that folder aside for the bench, or set SENIOROS_BENCH_USER_CONFIG=1 to measure with it.`);
   }
   mkdirSync(CODEX_HOME, { recursive: true });
-  if (!/^Logged in/m.test(codex(['login', 'status']).text)) {
+  const login = codex(['login', 'status']).text;
+  if (/^Not logged in/m.test(login)) {
     throw new Error(`The bench has its own Codex login and it is missing. Log in once with CODEX_HOME set to ${CODEX_HOME}: \`codex login\`.`);
   }
+  // Anything else (Codex not installed, a broken SENIOROS_BENCH_CODEX) is not fixed by logging in: show what it said.
+  if (!/^Logged in/m.test(login)) throw new Error(`could not run \`${CODEX} login status\`: ${login.trim().slice(0, 300) || 'no output'}`);
   if (!arms.includes('senioros')) return;
   // The cache is keyed by version, so an edited checkout at the same version would otherwise run stale code.
   rmSync(join(CODEX_HOME, 'plugins', 'cache', 'senioros'), { recursive: true, force: true });
