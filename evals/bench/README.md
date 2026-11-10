@@ -637,6 +637,17 @@ Backends: `agentapi` (default; needs `ANTIGRAVITY_LS_ADDRESS`, which Antigravity
 `agy` (the Antigravity CLI, `agy -p`, run inside each task repo; adjust flags with `SENIOROS_BENCH_AGY_ARGS`),
 and `manual` (prints each prompt and waits for you).
 
+**Codex** (`--backend codex --model <name>`, arms `none` and `senioros`; list models with `codex debug models`). Each
+run is one `codex exec --json` inside its repository, with Codex's `workspace-write` sandbox on. The bench has its
+own Codex home, `~/senioros-bench/codex-home`, with its own login: log in once with `CODEX_HOME` set to that folder
+(`codex login`). Your `~/.codex` is never read, so a run cannot rotate your login. The `senioros` arm is this checkout
+installed there as a Codex plugin, reinstalled at the start of each bench; `none` runs with plugins off. The plugin's
+hooks run without the `/hooks` trust step (`--dangerously-bypass-hook-trust`), because no one is there to answer it.
+Codex reads `~/.agents/skills` whatever the environment says, and a long list there pushes the plugin's skills out
+of the model's context, so the bench stops while that folder has skills: move it aside, or set
+`SENIOROS_BENCH_USER_CONFIG=1` to measure with it. Codex reports no cost per run, so the report's cost columns are
+empty. Not yet run end to end: no results are published for this backend.
+
 ## Reading the results
 
 Two trials per cell is enough to spot large differences, not small ones. Before claiming one pack beats another,

@@ -6,6 +6,7 @@
 //   agy       The Antigravity CLI (`agy -p <prompt>`), run inside the run's repository. Completion = exit.
 //   claude    Claude Code (`claude -p`) inside the run's repository; arms are flags (see claude.mjs).
 //   grok      Grok CLI (`grok -p`) inside the run's repository, with its own Grok home per run (see grok.mjs).
+//   codex     Codex CLI (`codex exec`) inside the run's repository, with the bench's own Codex home (see codex.mjs).
 //   manual    Prints the prompt and waits for Enter: you run the conversation yourself.
 import { copyFileSync, existsSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -13,6 +14,7 @@ import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { runClaude } from './claude.mjs';
 import { runGrok } from './grok.mjs';
+import { runCodex } from './codex.mjs';
 import { BENCH_HOME, GEMINI_HOME, newestMtime, run } from './util.mjs';
 
 /** Step type of a tool call in Antigravity's conversation store (observed on 44.4.3). */
@@ -120,7 +122,7 @@ export async function conversationStats(conversationId) {
 }
 
 /**
- * @param {'agentapi' | 'agy' | 'claude' | 'grok' | 'manual'} backend
+ * @param {'agentapi' | 'agy' | 'claude' | 'grok' | 'codex' | 'manual'} backend
  * @param {{ task: Record<string, any>, meta: Record<string, any>, model: string, parallel?: boolean }} job
  */
 export async function runConversation(backend, { task, meta, model, parallel = false }) {
@@ -148,6 +150,10 @@ export async function runConversation(backend, { task, meta, model, parallel = f
 
   if (backend === 'grok') {
     return runGrok({ prompt, repo: meta.repo, runDir: meta.runDir, arm: meta.arm, model, timeoutMs });
+  }
+
+  if (backend === 'codex') {
+    return runCodex({ prompt, repo: meta.repo, runDir: meta.runDir, arm: meta.arm, model, timeoutMs });
   }
 
   if (backend === 'agy') {
