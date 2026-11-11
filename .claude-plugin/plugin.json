@@ -1,6 +1,7 @@
 {
   "name": "senioros",
-  "description": "Engineering discipline for coding agents: risk-proportional workflows, proof gates that run in CI, and portable Agent Skills.",
+  "displayName": "SeniorOS",
+  "description": "A guard that asks before destructive commands, a finish gate that runs your checks before the agent says done, and skills that trace a bug to its cause.",
   "version": "0.10.1",
   "author": {
     "name": "Josh Segatt",
@@ -8,6 +9,8 @@
   },
   "homepage": "https://github.com/joshsegatt/SeniorOS",
   "repository": "https://github.com/joshsegatt/SeniorOS",
+  "documentationUrl": "https://github.com/joshsegatt/SeniorOS#readme",
+  "supportUrl": "https://github.com/joshsegatt/SeniorOS/issues",
   "license": "Apache-2.0",
   "keywords": ["skills", "engineering", "risk", "verification", "code-review", "debugging"]
 }
