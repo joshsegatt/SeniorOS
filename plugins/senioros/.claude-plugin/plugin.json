@@ -1,7 +1,6 @@
 {
   "name": "senioros",
   "displayName": "SeniorOS",
-  "description": "Skills that trace a bug to its cause, size the process to the risk of each change, and review and finish with real checks. The guard and the finish gate come with the full plugin from the repository.",
   "version": "0.10.1",
   "author": {
     "name": "Josh Segatt",
@@ -19,5 +18,6 @@
     "verification",
     "code-review",
     "debugging"
-  ]
+  ],
+  "description": "Skills that trace a bug to its cause, size the process to the risk of each change, and review and finish with real checks. The guard and the finish gate come with the full plugin from the repository."
 }
