@@ -4,6 +4,10 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- `plugins/senioros/`: a skills-only edition for the Claude plugin directory, which accepts from unverified publishers only Markdown, text, JSON and images, and no hooks. `npm run gen:rules` copies the skills, license, icon and manifest into it, and `npm test` fails when the copy is out of date. The guard and the finish gate stay in the full plugin from the repository's marketplace.
+
 ## [0.10.1] - 2026-11-11
 
 ### Added
