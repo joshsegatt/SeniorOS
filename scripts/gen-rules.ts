@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 // The routing rules every host loads come from one template, rules/core.md, so a fix lands in all of them at once.
@@ -14,18 +14,48 @@ export function renderRules(root: string): Map<string, string> {
   return new Map(Object.entries(hosts).map(([file, skills]) => [file, template.split('{{skills}}').join(skills)]));
 }
 
-/** Writes the generated files; with `check`, only lists the ones that differ from the template. */
+// The Claude plugin directory takes from unverified publishers only Markdown, text, JSON and images, and no hooks,
+// so it lists a skills-only copy in plugins/senioros/. The guard and the finish gate stay in the full plugin.
+const DIRECTORY_PLUGIN = 'plugins/senioros';
+
+/** The skills-only plugin for the Claude directory: copies of the skills, license and icon, and its manifest. */
+export function renderDirectoryPlugin(root: string): Map<string, Buffer> {
+  const read = (file: string) => readFileSync(path.join(root, file));
+  const files = new Map<string, Buffer>();
+  const skills = readdirSync(path.join(root, 'skills'), { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => path.relative(root, path.join(entry.parentPath, entry.name)).split(path.sep).join('/'))
+    .sort();
+  for (const file of skills) files.set(`${DIRECTORY_PLUGIN}/${file}`, read(file));
+  files.set(`${DIRECTORY_PLUGIN}/LICENSE`, read('LICENSE'));
+  files.set(`${DIRECTORY_PLUGIN}/.claude-plugin/icon.png`, read('.claude-plugin/icon.png'));
+  const full = JSON.parse(read('.claude-plugin/plugin.json').toString('utf8')) as Record<string, unknown>;
+  const manifest = {
+    ...full,
+    description:
+      'Skills that trace a bug to its cause, size the process to the risk of each change, and review and finish with real checks. ' +
+      'The guard and the finish gate come with the full plugin from the repository.',
+  };
+  files.set(`${DIRECTORY_PLUGIN}/.claude-plugin/plugin.json`, Buffer.from(`${JSON.stringify(manifest, null, 2)}\n`));
+  return files;
+}
+
+/** Writes the generated files; with `check`, only lists the ones that differ from their sources. */
 export function generateRules(root: string, check = false): string[] {
   const stale: string[] = [];
-  for (const [file, content] of renderRules(root)) {
+  const outputs: [string, Buffer][] = [
+    ...[...renderRules(root)].map(([file, content]): [string, Buffer] => [file, Buffer.from(content)]),
+    ...renderDirectoryPlugin(root),
+  ];
+  for (const [file, content] of outputs) {
     const target = path.join(root, file);
-    let current = '';
+    let current = Buffer.alloc(0);
     try {
-      current = readFileSync(target, 'utf8');
+      current = readFileSync(target);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; // a missing file is stale; others are errors
     }
-    if (current === content) continue;
+    if (current.equals(content)) continue;
     stale.push(file);
     if (!check) {
       mkdirSync(path.dirname(target), { recursive: true });

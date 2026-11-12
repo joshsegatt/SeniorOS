@@ -1,0 +1,23 @@
+{
+  "name": "senioros",
+  "displayName": "SeniorOS",
+  "description": "Skills that trace a bug to its cause, size the process to the risk of each change, and review and finish with real checks. The guard and the finish gate come with the full plugin from the repository.",
+  "version": "0.10.1",
+  "author": {
+    "name": "Josh Segatt",
+    "url": "https://github.com/joshsegatt"
+  },
+  "homepage": "https://github.com/joshsegatt/SeniorOS",
+  "repository": "https://github.com/joshsegatt/SeniorOS",
+  "documentationUrl": "https://github.com/joshsegatt/SeniorOS#readme",
+  "supportUrl": "https://github.com/joshsegatt/SeniorOS/issues",
+  "license": "Apache-2.0",
+  "keywords": [
+    "skills",
+    "engineering",
+    "risk",
+    "verification",
+    "code-review",
+    "debugging"
+  ]
+}
