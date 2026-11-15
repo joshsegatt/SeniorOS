@@ -36,6 +36,24 @@ function skillsOnlyPlugin() {
   return dir;
 }
 
+/**
+ * A copy of the SeniorOS plugin with its hooks edited, to attribute cost and outcome to each hook. Built once per
+ * bench run from the repository.
+ * @param {string} name
+ * @param {(hooks: { hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>> }) => object} edit
+ */
+function hookVariantPlugin(name, edit) {
+  const dir = join(BENCH_HOME, 'plugins', name);
+  rmSync(dir, { recursive: true, force: true });
+  for (const part of ['.claude-plugin', 'skills', 'adapters']) cpSync(join(REPO_ROOT, part), join(dir, part), { recursive: true });
+  mkdirSync(join(dir, 'hooks'), { recursive: true });
+  writeFileSync(join(dir, 'hooks', 'hooks.json'), JSON.stringify(edit(JSON.parse(readFileSync(join(REPO_ROOT, 'hooks', 'hooks.json'), 'utf8'))), null, 2));
+  return dir;
+}
+const hookVariants = {};
+const hookVariantArm = (name, edit) => () => ['--plugin-dir', hookVariants[name] ??= hookVariantPlugin(name, edit)];
+const onlyEvents = (events) => (h) => ({ hooks: Object.fromEntries(Object.entries(h.hooks).filter(([event]) => events.includes(event))) });
+
 /** Extra `claude` arguments per arm (functions are resolved when a run starts). */
 export const CLAUDE_ARMS = {
   none: [],
@@ -45,6 +63,14 @@ export const CLAUDE_ARMS = {
   compound: () => packPlugin(COMPOUND_DIR, 'EveryInc/compound-engineering-plugin', 'SENIOROS_BENCH_COMPOUND'),
   senioros: ['--plugin-dir', REPO_ROOT],
   'senioros-skills': () => ['--plugin-dir', skillsOnlyDir ??= skillsOnlyPlugin()],
+  // The full plugin minus hooks, one at a time: what the rules alone and the guard each add, in outcome and cost.
+  'senioros-rules': hookVariantArm('senioros-rules', onlyEvents(['SessionStart'])),
+  'senioros-rules-guard': hookVariantArm('senioros-rules-guard', onlyEvents(['SessionStart', 'PreToolUse'])),
+  // The full plugin with the importers-first gate on (off by default in the shipped plugin).
+  'senioros-importers': hookVariantArm('senioros-importers', (h) => {
+    for (const block of h.hooks.PreToolUse ?? []) for (const hook of block.hooks) hook.command += ' --importers-first';
+    return h;
+  }),
   // Another SeniorOS checkout (for example a worktree of the previous release), to measure one change against it.
   'senioros-baseline': () => {
     if (!process.env.SENIOROS_BENCH_BASELINE) {

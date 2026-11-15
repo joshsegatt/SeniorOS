@@ -4,14 +4,16 @@
 // flow in place. Fails open.
 import { readFileSync } from 'node:fs';
 import { classify, denyMessage, editReason, guardMessage } from '../../shared/guard.mjs';
+import { importersFirst } from './importers-gate.mjs';
 
 const SHELL_TOOLS = new Set(['Bash', 'PowerShell', 'run_terminal_command', 'Shell']);
 
 /**
  * @param {string} raw the hook's stdin
+ * @param {{ importersFirst?: boolean }} options `importersFirst`: the experimental gate in importers-gate.mjs
  * @returns {object | null} the hook response, or null to stay silent
  */
-export function decide(raw) {
+export function decide(raw, options = {}) {
   let input;
   try {
     input = JSON.parse(raw);
@@ -23,7 +25,10 @@ export function decide(raw) {
   const reason = SHELL_TOOLS.has(input?.tool_name) || input?.tool_name === undefined
     ? classify(tool.command)
     : editReason([tool.file_path, tool.notebook_path]);
-  if (!reason) return null;
+  if (!reason) {
+    const gate = options.importersFirst ? importersFirst(input) : null;
+    return gate ? { hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: gate } } : null;
+  }
   // Grok (its camelCase `hookEventName` is `pre_tool_use`) approves a hook's question by itself under always-approve,
   // so there the command is refused instead, as the Codex guard does.
   const unattended = input?.hookEventName === 'pre_tool_use' && input?.permission_mode === 'bypassPermissions';
@@ -38,7 +43,7 @@ export function decide(raw) {
 
 if (process.argv[1]?.replace(/\\/g, '/').endsWith('claude-code/hooks/pretool-guard.mjs')) {
   try {
-    const response = decide(readFileSync(0, 'utf8'));
+    const response = decide(readFileSync(0, 'utf8'), { importersFirst: process.argv.includes('--importers-first') });
     if (response) process.stdout.write(JSON.stringify(response));
   } catch (error) {
     // Claude Code's normal permission flow applies, but say the guard did not run.
