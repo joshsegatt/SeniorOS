@@ -6,13 +6,17 @@ import os from 'node:os';
 import path from 'node:path';
 
 const EDIT_TOOLS = new Set(['Edit', 'MultiEdit', 'Write']);
-const SHELL_TOOLS = new Set(['Bash', 'PowerShell']);
+// The shell tools pretool-guard.mjs judges (Grok names its own `run_terminal_command` and `Shell`).
+const SHELL_TOOLS = new Set(['Bash', 'PowerShell', 'run_terminal_command', 'Shell']);
 const EXT = String.raw`\.(?:m?[jt]sx?|cjs|cts|py|go|rb|rs|java|kt|cs|php|swift)`;
 const SOURCE = new RegExp(`${EXT}$`, 'i');
 const TEST = /(^|[\\/])(tests?|__tests__|spec)[\\/]|\.(test|spec)\.[^\\/]+$/i;
 // Agents often edit through the shell: a redirection into a file, or an in-place editor on the files it names.
-const REDIRECT = /(?<![\d&])>>?\s*["']?([^\s"'|;&<>]+)/g;
-const IN_PLACE = /\bsed\s+(-\w+\s+)*-i|\bperl\s+-\w*i|\btee\b|\bwriteFileSync\b|\bwriteFile\b|\b(Set|Add)-Content\b|\bOut-File\b/i;
+// shortcut: paths are resolved against the session cwd, not a leading `cd`, and a script's own writes (`node -e`) are
+// not seen; good enough for an experiment, upgrade with a real shell parser if the gate ships.
+const REDIRECT = /(?<![\d&=-])>>?\s*["']?([^\s"'|;&<>]+)/g;
+// An in-place editor at the start of a pipeline segment (also inside `for … do` and `if … then`).
+const IN_PLACE = /^\s*((do|then)\s+)?(sed\s+(-\w+\s+)*-i|perl\s+-\w*i|tee\b|(Set|Add)-Content\b|Out-File\b)/i;
 const PATHS = new RegExp(String.raw`[\w.~/\\-]+${EXT}\b`, 'gi');
 
 /** The files a tool call writes, as far as its input shows. */
@@ -21,7 +25,9 @@ function written(input) {
   if (EDIT_TOOLS.has(input?.tool_name ?? '')) return typeof tool.file_path === 'string' ? [tool.file_path] : [];
   if (!SHELL_TOOLS.has(input?.tool_name ?? '') || typeof tool.command !== 'string') return [];
   const files = [...tool.command.matchAll(REDIRECT)].map((m) => m[1]);
-  return IN_PLACE.test(tool.command) ? [...files, ...(tool.command.match(PATHS) ?? [])] : files;
+  // Operators with spaces around them, so a `;` or `&&` inside a quoted sed script does not split it.
+  const edited = tool.command.split(/\s(?:&&|\|\||\|)\s|;\s|\n/).filter((segment) => IN_PLACE.test(segment));
+  return [...files, ...edited.flatMap((segment) => segment.match(PATHS) ?? [])];
 }
 
 /**

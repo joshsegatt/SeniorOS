@@ -173,8 +173,12 @@ test('importers-first gate: off by default; on, it sends back the first edit of 
     assert.equal(importersFirst(sh('cat src/orders.js 2>&1 | head', 'b1'), state), null, 'a read');
     assert.equal(importersFirst(sh('npm test > out.log 2>&1', 'b1'), state), null, 'a write elsewhere');
     assert.equal(importersFirst(sh("sed -i 's/a/b/' test/orders.test.js", 'b1'), state), null, 'a test');
+    assert.equal(importersFirst(sh('cat src/orders.js | tee out.log', 'b1'), state), null, 'tee of a read');
+    assert.equal(importersFirst(sh('grep -n writeFile src/orders.js', 'b1'), state), null, 'a search');
+    assert.equal(importersFirst(sh(`node -e "[1].map(x => require('./src/orders.js'))"`, 'b1'), state), null, 'an arrow');
     assert.ok(importersFirst(sh("cat >> src/orders.js <<'EOF'\nexport const x = 1;\nEOF", 'b1'), state), 'a heredoc append');
     assert.ok(importersFirst(sh("cd repo && sed -i 's/a/b/' src/orders.js", 'b2'), state), 'an in-place edit');
+    assert.ok(importersFirst(sh("for f in orders; do sed -i 's/a/b/' src/orders.js; done", 'b3'), state), 'inside a loop');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
