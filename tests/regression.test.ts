@@ -95,6 +95,16 @@ test('an incomplete fix is reported before anything is reverted', async () => {
   assert.equal(snapshot(root), before);
 });
 
+test('a test that only fails to load without the fix is not proof, unless --expect-failure says what to expect', async () => {
+  const root = await fixedRepo();
+  // The fix adds a module the test needs, so without the fix the test cannot even load.
+  await write(root, 'src/helper.js', 'module.exports = 1;\n');
+  await write(root, 'tests/cart.test.js', `require('../src/helper.js');\n${TEST}`);
+  const report = proveRegression(root, { test: 'node tests/cart.test.js' });
+  assert.equal(report.reason, 'failed-for-other-reason');
+  assert.match(report.message, /failed to load/);
+});
+
 test('failing for a different reason than --expect-failure is not proof', async () => {
   const root = await fixedRepo();
   const report = proveRegression(root, { test: 'node tests/cart.test.js', expectFailure: 'TypeError' });

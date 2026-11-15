@@ -30,7 +30,7 @@ test('every host routes the same surfaces and the same planning cases', () => {
     assert.match(routing, /`senior-debugging`, which fixes the cause even when it sits in another module than the one reported\./, file);
     assert.match(routing, /\(auth, data, stored records, migrations, public APIs, CI, deployment\)/, file);
     assert.match(routing, /when it also has several steps, changes a shared contract or stored data, or can fail halfway, plan it before the first edit: find every reader of what changes and the data already saved in the old shape, and decide what happens if a step fails halfway, runs twice or meets old data./, file);
-    for (const skill of ['senior-engineering', 'senior-debugging', 'senior-code-review', 'senior-finish']) assert.ok(routing.includes(`\`${skill}\``), `${file}: ${skill}`);
+    for (const skill of ['senior-engineering', 'senior-debugging', 'senior-code-review', 'senior-finish', 'senior-project-intelligence', 'senior-skill-authoring']) assert.ok(routing.includes(`\`${skill}\``), `${file}: ${skill}`);
   }
 });
 

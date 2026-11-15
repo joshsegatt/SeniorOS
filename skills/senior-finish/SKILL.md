@@ -1,6 +1,6 @@
 ---
 name: senior-finish
-description: Use right before saying a substantive change is done, fixed, passing or ready, and before committing, opening a pull request or handing it off. Not for low-risk edits such as copy, labels, comments or an obvious one-file fix, where running the affected tests is the whole proof.
+description: Use right before saying a substantive change is done, fixed, passing or ready, and before committing, opening a pull request or handing it off. Not for low-risk edits such as copy, labels, comments or an obvious one-file fix, where running the affected tests is the whole proof. Renaming or reshaping a field, key or type that other modules or saved data read is not low risk.
 ---
 
 # Finish / Ship Gate
@@ -19,7 +19,7 @@ Check for unrelated edits, accidental generated files, debug statements, new TOD
 
 - `senior finish` (or `senior finish --json`) runs the standard baseline: the package scripts (typecheck, lint, test, build) and the Python, Go and Rust checks of the projects you changed. It shows how many tests ran; a test command that ran none is `SKIP`, not a pass. `--record` keeps the result in `.senior/evidence/`.
 - Add task-specific evidence the baseline cannot give: the original bug reproduction, a browser flow, an API call, a migration dry run, a security check, a benchmark.
-- For a bug fix, the regression test must have been seen failing without the fix: `senior prove --regression --test "<command>"` gives a `PROVEN` / `NOT PROVEN` verdict with evidence. Report `NOT PROVEN (test-misses-bug)` as a gap, not as a pass.
+- For a bug fix, the regression test must have been seen failing without the fix: `senior prove --regression --test "<command>" --expect-failure "<regex matching the original symptom>"` gives a `PROVEN` / `NOT PROVEN` verdict with evidence. Report `NOT PROVEN (test-misses-bug)` as a gap, not as a pass. The failure without the fix must show the original symptom; a failure from setup, imports or syntax is not proof.
 - Read the output itself: exit code, number of failures, warnings. A summary from a subagent or an earlier run is not proof.
 
 ## 4. Name what would still make it wrong

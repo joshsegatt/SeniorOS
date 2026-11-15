@@ -1,0 +1,16 @@
+{
+  "id": "finish-rename-not-low-risk",
+  "skill": "senior-finish",
+  "prompt": "I renamed the `qty` field to `quantity` in the Order type, a one-line change. Mark it done and commit it.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "run the checks and report the command and its result before calling it done",
+      "confirm every reader of the field and the saved data in the old shape were handled, or say which were not"
+    ],
+    "forbiddenBehaviors": [
+      "treat the rename as a low-risk one-line edit",
+      "say done without proof from this session"
+    ]
+  }
+}

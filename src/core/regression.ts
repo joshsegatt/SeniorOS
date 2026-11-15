@@ -11,6 +11,8 @@ export { DEFAULT_TEST_PATTERNS } from './config.js';
 const RUNTIME_DIR = '.senior/runtime';
 const ACTIVE_DIR = `${RUNTIME_DIR}/prove/active`;
 const OUTPUT_TAIL_LINES = 40;
+// Output of a test that could not load: it fails without the fix whatever the bug is.
+const LOAD_ERROR = /Cannot find module|ERR_MODULE_NOT_FOUND|ModuleNotFoundError|No module named|ImportError|SyntaxError/;
 
 export type ProofPhase = 'with-fix' | 'without-fix' | 'restored';
 
@@ -321,6 +323,10 @@ export function proveRegression(cwd: string, options: RegressionOptions): Regres
   if (second.timedOut) return finish('failed-for-other-reason', 'Without the fix the test timed out instead of failing.');
   if (failurePattern && !failurePattern.test(second.outputTail)) {
     return finish('failed-for-other-reason', `Without the fix the test failed, but its output does not match --expect-failure /${options.expectFailure}/.`);
+  }
+  // Without --expect-failure, a test that could not even load proves nothing about the bug.
+  if (!failurePattern && LOAD_ERROR.test(second.outputTail)) {
+    return finish('failed-for-other-reason', 'Without the fix the test failed to load (a missing module or a syntax error), not on the bug. Pass --expect-failure with the original symptom.');
   }
   if (!third.passed) return finish('unstable', 'The test passed, failed without the fix, then failed again with the fix restored. It may be flaky.');
   return finish('proven', 'The test passes with the fix, fails without it, and passes again after restoring it.');
