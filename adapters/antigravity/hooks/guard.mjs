@@ -13,10 +13,10 @@ export const RULES = [
   [/\bRemove-Item\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
   [/(^|[|"'{(&])\s*(ri|rm|del|erase|rd|rmdir)(?=\s)[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
   // cmd switches in any order, also run together (`/q/s`).
-  [/\b(rd|rmdir)\b[^|;\n]*(\s|\/[a-z])\/s\b/i, 'recursive folder deletion'],
+  [/\b(rd|rmdir)\b[^|;\n]*\s(\/[a-z])*\/s\b/i, 'recursive folder deletion'],
   // A recursive listing piped into a deletion, and .NET's recursive delete.
-  [/\b(Get-ChildItem|gci|ls|dir)\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b[^;\n]*\|\s*(Remove-Item|ri|rm|del|erase)\b/i, 'recursive file deletion'],
-  [/\[(System\.)?IO\.Directory\]::Delete\s*\([^)]*\$true/i, 'recursive file deletion'],
+  [/\b(Get-ChildItem|gci|ls|dir)\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b[^;\n]*\|\s*((ForEach-Object|foreach|%)\s*\{[^}]*?)?\b(Remove-Item|ri|rm|del|erase)\b/i, 'recursive file deletion'],
+  [/\[(System\.)?IO\.Directory\]::Delete\s*\([^;\n]*,\s*(\$true|1)\s*\)/i, 'recursive file deletion'],
   [/\bdel\s+[^|;\n]*\/s\b/i, 'recursive file deletion'],
   [/\b(rimraf|del-cli)\s+\S/, 'recursive file deletion'],
   [/\bfind\b[^|;\n]*\s(-delete\b|-exec(dir)?\s+(rm|del|unlink|shred)\b)/, 'deleting the files find matches'],
@@ -63,9 +63,9 @@ export const RULES = [
   [/\baws\b[^|;\n]*\ss3\s+(rm\b[^|;\n]*--recursive|rb\b|sync\b[^|;\n]*\s--delete\b)|\baws\b[^|;\n]*\s(delete|terminate|remove|deregister)-[\w-]+(?=\s|$)/, 'deleting cloud resources'],
   [/\bhelm\s+(uninstall|delete)\b|\bheroku\s+(apps:destroy|pg:reset)\b|\bpulumi\s+(up|destroy)\b|\b(az|doctl)\s+[^|;\n]*\bdelete\b/, 'infrastructure change'],
   // Remote code, system, secrets
-  [/\b(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|\n]*\|\s*(sh|bash|zsh|iex|Invoke-Expression|pwsh|powershell)\b/i, 'running a script downloaded from the internet'],
+  [/\b(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|\n]*\|\s*(sudo\s+(-\S+\s+)*)?(sh|bash|zsh|iex|Invoke-Expression|pwsh|powershell)\b/i, 'running a script downloaded from the internet'],
   // The download as the script itself (`sh -c "$(curl …)"`, `bash <(curl …)`, `eval`, `.`), not as an argument.
-  [/((?<![\w./\-])(?:[\w.~/\-]*[\/])?(sh|bash|zsh|ksh|dash|python3?|node|ruby|perl)\b(\s+-\w+)*\s+-[ce]\s+|\b(eval|source)\s+|(^|[;&|(]\s*)\.\s+|(?<![\w./\-])(?:[\w.~/\-]*[\/])?(sh|bash|zsh|ksh|dash)\s+)["']?(\$\(|<\(|`)\s*(curl|wget)\b|\b(iex|Invoke-Expression)\b[^|;\n]*\b(irm|iwr|Invoke-RestMethod|Invoke-WebRequest|DownloadString)\b/i, 'running a script downloaded from the internet'],
+  [/((?<![\w./\-])(?:[\w.~/\-]*[\/])?(sh|bash|zsh|ksh|dash|python3?|node|ruby|perl)\b(\s+-\w+)*\s+-\w*[ce]\s+|\b(eval|source)\s+|(^|[;&|(]\s*)\.\s+|(?<![\w./\-])(?:[\w.~/\-]*[\/])?(sh|bash|zsh|ksh|dash)\s+)["']?(\$\(|<\(|`)\s*(curl|wget)\b|\b(iex|Invoke-Expression)\b[^|;\n]*\b(irm|iwr|Invoke-RestMethod|Invoke-WebRequest|DownloadString)\b/i, 'running a script downloaded from the internet'],
   [/\b(Format-Volume|diskpart|bcdedit|Stop-Computer|Restart-Computer|Set-ExecutionPolicy)\b|\bformat\s+[a-z]:|\breg\s+delete\b|\bshutdown\s+[/-]/i, 'system change'],
   [/\bdd\b[^|;\n]*\bof=\/dev\/(?!null\b)|\b(mkfs(\.\w+)?|wipefs)\s/, 'system change'],
   [/^\s*(printenv|env|Get-ChildItem\s+env:|gci\s+env:|dir\s+env:|ls\s+env:)\s*(\|.*)?$/i, 'printing environment variables (secrets) into the transcript'],
@@ -185,6 +185,7 @@ function splitOutsideQuotes(command) {
 const REGENERABLE = /^(\.\/|\.\\)?(node_modules|dist|build|out|\.next|\.nuxt|\.turbo|\.cache|\.parcel-cache|\.vite|coverage|target|__pycache__|\.pytest_cache)[\\/]?$/i;
 const DELETE_CMD = /^\s*(rm|Remove-Item|ri|rd|rmdir|del|rimraf)\b/i;
 const CMD_STYLE = /^\s*(rd|rmdir|del)\b/i;
+const LISTING_INTO_DELETE = /^\s*(?:Get-ChildItem|gci|ls|dir)\s+([^|;&\n]*)\|\s*(?:Remove-Item|ri|rm|del|erase)(?:\s+-\S+)*\s*$/i;
 
 /**
  * True only when every deletion target is a regenerable folder. Options start with `-`; a `/x` switch counts as
@@ -192,6 +193,16 @@ const CMD_STYLE = /^\s*(rd|rmdir|del)\b/i;
  * @param {string} command
  */
 function onlyRegenerableTargets(segment) {
+  // `gci -r dist | Remove-Item -Force` is the same deletion as `Remove-Item -Recurse dist`, when the deletion names
+  // no path of its own.
+  const piped = LISTING_INTO_DELETE.exec(segment);
+  if (piped) {
+    const words = (piped[1] ?? '').trim().split(/[\s,]+/).filter(Boolean);
+    // Only options that do not change what is listed: `-Exclude dist` would delete everything else.
+    if (words.some((t) => t.startsWith('-') && !/^-(r(e(c(u(r(se?)?)?)?)?)?|force|file|directory|hidden|path|literalpath)$/i.test(t))) return false;
+    const targets = words.filter((t) => !t.startsWith('-')).map((t) => t.replace(/^["']|["']$/g, ''));
+    return targets.length > 0 && targets.every((t) => REGENERABLE.test(t));
+  }
   if (/[|;&\n]/.test(segment)) return false;
   // `npx rimraf dist` is the same deletion as `rimraf dist`.
   const command = segment.replace(/^\s*(npx|bunx|(pnpm|yarn)\s+dlx)\s+(-y\s+|--yes\s+)?/, '');
@@ -240,11 +251,16 @@ const withoutMessages = (segment) => (TEXT_OPTIONS_TOOL.test(segment) ? segment.
  */
 function broadPathspec(spec) {
   const p = spec.replace(/^["']|["']$/g, '');
-  if (p === '.' || p === './' || p === ':/' || /[*?[]/.test(p) || /[\\/]$/.test(p) || p.startsWith(':(')) return true;
+  if (onlyAPath(p)) return true;
   const name = p.split(/[\\/]/).pop() ?? '';
   // A dot-name with no other dot is a folder (`.github`, `.husky`) unless it is a common dotfile.
   if (/^\.[^.]+$/.test(name)) return !DOTFILES.has(name.toLowerCase());
   return !/\.[\w-]+$/.test(name);
+}
+/** `.`, a folder with a trailing slash, a glob or a magic pathspec: never a branch name. */
+function onlyAPath(spec) {
+  const p = spec.replace(/^["']|["']$/g, '');
+  return p === '.' || p === './' || p === ':/' || /[*?[]/.test(p) || /[\\/]$/.test(p) || p.startsWith(':(');
 }
 const DOTFILES = new Set(['.env', '.gitignore', '.gitattributes', '.gitmodules', '.npmrc', '.nvmrc', '.editorconfig', '.prettierrc', '.eslintrc', '.babelrc', '.dockerignore', '.npmignore', '.prettierignore', '.eslintignore', '.mailmap', '.browserslistrc', '.yarnrc', '.tool-versions', '.python-version', '.node-version', '.ruby-version']);
 
@@ -270,7 +286,9 @@ function discardsChanges(segment) {
     if (tokens.some((t) => /^-[a-zA-Z]*[bB][a-zA-Z]*$/.test(t) || t === '--orphan')) return false;
     // Redirections (`2>&1`, `> out.txt`, `*>$null`) are not paths.
     const words = (rest ?? '').replace(/\s[\d*]*(>>?|<)&?\s*[^\s|;&]*/g, ' ').split(/[|;&]/)[0].trim().split(/\s+/);
-    return words.filter((t) => t && !t.startsWith('-')).slice(1).some(broadPathspec);
+    const operands = words.filter((t) => t && !t.startsWith('-'));
+    // A lone word is a branch (`git checkout feature/x`) unless no branch can be named so (`.`, `src/`, a glob).
+    return operands.length === 1 ? onlyAPath(operands[0]) : operands.slice(1).some(broadPathspec);
   }
   // restore: staging only (`--staged` without `--worktree`) keeps the files as they are.
   if (tokens.some((t) => t === '--staged' || t === '-S') && !tokens.some((t) => t === '--worktree' || t === '-W')) return false;
