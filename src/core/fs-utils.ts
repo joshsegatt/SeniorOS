@@ -1,5 +1,8 @@
 import { access, mkdir, readFile, writeFile, cp } from 'node:fs/promises';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
+
+export const sha256 = (data: Buffer) => createHash('sha256').update(data).digest('hex');
 
 export async function exists(filePath: string): Promise<boolean> {
   try {
