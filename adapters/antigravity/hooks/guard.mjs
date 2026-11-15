@@ -12,7 +12,11 @@ export const RULES = [
   // `rd`) count only where a command starts, so `grep del -r src` is a search.
   [/\bRemove-Item\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
   [/(^|[|"'{(&])\s*(ri|rm|del|erase|rd|rmdir)(?=\s)[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
-  [/\b(rd|rmdir)\b[^|;\n]*\s\/s\b/i, 'recursive folder deletion'],
+  // cmd switches in any order, also run together (`/q/s`).
+  [/\b(rd|rmdir)\b[^|;\n]*(\s|\/[a-z])\/s\b/i, 'recursive folder deletion'],
+  // A recursive listing piped into a deletion, and .NET's recursive delete.
+  [/\b(Get-ChildItem|gci|ls|dir)\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b[^;\n]*\|\s*(Remove-Item|ri|rm|del|erase)\b/i, 'recursive file deletion'],
+  [/\[(System\.)?IO\.Directory\]::Delete\s*\([^)]*\$true/i, 'recursive file deletion'],
   [/\bdel\s+[^|;\n]*\/s\b/i, 'recursive file deletion'],
   [/\b(rimraf|del-cli)\s+\S/, 'recursive file deletion'],
   [/\bfind\b[^|;\n]*\s(-delete\b|-exec(dir)?\s+(rm|del|unlink|shred)\b)/, 'deleting the files find matches'],
@@ -35,7 +39,8 @@ export const RULES = [
   [/\bgit\s+(rebase|filter-branch|filter-repo)\b/, 'history rewrite'],
   // Databases
   [/\b(drop\s+(table|database|schema)|truncate\s+table)\b/i, 'deleting database data'],
-  [/\btruncate\s+(only\s+)?[\w."`\[\]]+\s*(;|"|'|$)/i, 'deleting database data'],
+  // TRUNCATE without TABLE (Postgres, MySQL), only inside a database client so a search for the word stays free.
+  [/\b(psql|mysql|mariadb|sqlite3|sqlcmd|duckdb|clickhouse-client|cockroach)\b[^|\n]*\btruncate\s+(only\s+)?[\w."`\[\]]/i, 'deleting database data'],
   [/\bdelete\s+from\s+[\w."`\[\]]+\s*(;|"|'|$)/i, 'DELETE without WHERE'],
   [/\bprisma\s+migrate\s+reset\b|\bprisma\s+db\s+push\b[^|;\n]*--accept-data-loss/, 'Prisma reset / data loss'],
   [/\bdrizzle-kit\s+(push|drop)\b/, 'direct schema change via Drizzle'],
@@ -59,7 +64,8 @@ export const RULES = [
   [/\bhelm\s+(uninstall|delete)\b|\bheroku\s+(apps:destroy|pg:reset)\b|\bpulumi\s+(up|destroy)\b|\b(az|doctl)\s+[^|;\n]*\bdelete\b/, 'infrastructure change'],
   // Remote code, system, secrets
   [/\b(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|\n]*\|\s*(sh|bash|zsh|iex|Invoke-Expression|pwsh|powershell)\b/i, 'running a script downloaded from the internet'],
-  [/\b(sh|bash|zsh|source)\b[^|;\n]*(\$\(|<\(|`)\s*(curl|wget)\b|\b(iex|Invoke-Expression)\b[^|;\n]*\b(irm|iwr|Invoke-RestMethod|Invoke-WebRequest|DownloadString)\b/i, 'running a script downloaded from the internet'],
+  // The download as the script itself (`sh -c "$(curl …)"`, `bash <(curl …)`, `eval`, `.`), not as an argument.
+  [/((?<![\w./\-])(?:[\w.~/\-]*[\/])?(sh|bash|zsh|ksh|dash|python3?|node|ruby|perl)\b(\s+-\w+)*\s+-[ce]\s+|\b(eval|source)\s+|(^|[;&|(]\s*)\.\s+|(?<![\w./\-])(?:[\w.~/\-]*[\/])?(sh|bash|zsh|ksh|dash)\s+)["']?(\$\(|<\(|`)\s*(curl|wget)\b|\b(iex|Invoke-Expression)\b[^|;\n]*\b(irm|iwr|Invoke-RestMethod|Invoke-WebRequest|DownloadString)\b/i, 'running a script downloaded from the internet'],
   [/\b(Format-Volume|diskpart|bcdedit|Stop-Computer|Restart-Computer|Set-ExecutionPolicy)\b|\bformat\s+[a-z]:|\breg\s+delete\b|\bshutdown\s+[/-]/i, 'system change'],
   [/\bdd\b[^|;\n]*\bof=\/dev\/(?!null\b)|\b(mkfs(\.\w+)?|wipefs)\s/, 'system change'],
   [/^\s*(printenv|env|Get-ChildItem\s+env:|gci\s+env:|dir\s+env:|ls\s+env:)\s*(\|.*)?$/i, 'printing environment variables (secrets) into the transcript'],
@@ -261,8 +267,10 @@ function discardsChanges(segment) {
     if (dash >= 0) return tokens.slice(dash + 1).some(broadPathspec);
     // Without `--`, a second word makes the first a commit and the rest paths (`git checkout HEAD .`), unless a
     // branch is being created from a start point (`-b feat origin/feat`).
-    if (tokens.some((t) => t === '-b' || t === '-B' || t === '--orphan')) return false;
-    return tokens.filter((t) => !t.startsWith('-')).slice(1).some(broadPathspec);
+    if (tokens.some((t) => /^-[a-zA-Z]*[bB][a-zA-Z]*$/.test(t) || t === '--orphan')) return false;
+    // Redirections (`2>&1`, `> out.txt`, `*>$null`) are not paths.
+    const words = (rest ?? '').replace(/\s[\d*]*(>>?|<)&?\s*[^\s|;&]*/g, ' ').split(/[|;&]/)[0].trim().split(/\s+/);
+    return words.filter((t) => t && !t.startsWith('-')).slice(1).some(broadPathspec);
   }
   // restore: staging only (`--staged` without `--worktree`) keeps the files as they are.
   if (tokens.some((t) => t === '--staged' || t === '-S') && !tokens.some((t) => t === '--worktree' || t === '-W')) return false;

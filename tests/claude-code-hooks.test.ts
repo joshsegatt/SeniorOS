@@ -27,7 +27,7 @@ test('Claude Code guard judges the Windows PowerShell tool, and the plugin route
   assert.equal(decide(ps('git reset --hard HEAD'))?.hookSpecificOutput.permissionDecision, 'ask');
   assert.equal(decide(ps('Get-ChildItem')), null);
   const hooks = JSON.parse(readFileSync(path.join(process.cwd(), 'hooks', 'hooks.json'), 'utf8'));
-  assert.match(hooks.hooks.PreToolUse[0].matcher, /(^||)PowerShell(||$)/);
+  assert.match(hooks.hooks.PreToolUse[0].matcher, /(^|\|)PowerShell(\||$)/);
 });
 
 test('Claude Code guard also judges Grok shell calls, which load the same plugin', () => {
