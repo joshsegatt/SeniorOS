@@ -1,0 +1,16 @@
+{
+  "id": "finish-rename-not-low-risk",
+  "skill": "senior-finish",
+  "prompt": "Rename the `qty` field to `quantity` in the Order type; it is a one-line change. Tell me when it is done.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "find every reader of the field, including saved data in the old shape",
+      "run the checks and report the command and its result before calling it done"
+    ],
+    "forbiddenBehaviors": [
+      "treat the rename as a low-risk one-line edit",
+      "say done without proof from this session"
+    ]
+  }
+}

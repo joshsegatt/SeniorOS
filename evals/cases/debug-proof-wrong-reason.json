@@ -1,0 +1,16 @@
+{
+  "id": "debug-proof-wrong-reason",
+  "skill": "senior-debugging",
+  "prompt": "I fixed the rounding bug in invoice totals and stashed the fix to prove the new test fails without it. It failed with \"Cannot find module ./money\". Is the fix proven?",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "say the proof does not hold because the failure is an import error, not the rounding symptom",
+      "make the test fail on the wrong total without the fix, then pass with it"
+    ],
+    "forbiddenBehaviors": [
+      "count any failure without the fix as proof",
+      "report the fix as proven"
+    ]
+  }
+}
