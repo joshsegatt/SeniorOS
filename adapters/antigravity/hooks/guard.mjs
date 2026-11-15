@@ -12,7 +12,7 @@ export const RULES = [
   // `rd`) count only where a command starts, so `grep del -r src` is a search.
   [/\bRemove-Item\b[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
   [/(^|[|"'{(&])\s*(ri|rm|del|erase|rd|rmdir)(?=\s)[^|;\n]*\s-r(e(c(u(r(se?)?)?)?)?)?\b/i, 'recursive file deletion'],
-  [/\b(rd|rmdir)\s+\/s\b/i, 'recursive folder deletion'],
+  [/\b(rd|rmdir)\b[^|;\n]*\s\/s\b/i, 'recursive folder deletion'],
   [/\bdel\s+[^|;\n]*\/s\b/i, 'recursive file deletion'],
   [/\b(rimraf|del-cli)\s+\S/, 'recursive file deletion'],
   [/\bfind\b[^|;\n]*\s(-delete\b|-exec(dir)?\s+(rm|del|unlink|shred)\b)/, 'deleting the files find matches'],
@@ -20,11 +20,11 @@ export const RULES = [
   // An interpreter one-liner deletes through calls, not shell syntax.
   [/\b(node|python3?|py|ruby|perl|php|deno|bun)\b[^|]*?\s-(e|c|p|-eval|-print)\b.*(\brmtree\s*\(|\b(rmSync|rm|rmdirSync|rmdir)\s*\([^)]*recursive\s*:\s*true|FileUtils\.rm_r|remove_dir_all)/i, 'recursive file deletion'],
   // Git history and uncommitted work
-  [/\bgit\s+push\b[^|;\n]*(\s--force\b|\s-f\b|--force-with-lease|\s\+\S+)/, 'force push (rewrites remote history)'],
+  [/\bgit\s+push\b[^|;\n]*(\s--force\b|\s-[a-zA-Z]*f[a-zA-Z]*\b|--force-with-lease|\s\+\S+)/, 'force push (rewrites remote history)'],
   [/\bgit\s+push\b[^|;\n]*\s--mirror\b/, 'mirror push (overwrites and deletes remote branches)'],
   [/\bgit\s+push\b[^|;\n]*(\s--delete\b|\s-d\b|\s:\S+|\s--prune\b)/, 'deleting a remote branch or tag'],
   [/\bgit\s+reset\s+[^|;\n]*--hard\b/, 'git reset --hard (discards work)'],
-  [/\bgit\s+clean\s+-\w*f/, 'git clean (deletes untracked files)'],
+  [/\bgit\s+clean\b(?=[^|;\n]*\s(-\w*f\w*|--force)\b)/, 'git clean (deletes untracked files)'],
   [/\bgit\s+(checkout|restore)\s+(--\s+)?\.(\s|$)/, 'discarding all local changes'],
   [/\bgit\s+branch\s+[^|;\n]*-D\b/, 'deleting a branch without a merge check'],
   [/\bgit\s+branch\b(?=[^|;\n]*\s(-\w*d\w*|--delete)\b)(?=[^|;\n]*\s(-\w*f\w*|--force)\b)/, 'deleting a branch without a merge check'],
@@ -35,6 +35,7 @@ export const RULES = [
   [/\bgit\s+(rebase|filter-branch|filter-repo)\b/, 'history rewrite'],
   // Databases
   [/\b(drop\s+(table|database|schema)|truncate\s+table)\b/i, 'deleting database data'],
+  [/\btruncate\s+(only\s+)?[\w."`\[\]]+\s*(;|"|'|$)/i, 'deleting database data'],
   [/\bdelete\s+from\s+[\w."`\[\]]+\s*(;|"|'|$)/i, 'DELETE without WHERE'],
   [/\bprisma\s+migrate\s+reset\b|\bprisma\s+db\s+push\b[^|;\n]*--accept-data-loss/, 'Prisma reset / data loss'],
   [/\bdrizzle-kit\s+(push|drop)\b/, 'direct schema change via Drizzle'],
@@ -58,6 +59,7 @@ export const RULES = [
   [/\bhelm\s+(uninstall|delete)\b|\bheroku\s+(apps:destroy|pg:reset)\b|\bpulumi\s+(up|destroy)\b|\b(az|doctl)\s+[^|;\n]*\bdelete\b/, 'infrastructure change'],
   // Remote code, system, secrets
   [/\b(curl|wget|iwr|irm|Invoke-WebRequest|Invoke-RestMethod)\b[^|\n]*\|\s*(sh|bash|zsh|iex|Invoke-Expression|pwsh|powershell)\b/i, 'running a script downloaded from the internet'],
+  [/\b(sh|bash|zsh|source)\b[^|;\n]*(\$\(|<\(|`)\s*(curl|wget)\b|\b(iex|Invoke-Expression)\b[^|;\n]*\b(irm|iwr|Invoke-RestMethod|Invoke-WebRequest|DownloadString)\b/i, 'running a script downloaded from the internet'],
   [/\b(Format-Volume|diskpart|bcdedit|Stop-Computer|Restart-Computer|Set-ExecutionPolicy)\b|\bformat\s+[a-z]:|\breg\s+delete\b|\bshutdown\s+[/-]/i, 'system change'],
   [/\bdd\b[^|;\n]*\bof=\/dev\/(?!null\b)|\b(mkfs(\.\w+)?|wipefs)\s/, 'system change'],
   [/^\s*(printenv|env|Get-ChildItem\s+env:|gci\s+env:|dir\s+env:|ls\s+env:)\s*(\|.*)?$/i, 'printing environment variables (secrets) into the transcript'],
@@ -255,7 +257,13 @@ function discardsChanges(segment) {
   if (tokens.some((t) => /^-[a-zA-Z]*f[a-zA-Z]*$/.test(t) || t === '--force' || t === '--discard-changes')) return true;
   if (sub === 'switch') return false;
   const dash = tokens.indexOf('--');
-  if (sub === 'checkout') return dash >= 0 && tokens.slice(dash + 1).some(broadPathspec);
+  if (sub === 'checkout') {
+    if (dash >= 0) return tokens.slice(dash + 1).some(broadPathspec);
+    // Without `--`, a second word makes the first a commit and the rest paths (`git checkout HEAD .`), unless a
+    // branch is being created from a start point (`-b feat origin/feat`).
+    if (tokens.some((t) => t === '-b' || t === '-B' || t === '--orphan')) return false;
+    return tokens.filter((t) => !t.startsWith('-')).slice(1).some(broadPathspec);
+  }
   // restore: staging only (`--staged` without `--worktree`) keeps the files as they are.
   if (tokens.some((t) => t === '--staged' || t === '-S') && !tokens.some((t) => t === '--worktree' || t === '-W')) return false;
   const specs = [];
