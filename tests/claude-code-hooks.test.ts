@@ -143,3 +143,43 @@ test('Claude Code stop gate blocks a finish with failing checks, at most twice, 
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('importers-first gate: off by default; on, it sends back the first edit of existing source once per session', async () => {
+  const { importersFirst } = (await import(pathToFileURL(path.join(hooksDir, 'importers-gate.mjs')).href)) as {
+    importersFirst: (input: object, stateDir?: string) => string | null;
+  };
+  const repo = mkdtempSync(path.join(os.tmpdir(), 'so-gate-'));
+  const state = path.join(repo, '.state');
+  try {
+    mkdirSync(path.join(repo, 'src'));
+    mkdirSync(path.join(repo, 'test'));
+    writeFileSync(path.join(repo, 'src', 'orders.js'), 'export {}\n');
+    writeFileSync(path.join(repo, 'test', 'orders.test.js'), '\n');
+    writeFileSync(path.join(repo, 'README.md'), '\n');
+    const edit = (file: string, session = 's1', tool_name = 'Edit') => ({ session_id: session, cwd: repo, tool_name, tool_input: { file_path: file } });
+
+    // The shipped hook never gates without the flag.
+    assert.equal(decide(JSON.stringify(edit('src/orders.js', 'off'))), null);
+
+    assert.equal(importersFirst(edit('README.md'), state), null, 'not source code');
+    assert.equal(importersFirst(edit('test/orders.test.js'), state), null, 'a test');
+    assert.equal(importersFirst(edit('src/new.js', 's1', 'Write'), state), null, 'a new file has no callers');
+    assert.match(importersFirst(edit('src/orders.js'), state) ?? '', /import or call orders\.js/);
+    assert.equal(importersFirst(edit('src/orders.js'), state), null, 'only once per session');
+    assert.ok(importersFirst(edit(path.join(repo, 'src', 'orders.js'), 's2'), state), 'each session is asked once');
+
+    // Edits through the shell count; reads and writes elsewhere do not.
+    const sh = (command: string, session: string) => ({ session_id: session, cwd: repo, tool_name: 'Bash', tool_input: { command } });
+    assert.equal(importersFirst(sh('cat src/orders.js 2>&1 | head', 'b1'), state), null, 'a read');
+    assert.equal(importersFirst(sh('npm test > out.log 2>&1', 'b1'), state), null, 'a write elsewhere');
+    assert.equal(importersFirst(sh("sed -i 's/a/b/' test/orders.test.js", 'b1'), state), null, 'a test');
+    assert.equal(importersFirst(sh('cat src/orders.js | tee out.log', 'b1'), state), null, 'tee of a read');
+    assert.equal(importersFirst(sh('grep -n writeFile src/orders.js', 'b1'), state), null, 'a search');
+    assert.equal(importersFirst(sh(`node -e "[1].map(x => require('./src/orders.js'))"`, 'b1'), state), null, 'an arrow');
+    assert.ok(importersFirst(sh("cat >> src/orders.js <<'EOF'\nexport const x = 1;\nEOF", 'b1'), state), 'a heredoc append');
+    assert.ok(importersFirst(sh("cd repo && sed -i 's/a/b/' src/orders.js", 'b2'), state), 'an in-place edit');
+    assert.ok(importersFirst(sh("for f in orders; do sed -i 's/a/b/' src/orders.js; done", 'b3'), state), 'inside a loop');
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});

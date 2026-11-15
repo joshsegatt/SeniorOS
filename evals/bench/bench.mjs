@@ -27,7 +27,7 @@ const USAGE = `Usage: node evals/bench/bench.mjs <command>
       --parallel <n>                     conversations at once within an arm (agentapi only; default 1)
       --tasks core|hard|t1-label,...     (default: all)
       --trials 2
-      --backend agentapi|agy|claude|grok|codex|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros|senioros-baseline; codex runs "codex exec", arms none|senioros, needs --model)
+      --backend agentapi|agy|claude|grok|codex|manual (default: agentapi; claude runs "claude -p", arms none|superpowers|pocock|compound|senioros|senioros-skills|senioros-rules|senioros-rules-guard|senioros-importers|senioros-baseline; grok runs "grok -p", arms none|superpowers|senioros|senioros-baseline; codex runs "codex exec", arms none|senioros, needs --model)
       --model flash                      (default: flash; haiku for claude)
   report <resultsDir>           Rebuild a report from graded runs
   submit <resultsDir...> --id <id> --title "<title>" [--by <who ran it>] [--notes "<text>"] [--force]
@@ -176,7 +176,10 @@ function builtinProvenance(arm) {
   if (arm === 'superpowers') return { ...gitProvenance(SUPERPOWERS_DIR, 'obra/superpowers'), url: 'https://github.com/obra/superpowers' };
   if (arm === 'pocock') return { ...gitProvenance(POCOCK_DIR, 'mattpocock/skills'), url: 'https://github.com/mattpocock/skills' };
   if (arm === 'compound') return { ...gitProvenance(COMPOUND_DIR, 'EveryInc/compound-engineering-plugin'), url: 'https://github.com/EveryInc/compound-engineering-plugin' };
-  if (arm === 'senioros' || arm === 'senioros-skills') return { ...gitProvenance(REPO_ROOT, `SeniorOS ${version()}${arm === 'senioros-skills' ? ', skills only' : ''}`), url: 'https://github.com/joshsegatt/SeniorOS' };
+  if (arm === 'senioros' || arm.startsWith('senioros-') && arm !== 'senioros-baseline') {
+    const label = arm === 'senioros' ? '' : `, ${arm.slice('senioros-'.length)} variant`;
+    return { ...gitProvenance(REPO_ROOT, `SeniorOS ${version()}${label}`), url: 'https://github.com/joshsegatt/SeniorOS' };
+  }
   if (arm === 'senioros-baseline' && process.env.SENIOROS_BENCH_BASELINE) return gitProvenance(process.env.SENIOROS_BENCH_BASELINE, 'SeniorOS baseline');
   return null;
 }
