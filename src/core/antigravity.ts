@@ -76,6 +76,8 @@ interface InstallManifest {
   skillsEntry: boolean;
   /** The installer created (or, with --force, replaced) the hook scripts folder. */
   hooksDir: boolean;
+  /** sha256 of each hook script as copied, keyed by file name; absent in manifests from before 0.10.2. */
+  hookFiles?: Record<string, string>;
   /** Path of the user's hook scripts folder saved before a --force replacement, restored on uninstall. */
   hooksDirBackup?: string;
   /** Hook blocks the installer wrote, as written (without `enabled`), keyed by block name. */
@@ -91,13 +93,15 @@ async function readManifest(paths: AntigravityPaths): Promise<InstallManifest | 
   return (await exists(file)) ? readJsonFile<InstallManifest | null>(file, null) : null;
 }
 
+const sha256 = (data: Buffer) => createHash('sha256').update(data).digest('hex');
+
 async function hashTree(root: string, rel = ''): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
   if (!(await exists(path.join(root, rel)))) return out;
   for (const entry of await readdir(path.join(root, rel), { withFileTypes: true })) {
     const child = path.posix.join(rel.replace(/\\/g, '/'), entry.name);
     if (entry.isDirectory()) Object.assign(out, await hashTree(root, child));
-    else if (entry.isFile()) out[child] = createHash('sha256').update(await readFile(path.join(root, child))).digest('hex');
+    else if (entry.isFile()) out[child] = sha256(await readFile(path.join(root, child)));
   }
   return out;
 }
@@ -124,6 +128,10 @@ export async function installAntigravity(options: { turbo?: boolean; force?: boo
   const force = Boolean(options.force);
   const previous = await readManifest(paths);
   const manifest: InstallManifest = previous ?? { version: 1, skillFiles: {}, skillsEntry: false, hooksDir: false, hookBlocks: {}, replacedHooks: {} };
+  // Read both config files before changing anything: one that is not valid JSON stops the install here, not halfway
+  // with files copied and no manifest to say so.
+  const skillsJson = await readJsonFile<SkillsJson>(paths.skillsJson, {});
+  const hooksJson = await readJsonFile<HooksJson>(paths.hooksJson, {});
 
   // 1. Skills: a stable copy, so an npx cache cleanup cannot break the registration.
   const installed = await hashTree(paths.skills);
@@ -140,7 +148,6 @@ export async function installAntigravity(options: { turbo?: boolean; force?: boo
     report.actions.push(`copied skills to ${paths.skills}`);
   }
 
-  const skillsJson = await readJsonFile<SkillsJson>(paths.skillsJson, {});
   const entries = Array.isArray(skillsJson.entries) ? skillsJson.entries : [];
   const others = await otherSeniorEntries(entries, paths.skills);
   const ourEntry = entries.some((e) => path.resolve(expandHome(e.path ?? '')) === path.resolve(paths.skills));
@@ -163,8 +170,17 @@ export async function installAntigravity(options: { turbo?: boolean; force?: boo
   // 3. Hook scripts, next to hooks.json (Antigravity resolves relative commands from there).
   const scriptsSource = path.join(source, 'adapters', 'antigravity', 'hooks');
   const foreignScripts = (await exists(paths.hooks)) && !manifest.hooksDir;
+  const scripts = (await readdir(scriptsSource, { withFileTypes: true })).filter((e) => e.isFile() && e.name.endsWith('.mjs')).map((e) => e.name);
+  // Scripts the installer copied that the user has edited since; the folder also holds their logs, which stay.
+  const edited: string[] = [];
+  for (const [name, hash] of Object.entries(manifest.hooksDir ? manifest.hookFiles ?? {} : {})) {
+    const file = path.join(paths.hooks, name);
+    if ((await exists(file)) && sha256(await readFile(file)) !== hash) edited.push(name);
+  }
   if (foreignScripts && !force) {
     report.warnings.push(`${paths.hooks} was not created by the installer; kept those scripts (run with --force to replace them)`);
+  } else if (edited.length && !force) {
+    report.warnings.push(`hook scripts changed since the install: ${edited.join(', ')}; kept them and did not update the hook scripts (run with --force to replace them)`);
   } else {
     if (foreignScripts) {
       const backup = `${paths.hooks}.bak-senioros`;
@@ -173,10 +189,20 @@ export async function installAntigravity(options: { turbo?: boolean; force?: boo
       manifest.hooksDirBackup = backup;
       report.actions.push(`backed up ${paths.hooks} to ${backup}`);
     }
-    await rm(paths.hooks, { recursive: true, force: true });
+    if (foreignScripts) await rm(paths.hooks, { recursive: true, force: true });
     await mkdir(paths.hooks, { recursive: true });
-    for (const entry of await readdir(scriptsSource, { withFileTypes: true })) {
-      if (entry.isFile() && entry.name.endsWith('.mjs')) await copyFile(path.join(scriptsSource, entry.name), path.join(paths.hooks, entry.name));
+    for (const name of edited) {
+      await copyFile(path.join(paths.hooks, name), path.join(paths.hooks, `${name}.bak-senioros`));
+      report.actions.push(`backed up your edited ${name} to ${name}.bak-senioros`);
+    }
+    // Scripts an earlier version copied and this one no longer ships.
+    for (const name of Object.keys(manifest.hookFiles ?? {})) {
+      if (!scripts.includes(name)) await rm(path.join(paths.hooks, name), { force: true });
+    }
+    manifest.hookFiles = {};
+    for (const name of scripts) {
+      await copyFile(path.join(scriptsSource, name), path.join(paths.hooks, name));
+      manifest.hookFiles[name] = sha256(await readFile(path.join(paths.hooks, name)));
     }
     manifest.hooksDir = true;
     report.actions.push(`copied the hooks to ${paths.hooks}`);
@@ -186,7 +212,6 @@ export async function installAntigravity(options: { turbo?: boolean; force?: boo
   let template = await readFile(path.join(source, 'adapters', 'antigravity', 'hooks.json'), 'utf8');
   if (options.turbo) template = template.replace('--passthrough=ask', '--passthrough=allow');
   const ours = JSON.parse(template) as HooksJson;
-  const hooksJson = await readJsonFile<HooksJson>(paths.hooksJson, {});
   const nextHooks: HooksJson = { ...hooksJson };
   const kept: string[] = [];
   for (const [key, block] of Object.entries(ours)) {
