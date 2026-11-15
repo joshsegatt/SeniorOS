@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { createHash } from 'node:crypto';
+import { sha256 } from './fs-utils.js';
 import { spawnSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
 import { globToRegExp, isTestPath } from './config.js';
@@ -81,7 +81,6 @@ interface BackupManifest {
   entries: BackupEntry[];
 }
 
-const sha256 = (data: Buffer) => createHash('sha256').update(data).digest('hex');
 
 
 function matchesAny(file: string, patterns: string[]): boolean {

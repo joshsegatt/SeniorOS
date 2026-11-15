@@ -15,8 +15,9 @@ changes is backed up once as `<file>.bak-senioros`, and running it again does no
 terminal auto-execution is on Turbo (see below). For the finish gate, also put the CLI on PATH: `npm install -g senioros`.
 
 The installer records what it added in `~/.gemini/config/senioros/install.json`. Without `--force` it never overwrites
-what it did not write or what you changed since: edited skills, hook blocks and scripts made by hand, or SeniorOS rules
-outside its block. It keeps them and says so. A hook you turned off with `"enabled": false` stays off after a reinstall.
+what it did not write or what you changed since: edited skills, hook blocks and scripts made by hand, edited or deleted
+hook scripts (whose `hooks.json` blocks then stay as they were too), or SeniorOS rules outside its block. It keeps them
+and says so. With `--force`, the hook scripts folder is first saved once as `config/hooks/senioros.bak-senioros`. A hook you turned off with `"enabled": false` stays off after a reinstall.
 
 Remove it with `npx senioros uninstall --target antigravity`: it takes out only what the installer added and restores
 anything it replaced with `--force`.

@@ -146,3 +146,87 @@ test('uninstall removes a GEMINI.md the install created and left empty', async (
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test('reinstall keeps an edited hook script and the hook log, unless --force, which backs the edit up', async () => {
+  const dir = await geminiHome({});
+  const paths = antigravityPaths(dir);
+  try {
+    await installAntigravity({}, paths);
+    const guard = path.join(paths.hooks, 'guard.mjs');
+    const shipped = await readFile(guard, 'utf8');
+    await writeFile(guard, '// my edited guard');
+    await writeFile(path.join(paths.hooks, 'hooks.log'), 'a log line\n');
+
+    const report = await installAntigravity({}, paths);
+    assert.equal(await readFile(guard, 'utf8'), '// my edited guard');
+    assert.ok(report.warnings.some((w) => w.includes('guard.mjs')), 'the user is told why the scripts were not updated');
+
+    await installAntigravity({ force: true }, paths);
+    assert.equal(await readFile(guard, 'utf8'), shipped);
+    assert.equal(await readFile(path.join(`${paths.hooks}.bak-senioros`, 'guard.mjs'), 'utf8'), '// my edited guard');
+    assert.equal(await readFile(path.join(paths.hooks, 'hooks.log'), 'utf8'), 'a log line\n', 'the log stays');
+
+    const again = await installAntigravity({}, paths);
+    assert.deepEqual(again.warnings.filter((w) => w.includes('hook scripts')), [], 'an untouched reinstall updates quietly');
+
+    await uninstallAntigravity(paths);
+    assert.equal(await readFile(guard, 'utf8'), '// my edited guard', 'uninstall puts the edited script back');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('a deleted hook script stays deleted, and its hooks.json blocks are not updated either', async () => {
+  const dir = await geminiHome({});
+  const paths = antigravityPaths(dir);
+  try {
+    await installAntigravity({}, paths);
+    await rm(path.join(paths.hooks, 'track.mjs'));
+    const before = await readFile(paths.hooksJson, 'utf8');
+    const report = await installAntigravity({ turbo: true }, paths);
+    assert.equal(existsSync(path.join(paths.hooks, 'track.mjs')), false);
+    assert.ok(report.warnings.some((w) => w.includes('track.mjs')));
+    assert.equal(await readFile(paths.hooksJson, 'utf8'), before, 'the blocks stay as they were');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('an install from before script hashes is upgraded after a backup of its scripts', async () => {
+  const dir = await geminiHome({});
+  const paths = antigravityPaths(dir);
+  try {
+    await installAntigravity({}, paths);
+    const manifestPath = path.join(paths.home, 'install.json');
+    const manifest = await json(manifestPath);
+    delete manifest.hookFiles;
+    await writeFile(manifestPath, JSON.stringify(manifest));
+    await writeFile(path.join(paths.hooks, 'guard.mjs'), '// edited before 0.10.2');
+    await writeFile(path.join(paths.hooks, 'old-script.mjs'), '// shipped by an older version');
+
+    const report = await installAntigravity({}, paths);
+    assert.deepEqual(report.warnings, []);
+    assert.notEqual(await readFile(path.join(paths.hooks, 'guard.mjs'), 'utf8'), '// edited before 0.10.2');
+    assert.equal(existsSync(path.join(paths.hooks, 'old-script.mjs')), false);
+    assert.equal(await readFile(path.join(`${paths.hooks}.bak-senioros-pre-0.10.2`, 'guard.mjs'), 'utf8'), '// edited before 0.10.2');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('an invalid hooks.json stops the first install before anything is copied', async () => {
+  const dir = await geminiHome({ 'config/hooks.json': '{ "mine": {}, }' });
+  const paths = antigravityPaths(dir);
+  try {
+    await assert.rejects(installAntigravity({}, paths), /not valid JSON/);
+    assert.equal(existsSync(paths.skills), false);
+    assert.equal(existsSync(paths.hooks), false);
+
+    await writeFile(paths.hooksJson, '{ "mine": {} }');
+    const report = await installAntigravity({}, paths);
+    assert.deepEqual(report.warnings, [], 'after the fix, the install runs as a first install');
+    assert.ok((await json(paths.hooksJson)).mine, 'the user block stays');
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
