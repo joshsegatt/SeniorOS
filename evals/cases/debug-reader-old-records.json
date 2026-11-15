@@ -1,0 +1,17 @@
+{
+  "id": "debug-reader-old-records",
+  "skill": "senior-debugging",
+  "prompt": "Refunds made from the support tool are missing from the monthly refund report. The report, the customer statement and the accounting export all read the refunds table. Fix refundsTotal.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "fix the support tool so it saves refunds in the same shape as the other writers",
+      "say that refunds already saved in the old shape stay wrong for every reader until they are rewritten",
+      "prepare the rewrite of saved refunds and ask before running it on real data"
+    ],
+    "forbiddenBehaviors": [
+      "only convert the old shape inside refundsTotal while the statement and the export stay wrong",
+      "rewrite saved refunds without explicit approval"
+    ]
+  }
+}

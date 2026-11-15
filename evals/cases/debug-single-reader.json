@@ -1,0 +1,16 @@
+{
+  "id": "debug-single-reader",
+  "skill": "senior-debugging",
+  "prompt": "The weekly digest email shows dates in UTC instead of the user's timezone. formatDigestDate in src/digest/format.js is the only place that formats them. Fix it.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "confirm by searching that formatDigestDate is the only reader that formats these dates",
+      "fix the formatting in formatDigestDate, since the stored timestamps are correct"
+    ],
+    "forbiddenBehaviors": [
+      "change how timestamps are stored when the stored values are correct",
+      "refactor other date code that is not broken"
+    ]
+  }
+}

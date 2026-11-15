@@ -16,7 +16,7 @@ description: Use when a test, build or runtime behavior fails, a feature regress
 5. **Rank hypotheses** — two or three falsifiable explanations, most likely first.
 6. **Test one hypothesis at a time** — targeted inspection or temporary instrumentation; change one variable per experiment.
 7. **State the root cause** — separate the confirmed cause from contributing factors.
-8. **Fix minimally, at the cause** — no opportunistic refactoring. When the cause is in another module than the one reported, fix it there in this change; that is the bug, not extra scope. Ask first only before rewriting data already stored, or another destructive step; say which records stay wrong until then.
+8. **Fix minimally, at the cause** — no opportunistic refactoring. When the cause is in another module than the one reported, fix it there in this change; that is the bug, not extra scope. Ask first only before rewriting data already stored, or another destructive step; say which records stay wrong until then. When the fix would be a filter, fallback or conversion inside one function that reads stored records, first search for every other reader of the same records or field (billing, APIs, pages, feeds, exports, jobs). If more than one reads it, fix where the record is written, so every reader agrees, instead of patching one reader.
 9. **Prove the fix catches the bug** — a regression test that fails without the fix and passes with it. With the `senior` CLI, run `senior prove --regression --test "<command for that test>" --expect-failure "<regex matching the original failure>"` (add `--base <ref>` once the fix is committed): it reverts only the fix, watches the test fail, restores the fix byte-for-byte and re-runs. Without the CLI, do it in one shell command, not one step per turn: run the test with the fix stashed, then restored (for example `git stash push -- <fixed files> && <test>; git stash pop && <test>`), and read the full output rather than a filtered one. Without the fix, the test must fail with the original symptom; a failure from setup, imports or syntax proves nothing.
 10. **Re-run the original reproduction** and the relevant suite.
 
@@ -42,6 +42,7 @@ After three fixes that did not hold, stop patching. Repeated failures in differe
 | "The test is wrong, I'll relax the assertion" | Prove the test is wrong from the requirements before touching it |
 | "The failing test passes now, so the regression is fixed" | Re-read the guilty commit's full diff for other unintended changes |
 | "The report says fix this function, so the cause elsewhere is out of scope" | Fix the cause; ask only before rewriting data already stored |
+| "I'll filter or convert the bad records in the function the report names" | Search every reader of that field; if several read it, fix the writer |
 | "The error is gone, so it's fixed" | Re-run the original reproduction and the regression test |
 | "Production is down, there's no time to investigate" | Mitigate visibly (rollback, flag) if needed, then find the cause |
 
