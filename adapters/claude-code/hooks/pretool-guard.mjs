@@ -1,11 +1,11 @@
-// Claude Code PreToolUse hook (Bash and the file-edit tools): asks for confirmation before destructive or
+// Claude Code PreToolUse hook (Bash, PowerShell and the file-edit tools): asks for confirmation before destructive or
 // irreversible commands, with the same rules as the Antigravity guard, and before an edit to the agent's own settings,
 // hooks or plugins. Unflagged commands get no answer, which leaves Claude Code's own permission
 // flow in place. Fails open.
 import { readFileSync } from 'node:fs';
 import { classify, denyMessage, editReason, guardMessage } from '../../shared/guard.mjs';
 
-const SHELL_TOOLS = new Set(['Bash', 'run_terminal_command', 'Shell']);
+const SHELL_TOOLS = new Set(['Bash', 'PowerShell', 'run_terminal_command', 'Shell']);
 
 /**
  * @param {string} raw the hook's stdin
@@ -40,7 +40,9 @@ if (process.argv[1]?.replace(/\\/g, '/').endsWith('claude-code/hooks/pretool-gua
   try {
     const response = decide(readFileSync(0, 'utf8'));
     if (response) process.stdout.write(JSON.stringify(response));
-  } catch {
-    // Stay silent: Claude Code's normal permission flow applies.
+  } catch (error) {
+    // Claude Code's normal permission flow applies, but say the guard did not run.
+    process.stderr.write(`SeniorOS guard did not run: ${error instanceof Error ? error.message : error}
+`);
   }
 }

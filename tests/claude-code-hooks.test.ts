@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -19,6 +19,15 @@ test('Claude Code guard asks before destructive commands and stays silent otherw
   }
   for (const command of ['git status', 'npm test', 'rm -rf node_modules']) assert.equal(decide(bash(command)), null, command);
   assert.equal(decide('not json'), null);
+});
+
+test('Claude Code guard judges the Windows PowerShell tool, and the plugin routes it to the guard', () => {
+  const ps = (command: string) => JSON.stringify({ tool_name: 'PowerShell', tool_input: { command } });
+  assert.equal(decide(ps('Remove-Item -Recurse -Force src'))?.hookSpecificOutput.permissionDecision, 'ask');
+  assert.equal(decide(ps('git reset --hard HEAD'))?.hookSpecificOutput.permissionDecision, 'ask');
+  assert.equal(decide(ps('Get-ChildItem')), null);
+  const hooks = JSON.parse(readFileSync(path.join(process.cwd(), 'hooks', 'hooks.json'), 'utf8'));
+  assert.match(hooks.hooks.PreToolUse[0].matcher, /(^|\|)PowerShell(\||$)/);
 });
 
 test('Claude Code guard also judges Grok shell calls, which load the same plugin', () => {

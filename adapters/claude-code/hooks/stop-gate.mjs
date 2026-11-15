@@ -19,7 +19,9 @@ if (/[\\/]claude-code[\\/]hooks[\\/]stop-gate\.mjs$/.test(process.argv[1] ?? '')
   try {
     const response = decide(JSON.parse(readFileSync(0, 'utf8') || '{}'));
     if (response) process.stdout.write(JSON.stringify(response));
-  } catch {
-    // Fail open: the agent may stop.
+  } catch (error) {
+    // Fail open: the agent may stop, but say the gate did not run.
+    process.stderr.write(`SeniorOS finish gate did not run: ${error instanceof Error ? error.message : error}
+`);
   }
 }
