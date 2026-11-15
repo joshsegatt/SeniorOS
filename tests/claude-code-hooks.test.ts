@@ -167,6 +167,14 @@ test('importers-first gate: off by default; on, it sends back the first edit of 
     assert.match(importersFirst(edit('src/orders.js'), state) ?? '', /import or call orders\.js/);
     assert.equal(importersFirst(edit('src/orders.js'), state), null, 'only once per session');
     assert.ok(importersFirst(edit(path.join(repo, 'src', 'orders.js'), 's2'), state), 'each session is asked once');
+
+    // Edits through the shell count; reads and writes elsewhere do not.
+    const sh = (command: string, session: string) => ({ session_id: session, cwd: repo, tool_name: 'Bash', tool_input: { command } });
+    assert.equal(importersFirst(sh('cat src/orders.js 2>&1 | head', 'b1'), state), null, 'a read');
+    assert.equal(importersFirst(sh('npm test > out.log 2>&1', 'b1'), state), null, 'a write elsewhere');
+    assert.equal(importersFirst(sh("sed -i 's/a/b/' test/orders.test.js", 'b1'), state), null, 'a test');
+    assert.ok(importersFirst(sh("cat >> src/orders.js <<'EOF'\nexport const x = 1;\nEOF", 'b1'), state), 'a heredoc append');
+    assert.ok(importersFirst(sh("cd repo && sed -i 's/a/b/' src/orders.js", 'b2'), state), 'an in-place edit');
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

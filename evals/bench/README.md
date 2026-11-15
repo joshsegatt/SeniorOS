@@ -512,6 +512,31 @@ same message as its first look at the code; the other had the regression proof k
 did). Both arms scored 39/39 at $10.81 and $10.77 in total. The agent already loaded the skill alongside its first
 read in 19 of 21 cases, and the reruns did not drop (5 runs against 1).
 
+### Where the cost goes, and an importers-first gate (Sonnet, November 2026)
+
+Each hook switched on in turn, on the cause-elsewhere tasks `o17`, `o19`, `o20`, `o36`, `o37`, `o38` (3 trials, one
+batch except the last row, which ran right after it):
+
+| Arm | Pass (95% Wilson) | Cost per run | Cost per pass |
+|---|---|---|---|
+| `none` | 0/18 (0–18%) | $0.08 | - |
+| `senioros-rules` (SessionStart only) | 10/18 (34–75%) | $0.13 | $0.24 |
+| `senioros-rules-guard` (+ PreToolUse guard) | 7/18 (20–61%) | $0.12 | $0.32 |
+| `senioros` (+ finish gate) | 7/18 (20–61%) | $0.13 | $0.32 |
+| `senioros-importers`, edit tools only | 6/18 (16–56%) | $0.12 | $0.36 |
+| `senioros-importers`, edit tools and shell writes | 5/18 (12–51%) | $0.13 | $0.49 |
+
+- The extra $0.05 a run over the bare model comes with the rules (the skills they load and the longer runs). The
+  guard and the finish gate add no measurable cost here; the risk review fired in 6 of 18 runs.
+- The rules alone scored highest, but the intervals overlap: this set shows no gain or loss from the hooks. Their job
+  is the approval boundary and the proof check, which these tasks do not score.
+- The importers-first gate sends the agent back once, before its first edit of existing source code, to find and
+  read the modules that import or call it. The first version watched only the edit tools; Sonnet edited through the
+  shell (heredocs, `sed -i`) in 30 of 34 runs, so it fired in 4. The second also reads shell writes and fired in 10
+  of 18: gated runs passed 4 of 10, the others 1 of 8, and the arm 5 of 18 against 7 of 18 without it. Not adopted:
+  it stays an off-by-default flag (`pretool-guard.mjs --importers-first`) for this arm, outside `hooks.json`.
+- Control tasks `o9`–`o16` (2 trials): `senioros` 16/16 at $0.14, both gate versions 16/16 at $0.13 and $0.14.
+
 ### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
 
 Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2 trials, 78 runs, `--backend grok`:
@@ -579,6 +604,8 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
 | `senioros` | The SeniorOS Antigravity adapter: `senior-*` skills, `adapters/antigravity/rules.md` and the three hooks |
 | `senioros-skills` | SeniorOS skills and rules without hooks, to isolate what the hooks add |
 | `senioros-noplan` | This checkout without a `skills/senior-plan` folder, used to split what the planning rules add from what the skill added. Removed once the skill moved to `experiments/`, since it then ran the same pack as `senioros` |
+| `senioros-rules`, `senioros-rules-guard` | The Claude Code plugin with only its SessionStart hook (the rules), or the rules and the PreToolUse guard, to split the cost of each hook (Claude backend) |
+| `senioros-importers` | The Claude Code plugin with the experimental importers-first gate on (`pretool-guard.mjs --importers-first`), measured and not shipped (Claude backend) |
 | `senioros-baseline` | Another SeniorOS checkout, named by `SENIOROS_BENCH_BASELINE` (for example a worktree of `main`), to measure one change such as a new skill against the version without it (Claude backend) |
 
 While the bench runs, your global Antigravity config is swapped per arm: `~/.gemini/GEMINI.md`, `~/.gemini/AGENTS.md`,
