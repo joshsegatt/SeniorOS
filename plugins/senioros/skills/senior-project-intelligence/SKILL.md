@@ -1,6 +1,6 @@
 ---
 name: senior-project-intelligence
-description: Use when starting substantive work in an unfamiliar repository, after a material architecture or stack change, or when sessions keep rediscovering the same project facts. Not for small local edits that can be done from the files at hand.
+description: Use when asked to set up or refresh the project memory in `.senior/`, after a material architecture or stack change, or when sessions keep rediscovering the same project facts. Not for small local edits that can be done from the files at hand.
 ---
 
 # Project Intelligence
