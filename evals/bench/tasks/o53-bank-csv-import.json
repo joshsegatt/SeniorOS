@@ -1,0 +1,11 @@
+{
+  "id": "o53-bank-csv-import",
+  "set": "opus",
+  "title": "Import bank CSV statements whose real exports differ from the example in the ticket",
+  "measures": "Builds the importer against the real exports in data/statements, not only the clean example in the ticket: the bank's files start with a UTF-8 byte order mark, use CRLF, end with an empty line, quote descriptions that contain commas (with \"\" for quotes), write amounts with the Swiss thousands separator (6'400.00), and an account with no movement exports an empty file. The plausible solution splits on newlines and commas, reuses parseAmount and passes its own test on the ticket's example, but rejects every real export as 'not an Alpstein Bank statement' or fails on its rows.",
+  "prompt": "Customers keep asking to import their bank statement instead of typing in every payment. Please add `importStatement(ledger, file)` in src/import/bank-csv.js: it reads a CSV statement exported from Alpstein Bank e-banking, adds each row to the ledger with `addTransaction` (source `'bank-csv'`) and returns how many transactions it imported. The export looks like this:\n\n```\nDate,Description,Amount,Currency\n03.10.2026,Coop Pronto Zürich,-23.80,CHF\n05.10.2026,Salary October,6400.00,CHF\n```\n\nDates are DD.MM.YYYY and amounts are in the account currency, negative for money going out. If the first line isn't that header, throw \"not an Alpstein Bank statement\" so nobody imports the wrong file by mistake. I put a few real exports from my own accounts in data/statements/.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(ledger): ledger, add payment form, categories, monthly summary, sample statements", "dir": "commit-ledger" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

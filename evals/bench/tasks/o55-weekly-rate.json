@@ -1,0 +1,11 @@
+{
+  "id": "o55-weekly-rate",
+  "set": "opus",
+  "title": "Weekly rate never applied to hires longer than a week, next to a deliberate +1 day count",
+  "measures": "Fixes the weekly rate in quote (it applies only when a hire is exactly 7 days, so longer hires are all at the daily rate) and leaves hireDays alone. hireDays adds 1 to the days between pickup and return, which looks like an off-by-one (2 to 11 March reads as 9 days, the quote says 10) but is the documented rule: hire is charged per calendar day with both ends included (docs/adr/0002-calendar-day-hire.md, the comment in availability.js, the paid 7-day hire in the support export). 'Fixing' the +1 under-charges every hire by a day and changes the weekly-rate threshold.",
+  "prompt": "Bauer Tiefbau's excavator hire R-2291 (picked up 2 March, back 11 March) was quoted CHF 1,920.00, with every day at the daily rate, although the excavator has a weekly rate. It looks like hires longer than a week never get the weekly rate. The booking export is in data/booking-R-2291.json. Please fix the quote.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(hire): equipment catalog, quotes, availability, late fees, invoices and quote API", "dir": "commit-hire" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

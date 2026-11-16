@@ -1,0 +1,229 @@
+{
+  "migrations": [
+    "001-appointment-channel"
+  ],
+  "practitioners": [
+    {
+      "id": "p-1",
+      "name": "Dr. Lena Keller"
+    },
+    {
+      "id": "p-2",
+      "name": "Marc Dubois"
+    }
+  ],
+  "patients": [
+    {
+      "id": "pt-11",
+      "name": "Ana Costa",
+      "phone": "+41795551100"
+    },
+    {
+      "id": "pt-12",
+      "name": "Ben Huber",
+      "phone": "+41795551101"
+    },
+    {
+      "id": "pt-13",
+      "name": "Chiara Rossi",
+      "phone": "+41795551102"
+    },
+    {
+      "id": "pt-14",
+      "name": "David Meier",
+      "phone": "+41795551103"
+    },
+    {
+      "id": "pt-15",
+      "name": "Elif Yilmaz",
+      "phone": "+41795551104"
+    },
+    {
+      "id": "pt-16",
+      "name": "Fabian Graf",
+      "phone": "+41795551105"
+    },
+    {
+      "id": "pt-17",
+      "name": "Greta Lang",
+      "phone": "+41795551106"
+    },
+    {
+      "id": "pt-18",
+      "name": "Hugo Favre",
+      "phone": "+41795551107"
+    },
+    {
+      "id": "pt-19",
+      "name": "Ines Brunner",
+      "phone": "+41795551108"
+    },
+    {
+      "id": "pt-20",
+      "name": "Jonas Weber",
+      "phone": "+41795551109"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "a-1841",
+      "practitionerId": "p-1",
+      "patientId": "pt-11",
+      "date": "2026-11-12",
+      "time": "08:00",
+      "durationMin": 45,
+      "channel": "phone",
+      "status": "booked",
+      "remindedAt": "2026-11-11T07:15:00.000Z"
+    },
+    {
+      "id": "a-1855",
+      "practitionerId": "p-2",
+      "patientId": "pt-17",
+      "date": "2026-11-13",
+      "time": "16:30",
+      "durationMin": 30,
+      "channel": "online",
+      "status": "booked",
+      "remindedAt": "2026-11-12T15:45:00.000Z"
+    },
+    {
+      "id": "a-1862",
+      "practitionerId": "p-1",
+      "patientId": "pt-12",
+      "date": "2026-11-19",
+      "time": "08:00",
+      "durationMin": 45,
+      "channel": "phone",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1870",
+      "practitionerId": "p-1",
+      "patientId": "pt-13",
+      "date": "2026-11-19",
+      "time": "09:00",
+      "durationMin": 30,
+      "channel": "online",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1873",
+      "practitionerId": "p-1",
+      "patientId": "pt-14",
+      "date": "2026-11-19",
+      "time": "10:30",
+      "durationMin": 60,
+      "channel": "desk",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1877",
+      "practitionerId": "p-2",
+      "patientId": "pt-18",
+      "date": "2026-11-19",
+      "time": "14:00",
+      "durationMin": 30,
+      "channel": "phone",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1880",
+      "practitionerId": "p-1",
+      "patientId": "pt-15",
+      "date": "2026-11-19",
+      "time": "15:00",
+      "durationMin": 30,
+      "channel": "online",
+      "status": "cancelled",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1884",
+      "practitionerId": "p-1",
+      "patientId": "pt-16",
+      "date": "2026-11-19",
+      "time": "16:00",
+      "durationMin": 45,
+      "channel": "online",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1889",
+      "practitionerId": "p-1",
+      "patientId": "pt-19",
+      "date": "2026-11-26",
+      "time": "17:30",
+      "durationMin": 30,
+      "channel": "phone",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1891",
+      "practitionerId": "p-2",
+      "patientId": "pt-20",
+      "date": "2027-03-30",
+      "time": "11:00",
+      "durationMin": 45,
+      "channel": "desk",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1902",
+      "practitionerId": "p-1",
+      "patientId": "pt-17",
+      "startsAt": "2026-11-19T08:30:00.000Z",
+      "durationMin": 30,
+      "channel": "desk",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1905",
+      "practitionerId": "p-1",
+      "patientId": "pt-20",
+      "startsAt": "2026-11-19T12:30:00.000Z",
+      "durationMin": 45,
+      "channel": "online",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1907",
+      "practitionerId": "p-2",
+      "patientId": "pt-11",
+      "startsAt": "2026-11-18T09:00:00.000Z",
+      "durationMin": 30,
+      "channel": "phone",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1911",
+      "practitionerId": "p-1",
+      "patientId": "pt-11",
+      "startsAt": "2026-11-19T16:00:00.000Z",
+      "durationMin": 30,
+      "channel": "online",
+      "status": "booked",
+      "remindedAt": null
+    },
+    {
+      "id": "a-1912",
+      "practitionerId": "p-1",
+      "patientId": "pt-18",
+      "startsAt": "2026-11-20T07:30:00.000Z",
+      "durationMin": 30,
+      "channel": "phone",
+      "status": "booked",
+      "remindedAt": null
+    }
+  ]
+}

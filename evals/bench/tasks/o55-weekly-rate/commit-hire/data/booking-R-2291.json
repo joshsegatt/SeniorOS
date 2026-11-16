@@ -1,0 +1,28 @@
+{
+  "exportedAt": "2026-02-26T14:08:51.000Z",
+  "ticket": "SUP-2034",
+  "customer": { "id": "c-1187", "name": "Bauer Tiefbau AG", "termsVersion": "v3" },
+  "booking": {
+    "id": "R-2291",
+    "itemId": "exc-8t",
+    "pickupDay": "2026-03-02",
+    "returnDay": "2026-03-11",
+    "damageWaiver": true,
+    "status": "confirmed"
+  },
+  "quote": {
+    "itemId": "exc-8t",
+    "pickupDay": "2026-03-02",
+    "returnDay": "2026-03-11",
+    "days": 10,
+    "hireCents": 180000,
+    "waiverCents": 12000,
+    "totalCents": 192000,
+    "depositCents": 150000
+  },
+  "previousHires": [
+    { "id": "R-2240", "itemId": "cmp-90", "pickupDay": "2026-02-09", "returnDay": "2026-02-11", "days": 3, "totalCents": 19500, "invoice": "paid" },
+    { "id": "R-2102", "itemId": "exc-8t", "pickupDay": "2026-01-12", "returnDay": "2026-01-18", "days": 7, "totalCents": 90000, "invoice": "paid" }
+  ],
+  "note": "Customer asks why the 2 to 11 March hire is all at the daily rate when the excavator has a weekly rate."
+}

@@ -1,0 +1,2 @@
+# The sample statements are the bank exporter's real bytes (UTF-8 BOM, CRLF): keep them as they are.
+commit-*/data/** -text

@@ -1,0 +1,9 @@
+{
+  "name": "bench-shop",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "migrate": "node scripts/migrate.js"
+  }
+}

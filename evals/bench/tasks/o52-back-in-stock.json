@@ -1,0 +1,11 @@
+{
+  "id": "o52-back-in-stock",
+  "set": "opus",
+  "title": "Back-in-stock emails from a product ticket with eight requirements",
+  "measures": "Implements every requirement of a product manager's ticket, including the one in the Notes footnote (legal: a sign-up older than 90 days is dropped, not emailed) and both halves of the trigger named in a parenthesis (a warehouse delivery and a stock correction in the admin both bring a product back). The plausible solution builds sign-up, validation, de-duplication, the email, one-shot sign-ups, the admin count and the page flag, but hooks the email only into the warehouse delivery and never applies the 90-day limit.",
+  "prompt": "Can you pick up #218 (back-in-stock emails)? The ticket is in docs/issues/218-back-in-stock.md.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(shop): catalog, admin stock, warehouse deliveries, checkout, email outbox, product page", "dir": "commit-shop" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}
