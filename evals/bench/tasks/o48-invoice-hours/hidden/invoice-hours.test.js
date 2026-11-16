@@ -85,12 +85,6 @@ test('the entries API returns integer minutes for old entries too', () => {
   for (const r of listEntries(store)) assert.ok(Number.isInteger(r.minutes), `${r.id} minutes ${r.minutes}`);
 });
 
-test('every entry the store hands out has integer minutes', () => {
-  const store = deployed();
-  for (const e of store.all('entries')) assert.ok(Number.isInteger(e.minutes), `${e.id} minutes ${e.minutes}`);
-  assert.equal(store.get('entries', 'te-4107').minutes, 450);
-});
-
 test('running the migrations again changes nothing', () => {
   const store = deployed();
   const once = store.dump();

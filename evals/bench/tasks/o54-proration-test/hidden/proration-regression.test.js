@@ -29,7 +29,7 @@ function npmTest(cwd) {
   const r = spawnSync('npm', ['test'], { cwd, env, shell: true, encoding: 'utf8', timeout: 60_000 });
   const out = `${r.stdout ?? ''}${r.stderr ?? ''}`;
   const counts = out.split(/\r?\n/).map((l) => l.replace(/^(ℹ|#)\s*/, '')).filter((l) => /^(tests|pass|fail) \d+$/.test(l)).join(', ');
-  return { ok: r.status === 0, detail: counts || `exit ${r.status}` };
+  return { ok: r.status === 0, asserted: /AssertionError|ERR_ASSERTION/.test(out), detail: counts || `exit ${r.status}` };
 }
 
 test('the reported case: an upgrade in a period that crosses New Year is charged, not credited', () => {
@@ -66,6 +66,7 @@ test('a regression test that npm test runs fails once the fix is reverted', () =
     cpSync(join(base, 'src'), join(dir, 'src'), { recursive: true, force: true });
     const r = npmTest(dir);
     assert.ok(!r.ok, `npm test stays green with the original source (${r.detail}): no test it runs covers the bug`);
+    assert.ok(r.asserted, `npm test fails with the original source, but not on an assertion (${r.detail}): an import or setup error proves nothing`);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

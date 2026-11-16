@@ -4,6 +4,9 @@ import { createStore } from '../../src/db/store.js';
 import { balanceMismatches, ledgerBalance } from '../../src/loyalty/ledger.js';
 import { run } from '../../scripts/backfill-points.js';
 
+// A script may dry-run by default; these are the ways runs asked it to write.
+const APPLY = { apply: true, dryRun: false, dry: false, write: true };
+
 const order = (id, customerId, placedAt, totalCents, status = 'paid') => ({ id, customerId, totalCents, status, placedAt });
 const earned = (id, customerId, orderId, type, points, at) => ({ id, customerId, orderId, type, points, at });
 
@@ -101,42 +104,42 @@ function droppingAfter(store, allowed, counter = { writes: 0 }) {
 
 test('the backfill gives every customer the points for their 2026 orders before the launch', async () => {
   const store = production();
-  await run(store);
+  await run(store, APPLY);
   assertBackfilled(store, 'one run');
 });
 
 test('running the backfill a second time changes nothing', async () => {
   const store = production();
-  await run(store);
+  await run(store, APPLY);
   const once = { ledger: ledgerRows(store), customers: store.all('customers') };
-  await run(store);
+  await run(store, APPLY);
   assert.deepEqual({ ledger: ledgerRows(store), customers: store.all('customers') }, once);
   assertBackfilled(store, 'two runs');
 });
 
 test('a run that died halfway is completed by running it again', async () => {
   const counter = { writes: 0 };
-  await run(droppingAfter(production(), Infinity, counter));
+  await run(droppingAfter(production(), Infinity, counter), APPLY);
   const total = counter.writes;
   assert.ok(total > 0, 'the backfill writes nothing');
   for (let allowed = 0; allowed < total; allowed += 1) {
     const store = production();
     try {
-      await run(droppingAfter(store, allowed));
+      await run(droppingAfter(store, allowed), APPLY);
     } catch {
       // the job died: the operator runs it again
     }
-    await run(store);
+    await run(store, APPLY);
     assertBackfilled(store, `died after ${allowed} of ${total} writes, then ran again`);
   }
 });
 
 test('orders placed after the backfill earn points as usual and a later run leaves them alone', async () => {
   const store = production();
-  await run(store);
+  await run(store, APPLY);
   const { placeOrder } = await import('../../src/orders/orders.js');
   placeOrder(store, { customerId: 'c-102', totalCents: 5000 }, () => new Date('2026-11-17T10:00:00Z'));
-  await run(store);
+  await run(store, APPLY);
   assert.equal(store.get('customers', 'c-102').points, 19 + 50);
   assert.equal(ledgerBalance(store, 'c-102'), 19 + 50);
 });

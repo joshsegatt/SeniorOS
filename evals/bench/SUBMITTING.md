@@ -43,7 +43,7 @@ node evals/bench/bench.mjs run --backend claude --model sonnet --trials 5 \
 |---|---|---|---|
 | Cause elsewhere, Sonnet | `o17`, `o19`, `o20`, `o37` | Bugs whose report names one module while the cause is in another | 60, about $10 |
 | Cause elsewhere, Opus | `o36`, `o37`, `o38` | The same class, on the tasks Opus alone failed in calibration | 45, about $25 |
-| Never worse, Opus | `o40`–`o47` | Work Opus already does alone: a pack should not lose it or cost much more | 120, about $55 |
+| Never worse, Opus | `o40`–`o48`, `o50`–`o55` | Work Opus already does alone: a pack should not lose it or cost much more | 225, about $100 |
 
 `node evals/bench/bench.mjs tasks` lists every task, and [README.md](README.md) explains how each set was built. All of
 these were written by agents that never saw any pack. If your pack was tuned on a task, say so in `--notes`.
