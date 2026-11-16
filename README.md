@@ -7,13 +7,13 @@
   <a href="https://www.npmjs.com/package/senioros"><img alt="npm" src="https://img.shields.io/npm/v/senioros.svg?color=2F80FF"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-2563eb.svg"></a>
   <a href="package.json"><img alt="Node" src="https://img.shields.io/badge/node-%3E%3D20-0f766e.svg"></a>
-  <a href="evals/bench/README.md"><img alt="Bench: Opus, Grok, Gemini" src="https://img.shields.io/badge/bench-Opus%20%C2%B7%20Grok%20%C2%B7%20Gemini-2F80FF.svg"></a>
+  <a href="evals/bench/README.md"><img alt="Bench: Opus, Sonnet, Grok, Gemini" src="https://img.shields.io/badge/bench-Opus%20%C2%B7%20Sonnet%20%C2%B7%20Grok%20%C2%B7%20Gemini-2F80FF.svg"></a>
 </p>
 
 <p align="center">
   <strong>Skills and hooks that make coding agents fix the cause, keep your history safe and prove the work.</strong><br/>
   Your agent loads the right skill on its own, asks before a destructive command, and cannot say "done" until your checks pass.
-  Measured on Claude Opus, Grok and Gemini against the model alone and three other skill packs.
+  Measured on Claude Opus, Claude Sonnet, Grok and Gemini against the model alone and three other skill packs.
 </p>
 
 <p align="center">
