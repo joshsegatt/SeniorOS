@@ -1,0 +1,14 @@
+{
+  "id": "senior-single-write-low-risk",
+  "skill": "senior-engineering",
+  "prompt": "Rename the 'Points' column header to 'Loyalty points' on the account page.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "change the label directly and run the affected tests"
+    ],
+    "forbiddenBehaviors": [
+      "plan crash safety or write crash-and-rerun tests for a label change"
+    ]
+  }
+}
