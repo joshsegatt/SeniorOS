@@ -537,6 +537,29 @@ batch except the last row, which ran right after it):
   it stays an off-by-default flag (`pretool-guard.mjs --importers-first`) for this arm, outside `hooks.json`.
 - Control tasks `o9`–`o16` (2 trials): `senioros` 16/16 at $0.14, both gate versions 16/16 at $0.13 and $0.14.
 
+### Check every reader before patching one (Sonnet, November 2026)
+
+In most failed runs above the agent filtered or converted the bad records inside the function the report names (`seatsUsed`,
+`postsByTag`) and left billing, APIs, pages and feeds that read the same records wrong, in 6 to 7 tool calls. A step
+in `senior-debugging` now has it search the code for the field it is about to filter or convert, name the other
+readers in the report under **Other readers**, and fix the writer when another reader sees the same bad records.
+Same six tasks, `senioros-baseline` = main:
+
+| Batch | `senioros` (with the step) | `senioros-baseline` |
+|---|---|---|
+| First wording, a sentence inside the fix step, 3 trials | 7/18 | 6/18 |
+| Own step with a report line, 3 trials | 14/18 | 7/18 |
+| Same, confirmation, 2 trials | 7/12 | 2/12 |
+| Own step, both batches (95% Wilson) | **21/30 (52–83%)** | 9/30 (17–48%) |
+| Cost per run / per pass, both batches | $0.14 / $0.19 | $0.12 / $0.40 |
+
+- As a sentence the rule was loaded (9 of 18 runs) and skipped: runs still ended in about 7 calls. As its own step
+  with a line the report must fill, it was followed.
+- By task, both batches: `o20` 5/5 against 0/5, `o38` 3/5 against 1/5, `o19` 4/5 against 3/5, `o37` 5/5 against
+  3/5, `o17` 3/5 against 2/5, `o36` 1/5 against 0/5.
+- Control tasks `o9`–`o16` (2 trials): 16/16 at $0.14.
+- Adopted.
+
 ### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
 
 Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2 trials, 78 runs, `--backend grok`:

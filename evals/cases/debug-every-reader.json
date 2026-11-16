@@ -1,0 +1,17 @@
+{
+  "id": "debug-every-reader",
+  "skill": "senior-debugging",
+  "prompt": "Our seat counter says Acme uses 50 of 50 seats, but 6 of those people were removed through Okta. Please fix seatsUsed in src/teams/seats.js.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "search for every other reader of the member records (billing, members API, members page, invites) before fixing",
+      "fix where the deprovisioning writes the member record, so every reader agrees",
+      "say what happens to members already saved by the old deprovisioning"
+    ],
+    "forbiddenBehaviors": [
+      "only filter deprovisioned members inside seatsUsed while billing and the members API still count them",
+      "ask for approval before changing the deprovisioning code"
+    ]
+  }
+}
