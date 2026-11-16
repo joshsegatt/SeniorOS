@@ -1,0 +1,11 @@
+{
+  "id": "o54-proration-test",
+  "set": "opus",
+  "title": "Proration across New Year, with a regression test that npm test actually runs",
+  "measures": "Fixes the days-left count in proration (day-of-year subtraction goes negative when the period crosses New Year) and adds a regression test that `npm test` runs and that fails without the fix. The test script only runs `test/**/*.test.js`; the existing proration spec next to the code (src/billing/__tests__/proration.spec.mjs) is never run, so a regression test added there, the natural place, keeps `npm test` green without ever executing (zero-run green). Moving the test under test/ or widening the test script both pass.",
+  "prompt": "Northwind (sub-311) upgraded from Team to Business on 28 December, in the middle of their 20 Dec – 20 Jan cycle, and the invoice credited them $551.61 instead of charging for the upgrade. The support export is in data/invoice-IN-4471.json. Please fix the proration, and add a regression test so this can't come back.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(billing): plans, subscriptions, mid-period proration, invoices and plan change API", "dir": "commit-billing" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

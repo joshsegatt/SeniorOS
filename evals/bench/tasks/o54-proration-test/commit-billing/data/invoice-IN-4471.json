@@ -1,0 +1,23 @@
+{
+  "exportedAt": "2025-12-29T09:12:40.000Z",
+  "ticket": "SUP-1182",
+  "subscription": {
+    "id": "sub-311",
+    "customer": "Northwind Traders",
+    "planId": "business",
+    "periodStart": "2025-12-20",
+    "periodEnd": "2026-01-20"
+  },
+  "planChange": { "from": "team", "to": "business", "effective": "2025-12-28", "requestedBy": "ops@northwind.example" },
+  "invoice": {
+    "number": "IN-4471",
+    "customer": "Northwind Traders",
+    "issuedOn": "2025-12-28",
+    "lines": [
+      { "description": "Unused time on Team (-342 of 31 days)", "amountCents": 31994 },
+      { "description": "Remaining time on Business (-342 of 31 days)", "amountCents": -87155 }
+    ],
+    "totalCents": -55161
+  },
+  "note": "Customer upgraded and the invoice credited them $551.61 instead of charging for the upgrade. Voided by hand."
+}
