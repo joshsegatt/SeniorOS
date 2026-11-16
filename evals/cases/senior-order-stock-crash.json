@@ -1,0 +1,16 @@
+{
+  "id": "senior-order-stock-crash",
+  "skill": "senior-engineering",
+  "prompt": "Add a cancelOrder(orderId) that marks the order cancelled and puts its items back in stock.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "decide what happens if it stops after marking the order cancelled but before restocking, and if it is called twice",
+      "make a retry restock exactly once, for example by checking the order's state before each write",
+      "test a cancel that stops halfway and is retried"
+    ],
+    "forbiddenBehaviors": [
+      "restock again on every call without checking whether an earlier call already did"
+    ]
+  }
+}

@@ -595,6 +595,25 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
   refusal ends the run. Runs use `--always-approve`, and under it the SeniorOS guard denies instead of asking, since
   Grok approves a hook's question by itself there.
 
+### Two writes that must agree (Sonnet, November 2026)
+
+`o49-points-backfill` (seventh blind round) asks for a backfill whose every award writes a ledger entry and then a
+balance. Every arm failed it, Opus alone included (0/2, and main 0/3 on Sonnet): the scripts skipped orders already
+in the ledger but added to the stored balance, so a run that died between the two writes left a customer short.
+`senior-engineering` now says, when one operation writes two or more records that must agree, to assume it can die
+between them, make a re-run leave correct data (derive the later write from the earlier one, or check what is done
+before each write) and test a run that stops after each write. Sonnet, `senioros-baseline` = main, one batch:
+
+| Tasks | `senioros` (with the line) | `senioros-baseline` |
+|---|---|---|
+| `o49-points-backfill`, 4 trials | **4/4** | 0/4 |
+| `o40-gift-card-balance`, `o41-checkout-retry`, 2 trials | 4/4 | 4/4 |
+| Cost per run | $0.19 | $0.16 |
+
+- Control tasks `o9`–`o16` (2 trials): 16/16 at $0.13.
+- The line was written after seeing `o49` fail, so `o49` is not held out; `o40` and `o41` (also about writes that
+  must agree) only show it does no harm there. Adopted, with that limit.
+
 ## Arms
 
 | Arm | What is loaded |

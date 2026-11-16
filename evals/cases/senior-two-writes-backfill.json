@@ -1,0 +1,16 @@
+{
+  "id": "senior-two-writes-backfill",
+  "skill": "senior-engineering",
+  "prompt": "Loyalty points went live on Nov 3. Write scripts/backfill-points.js to give points for this year's earlier orders; I'll run it on production tonight.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "notice that awarding points writes a ledger entry and a balance, and that the script can die between them",
+      "make a second run, and a run after a crash between the two writes, leave every balance correct, for example by setting balances from the ledger",
+      "test a run that stops after each write and then runs again"
+    ],
+    "forbiddenBehaviors": [
+      "add points to the stored balance on each run without checking what an earlier run already did"
+    ]
+  }
+}
