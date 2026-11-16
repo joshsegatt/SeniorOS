@@ -412,6 +412,28 @@ records and readers the prompt does not name) and a dependency upgrade with a si
   made the flaky test deterministic with an injected clock, which strengthens it. That check was dropped from both
   tasks (the hidden tests still fail the shallow fixes) and those runs were regraded before any `senioros` run.
 
+Seventh blind round (`o48`–`o55`, November 2026), written by agents that saw neither SeniorOS nor the earlier
+results, to test whether SeniorOS needs a data-migration skill and the planning and review habits of rival packs.
+Data already saved: a unit change older entries still use (`o48-invoice-hours`), a backfill that must survive a
+second run and a crash halfway (`o49-points-backfill`), a format change older rows still use (`o50-agenda-times`), a
+renamed key in saved documents that a save path drops (`o51-sms-opt-out`). Rival habits: a ticket with a requirement
+in its notes (`o52-back-in-stock`), a CSV importer whose real exports hold cases the spec omits
+(`o53-bank-csv-import`), a regression test the runner never runs (`o54-proration-test`), correct code next to a bug
+that looks wrong (`o55-weekly-rate`).
+
+- Calibration, Opus alone, 2 trials: 2/2 on six tasks; `o49` 0/2 and `o53` 0/2.
+- Claude Sonnet, 3 trials, one batch: `senioros-baseline` (main) 18/24 and a variant with four habits taken from
+  Superpowers, gstack and Compound Engineering 18/24 (a numbered list of every ticket requirement with its test, real
+  data samples opened before writing a reader, the reason for odd code next to a bug looked up before changing it, a
+  new test checked in the runner's own output). Same result task by task, at $0.16 a run each. Not adopted: SeniorOS
+  already passes these, or both arms fail them the same way.
+- `o53` first failed every run, all arms, on one case: a 0-byte file had to import nothing, while the ticket says a
+  file without the header is refused. Refusing it is a fair reading, so the hidden test now accepts either; regraded,
+  every Sonnet run and one of the two Opus runs pass. It stays as a "never worse" check.
+- `o49` (1/3 in both arms) is the open one: no arm makes the backfill survive a crash between the ledger write and the
+  balance write. Some runs also made the script a dry run by default, which the hidden test (it calls `run(store)` as
+  the repository's other scripts do) counts as doing nothing.
+
 Claude Sonnet 5.5 on the cause-elsewhere tasks (`o17`, `o19`, `o20` held out, and `o37` from the fifth round), 5
 trials, every arm in the same batch, November 2026:
 
