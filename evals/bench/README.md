@@ -539,7 +539,7 @@ batch except the last row, which ran right after it):
 
 ### Check every reader before patching one (Sonnet, November 2026)
 
-In every arm above the agent filtered or converted the bad records inside the function the report names (`seatsUsed`,
+In most failed runs above the agent filtered or converted the bad records inside the function the report names (`seatsUsed`,
 `postsByTag`) and left billing, APIs, pages and feeds that read the same records wrong, in 6 to 7 tool calls. A step
 in `senior-debugging` now has it search the code for the field it is about to filter or convert, name the other
 readers in the report under **Other readers**, and fix the writer when another reader sees the same bad records.
