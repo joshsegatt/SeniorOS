@@ -4,6 +4,10 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-11-16
+
+The 0.11.0 release, published to npm under a new number: npm held 0.11.0 for approval and the version can no longer be used. The only other change: the README names Sonnet in the bench badge and the tagline.
+
 ## [0.11.0] - 2026-11-16
 
 On Claude Sonnet 5.5, SeniorOS now fixes a bug at its cause in 29 of 30 runs, against 13 of 30 for 0.10 and none of 18 for Sonnet alone, at half the cost per passing run.
