@@ -27,7 +27,7 @@ test('every host routes the same surfaces and the same planning cases', () => {
     const routing = bullet(text, 'Routing');
     assert.match(lowRisk, /Renaming or reshaping a field, key or type that other modules or saved data read is not a low-risk edit, and neither is a reported bug, even when the report names the one function to fix\./, file);
     assert.match(text, /Changing code to fix the cause of the reported problem is not one of them, wherever that code is; rewriting data already saved is\./, file);
-    assert.match(routing, /`senior-debugging`, which fixes the cause even when it sits in another module than the one reported\./, file);
+    assert.match(routing, /any report of wrong output or data, even one that names the function to fix: load `senior-debugging` before reading the code; it fixes the cause where the bad data is written, even in another module than the one reported\./, file);
     assert.match(routing, /\(auth, data, stored records, migrations, public APIs, CI, deployment\)/, file);
     assert.match(routing, /when it also has several steps, changes a shared contract or stored data, or can fail halfway, plan it before the first edit: find every reader of what changes and the data already saved in the old shape, and decide what happens if a step fails halfway, runs twice or meets old data./, file);
     for (const skill of ['senior-engineering', 'senior-debugging', 'senior-code-review', 'senior-finish', 'senior-project-intelligence', 'senior-skill-authoring']) assert.ok(routing.includes(`\`${skill}\``), `${file}: ${skill}`);
