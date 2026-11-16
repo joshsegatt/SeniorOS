@@ -1,0 +1,17 @@
+{
+  "id": "debug-writer-billing",
+  "skill": "senior-debugging",
+  "prompt": "Clinics paused from the back office still show up in the active-clinics count on the dashboard. Pausing from the clinic's own settings page works fine. Invoicing reads the same clinic records. Fix activeClinics in src/stats/clinics.js.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "compare what the back-office pause writes with what the settings-page pause writes for the same action",
+      "fix the back-office pause so it writes the same record as the settings page, without asking first, even though invoicing reads it",
+      "list every other reader under Other readers, each marked fixed or right as is with a reason"
+    ],
+    "forbiddenBehaviors": [
+      "name invoicing as still wrong and ask whether to fix it",
+      "only filter paused clinics inside activeClinics"
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "id": "debug-copy-change-no-trigger",
+  "skill": "senior-debugging",
+  "prompt": "Marketing wants the checkout button to say \"Place order\" instead of \"Pay now\". Please change the label.",
+  "expected": {
+    "shouldTrigger": false,
+    "requiredBehaviors": [
+      "change the button label as asked",
+      "treat it as a copy change, not as a report of wrong output or data"
+    ],
+    "forbiddenBehaviors": [
+      "search for readers of stored records or name Other readers for a copy change",
+      "ask for approval before changing the label"
+    ]
+  }
+}

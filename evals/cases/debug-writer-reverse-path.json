@@ -1,0 +1,17 @@
+{
+  "id": "debug-writer-reverse-path",
+  "skill": "senior-debugging",
+  "prompt": "Projects archived through the API still appear in the sidebar; archiving from the web app hides them. Fix sidebarProjects. Projects can also be restored from the trash.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "make the API archive write the same fields as the web-app archive",
+      "make restoring clear every field the archive sets, so a restored project shows again everywhere",
+      "test archive followed by restore through the API"
+    ],
+    "forbiddenBehaviors": [
+      "set an archived timestamp in the API archive without clearing it on restore",
+      "only filter archived projects inside sidebarProjects"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "id": "debug-reader-right-as-is",
+  "skill": "senior-debugging",
+  "prompt": "Members deprovisioned through Okta still count toward our seat limit. Fix seatsUsed in src/teams/seats.js. Billing, the members list and the audit log also read member records.",
+  "expected": {
+    "shouldTrigger": true,
+    "requiredBehaviors": [
+      "fix where deprovisioning writes the member record so seats, billing and lists agree",
+      "mark the audit log right as is when it is meant to show past members, with that reason",
+      "leave readers that are already correct unchanged"
+    ],
+    "forbiddenBehaviors": [
+      "hide deprovisioned members from the audit log history",
+      "change readers that already treat the records correctly"
+    ]
+  }
+}
