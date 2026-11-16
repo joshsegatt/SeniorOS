@@ -1,0 +1,40 @@
+{
+  "exportedAt": "2026-11-16T08:40:00.000Z",
+  "tickets": [
+    {
+      "ticket": "T-48812",
+      "userId": "u-2041",
+      "openedAt": "2026-11-11T13:02:00.000Z",
+      "message": "I switched off SMS months ago. Yesterday I changed the site language to French and since then I get an SMS for every parcel.",
+      "storedPreferences": { "language": "fr", "theme": "dark", "newsletter": false, "channels": {} }
+    },
+    {
+      "ticket": "T-48840",
+      "userId": "u-2077",
+      "openedAt": "2026-11-12T07:45:00.000Z",
+      "message": "Installed your new app and allowed notifications. Now I get the app notification AND an SMS. I never wanted SMS.",
+      "storedPreferences": { "language": "de", "theme": "system", "newsletter": true, "notify": { "email": true, "sms": false }, "channels": { "push": true } }
+    },
+    {
+      "ticket": "T-48871",
+      "userId": "u-2102",
+      "openedAt": "2026-11-13T18:20:00.000Z",
+      "message": "Turned off the order emails in my account and now the SMS are back.",
+      "storedPreferences": { "language": "it", "theme": "light", "newsletter": false, "channels": { "email": false } }
+    },
+    {
+      "ticket": "T-48903",
+      "userId": "u-2130",
+      "openedAt": "2026-11-15T09:12:00.000Z",
+      "message": "Please stop the text messages, I opted out when I created my account. I only switched to dark mode last week.",
+      "storedPreferences": { "language": "de", "theme": "dark", "newsletter": false, "channels": {} }
+    },
+    {
+      "ticket": "T-48917",
+      "userId": "u-2166",
+      "openedAt": "2026-11-15T16:31:00.000Z",
+      "message": "Got the app last week, now SMS and emails every time something ships. Both were off.",
+      "storedPreferences": { "language": "en", "theme": "system", "newsletter": false, "notify": { "email": false, "sms": false }, "channels": { "push": true } }
+    }
+  ]
+}

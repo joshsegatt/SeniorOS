@@ -1,0 +1,16 @@
+{
+  "id": "o50-agenda-times",
+  "set": "opus",
+  "title": "Day agenda crashes on appointments booked before start times moved to UTC",
+  "measures": "Sees that the last commit switched appointments from a local date and time to a UTC startsAt and changed every writer and reader, but added no migration, so rows booked before the release still have only date and time; and brings them to the new shape in one place (a migration in src/db/migrations.js, which openStore already runs, safe on rows that already have startsAt, converting on the clinic's wall clock across daylight saving time), or in the store itself. The shallow fix falls back to date and time inside dayAgenda, which the user named: the agenda loads, but those patients get no reminder SMS, vanish from the calendar feed and the patient portal, and their slots can be double-booked.",
+  "prompt": "Since yesterday's release the desk agenda crashes with `RangeError: Invalid time value` when the front desk opens Dr. Keller's Thursday (2026-11-19). There's a copy of the production database in data/clinic.json. Please fix dayAgenda in src/web/agenda.js.",
+  "timeoutMinutes": 12,
+  "setup": {
+    "commits": [
+      { "message": "feat(clinic): appointments, day agenda, reminder SMS, calendar feed and patient portal", "dir": "commit-clinic" },
+      { "message": "refactor(appointments): store the start as a UTC instant (startsAt) instead of local date and time", "dir": "commit-utc" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

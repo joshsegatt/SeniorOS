@@ -1,0 +1,16 @@
+{
+  "id": "o48-invoice-hours",
+  "set": "opus",
+  "title": "Invoice short of the timesheets because entries saved before the minutes release still store float hours",
+  "measures": "Traces the missing hours to the release that switched time entries from float `hours` to integer `minutes` (writers and every reader changed, no data migration), so entries saved before it still have only `hours`. The careful fix brings the saved data to the new shape for every reader: a new, re-runnable migration registered after 001 (which production has already applied) or an upgrade where the store hands out records, rounding to integer minutes. The shallow fix reads `hours` as a fallback inside invoiceLines only, which fixes the invoice but leaves the weekly dashboard at NaN, project budgets under-counted and the entries API returning no minutes for old entries; editing migration 001 never runs in production. Entries logged after the release, the natural reproduction, never show the bug.",
+  "prompt": "Northwind's October invoice (client cl-14) only bills 31.5 hours, but the team logged 58.25 billable hours on Northwind projects in October. The October time entries export is in data/time-entries-2026-10.json. Please fix invoiceLines in src/billing/invoice.js.",
+  "timeoutMinutes": 12,
+  "setup": {
+    "commits": [
+      { "message": "feat(time): timesheets, client invoices, weekly dashboard, project budgets and the entries API", "dir": "commit-v1" },
+      { "message": "feat(time)!: store entry durations as integer minutes instead of float hours", "dir": "commit-v2" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

@@ -1,0 +1,11 @@
+{
+  "id": "o49-points-backfill",
+  "set": "opus",
+  "title": "Backfill loyalty points for orders before the launch without double-awarding on a re-run or after a crash",
+  "measures": "Writes a backfill that is safe on the data already saved and on a second run: it skips orders placed since the launch (they earned points live) and any order that already has an earn entry, keeps redemptions and reversals, and leaves balances matching the ledger even when an earlier run died between writing a ledger entry and updating the balance (setting each balance from the ledger, or one write per order). Naive backfills call awardOrderPoints for every 2026 order, which double-awards post-launch orders and everything again on a re-run; skipping orders with an earn entry but keeping the two-write award still leaves a customer short after a run that died halfway. One clean run on fresh data, the natural check, never shows the bug.",
+  "prompt": "We launched loyalty points on Nov 3 (1 point per euro on paid orders) and customers keep asking why their earlier orders don't count. Please write scripts/backfill-points.js to give everyone their points for their orders since Jan 1, 2026. I want to run it on production tonight.",
+  "timeoutMinutes": 12,
+  "setup": { "commits": [{ "message": "feat(loyalty): points on paid orders, redemptions, cancellations, points page and nightly balance check", "dir": "commit-loyalty" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

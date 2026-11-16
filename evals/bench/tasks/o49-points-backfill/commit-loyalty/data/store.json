@@ -1,0 +1,23 @@
+{
+  "meta": { "seq": 7204 },
+  "customers": [
+    { "id": "c-201", "name": "Test Customer A", "email": "a@example.test", "points": 61 },
+    { "id": "c-202", "name": "Test Customer B", "email": "b@example.test" },
+    { "id": "c-203", "name": "Test Customer C", "email": "c@example.test", "points": 0 }
+  ],
+  "orders": [
+    { "id": "o-7101", "customerId": "c-202", "totalCents": 5400, "status": "paid", "placedAt": "2025-11-28T14:02:00.000Z" },
+    { "id": "o-7115", "customerId": "c-201", "totalCents": 3290, "status": "paid", "placedAt": "2026-01-17T10:41:00.000Z" },
+    { "id": "o-7140", "customerId": "c-202", "totalCents": 11900, "status": "paid", "placedAt": "2026-04-09T19:20:00.000Z" },
+    { "id": "o-7152", "customerId": "c-201", "totalCents": 2750, "status": "cancelled", "placedAt": "2026-05-30T08:15:00.000Z" },
+    { "id": "o-7188", "customerId": "c-203", "totalCents": 6420, "status": "paid", "placedAt": "2026-09-12T16:55:00.000Z" },
+    { "id": "o-7199", "customerId": "c-201", "totalCents": 7130, "status": "paid", "placedAt": "2026-11-04T12:03:00.000Z" },
+    { "id": "o-7202", "customerId": "c-203", "totalCents": 1500, "status": "cancelled", "placedAt": "2026-11-08T09:30:00.000Z" }
+  ],
+  "ledger": [
+    { "id": "pt-7200", "customerId": "c-201", "orderId": "o-7199", "type": "earn", "points": 71, "at": "2026-11-04T12:03:00.000Z" },
+    { "id": "pt-7201", "customerId": "c-201", "orderId": "o-7203", "type": "redeem", "points": -10, "at": "2026-11-07T17:44:00.000Z" },
+    { "id": "pt-7203", "customerId": "c-203", "orderId": "o-7202", "type": "earn", "points": 15, "at": "2026-11-08T09:30:00.000Z" },
+    { "id": "pt-7204", "customerId": "c-203", "orderId": "o-7202", "type": "reverse", "points": -15, "at": "2026-11-08T11:02:00.000Z" }
+  ]
+}

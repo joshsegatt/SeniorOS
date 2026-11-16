@@ -1,0 +1,16 @@
+{
+  "id": "o51-sms-opt-out",
+  "set": "opus",
+  "title": "Customers who opted out of SMS get them again after the notify key became channels",
+  "measures": "Sees that the push-notifications commit renamed the saved notify key to channels, and that preferences saved before it are dropped by savePreferences (which keeps only known keys and builds channels from the raw document), while loadPreferences reads channels ?? notify, so an old document the app's push switch added channels.push to loses its email and SMS choices. The careful fix reads both keys in one place (channels win, the rest comes from notify), uses it for every read and write, including the push switch, and writes only channels. The shallow fix rebuilds savePreferences from loadPreferences, which the user named: changing the language keeps the opt-out, but customers who turned on push in the app still get SMS and emails, and the next save writes the wrong values back.",
+  "prompt": "Customers who turned off SMS are getting them again. Support says it started after last week's release and that it seems to happen when they change something else in their account, like the language. This week's tickets are in data/sms-complaints.json. Please fix savePreferences in src/settings/preferences.js.",
+  "timeoutMinutes": 12,
+  "setup": {
+    "commits": [
+      { "message": "feat(account): customer preferences, settings page and notification channels", "dir": "commit-settings" },
+      { "message": "feat(app): push notifications; notification switches move from notify to channels", "dir": "commit-push" }
+    ]
+  },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}
