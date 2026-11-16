@@ -3,7 +3,7 @@
 SeniorOS is being built in layers so the project can earn complexity instead of cosplay it. Nothing ships because it
 sounds better: it ships when the bench, a deterministic test or a run in the real host shows it.
 
-## Where SeniorOS stands (0.10.1)
+## Where SeniorOS stands (0.11.0)
 
 Measured (see [`evals/bench/`](evals/bench/README.md)), SeniorOS against no pack and Superpowers:
 - Claude Opus core set: 24/24, 21/24 and 19/24.
@@ -11,6 +11,8 @@ Measured (see [`evals/bench/`](evals/bench/README.md)), SeniorOS against no pack
   round of the same kind: 10/15, 2/15 and 5/15.
 - grok-4.7: 23/26, 15/26 and 14/26.
 - Gemini Pro: 21/26, 16/26 and 16/26.
+- Claude Sonnet 5.5, six bug tasks whose cause is in another module: 29/30 with 0.11, 13/30 with 0.10, 0/18 with
+  no pack.
 
 The wins are the approval boundary and fixing a bug at its cause. On the other kinds of work tried, Opus alone already
 scores as well. SeniorOS costs more per run and is slower on Grok.
