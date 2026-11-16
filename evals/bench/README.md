@@ -586,6 +586,32 @@ Same six tasks, `senioros-baseline` = main:
 - Control tasks `o9`–`o16` (2 trials): 16/16 at $0.14.
 - Adopted.
 
+### Load debugging for every wrong-data report, and fix the writer without asking (Sonnet, November 2026)
+
+With the step above merged, the losses had two causes. `senior-debugging` was not loaded in 14 of 42 recent runs on bug
+tasks, phrased "fix function X": 26/28 passed with it loaded, 5/14 without. With it loaded, the agent found the
+writer, then listed billing or access as "still wrong" and asked instead of fixing it. The routing line and the skill
+description now send any report of wrong output or data to `senior-debugging` before the code is read, and step 9 says
+the writer change is code, copies what the working path writes for the same action, and covers every path that sets or
+clears the field. Same six tasks, `senioros-baseline` = main after the step above:
+
+| Batch | `senioros` | `senioros-baseline` |
+|---|---|---|
+| Step 9 wording only, `o17` `o19` `o36` `o38`, 3 trials | 6/12 | 4/12 |
+| With the routing, six tasks, 3 trials | 17/18 | 8/18 |
+| Same, confirmation, 2 trials | 12/12 | 5/12 |
+| With the routing, both batches (95% Wilson) | **29/30 (83–99%)** | 13/30 (27–61%) |
+| Cost per run / per pass, both batches | $0.14 / $0.14 | $0.12 / $0.28 |
+
+- By task, both batches: `o36` 5/5 against 0/5, `o38` 4/5 against 0/5, `o17` 5/5 against 2/5, `o19` 5/5 against
+  3/5, `o20` 5/5 against 4/5, `o37` 5/5 against 4/5.
+- Bug tasks never run with SeniorOS on Sonnet before (`o9` `o10` `o18` `o34` `o35` `o39`, 3 trials): 18/18 with
+  the wording only and 18/18 with the routing; main 16/18.
+- Control tasks `o9`–`o16` (2 trials): 16/16 at $0.14.
+- The six tasks were used to find the causes, so they are not held out; the untouched bug tasks above are, and main
+  is near the ceiling there. 154 runs, $20.17.
+- Adopted.
+
 ### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
 
 Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2 trials, 78 runs, `--backend grok`:
