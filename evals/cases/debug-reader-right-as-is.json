@@ -1,7 +1,7 @@
 {
   "id": "debug-reader-right-as-is",
   "skill": "senior-debugging",
-  "prompt": "Members deprovisioned through Okta still count toward our seat limit. Fix seatsUsed in src/teams/seats.js. The audit log also reads member records.",
+  "prompt": "Members deprovisioned through Okta still count toward our seat limit. Fix seatsUsed in src/teams/seats.js. Billing, the members list and the audit log also read member records.",
   "expected": {
     "shouldTrigger": true,
     "requiredBehaviors": [

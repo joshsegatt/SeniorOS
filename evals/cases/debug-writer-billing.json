@@ -1,7 +1,7 @@
 {
   "id": "debug-writer-billing",
   "skill": "senior-debugging",
-  "prompt": "Clinics paused from the back office still show up in the active-clinics count on the dashboard. Pausing from the clinic's own settings page works fine. Fix activeClinics in src/stats/clinics.js.",
+  "prompt": "Clinics paused from the back office still show up in the active-clinics count on the dashboard. Pausing from the clinic's own settings page works fine. Invoicing reads the same clinic records. Fix activeClinics in src/stats/clinics.js.",
   "expected": {
     "shouldTrigger": true,
     "requiredBehaviors": [

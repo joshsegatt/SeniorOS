@@ -1,6 +1,6 @@
 ---
 name: senior-debugging
-description: Use when a test, build or runtime behavior fails, a feature regressed, behavior is flaky, a previous fix did not hold, or a report of wrong output or data asks to fix a named function. Not for explaining code that works or reviewing a change without a reported failure.
+description: Use when a test, build or runtime behavior fails, a feature regressed, behavior is flaky, a previous fix did not hold, or a report of wrong output or data comes in, even one that names the function to fix. Not for explaining code that works or reviewing a change without a reported failure.
 ---
 
 # Debugging
@@ -18,7 +18,7 @@ description: Use when a test, build or runtime behavior fails, a feature regress
 7. **State the root cause** — separate the confirmed cause from contributing factors.
 8. **Fix minimally, at the cause** — no opportunistic refactoring. When the cause is in another module than the one reported, fix it there in this change; that is the bug, not extra scope. Ask first only before rewriting data already stored, or another destructive step; say which records stay wrong until then.
 9. **Check every reader before patching one** — if your fix filters, falls back or converts stored records inside one function, stop and search the whole repository for the field or value it handles (`git grep -n "<field>"`). Name each other module that reads it (billing, APIs, pages, feeds, exports, jobs) in your report under **Other readers**, each marked *fixed* or *right as is, because…*. If another reader sees the same bad records, the cause is how they are written: fix the writer so every reader agrees, and do not keep the patch in the reader; records already saved follow step 8.
-   - **Changing the writer is code, not a data change:** do it now, without asking, even when a reader is billing, access or a public API. Make the bad records look exactly like the ones the working path writes for the same action (a member removed in the admin UI, an address saved by web checkout); that path already answers how billing, lists and lookups should treat them. Fix every path that sets or clears the field (create, update, undo, reactivate, import), not only the one in the report.
+   - **Changing the writer is code, not a data change:** do it now, without asking, even when a reader is billing, access or a public API. When another path does the same action correctly (a member removed in the admin UI, an address saved by web checkout), make the bad records look exactly like the ones it writes; that path already answers how billing, lists and lookups should treat them. Fix every path that sets or clears the field (create, update, undo, reactivate, import), not only the one in the report.
 10. **Prove the fix catches the bug** — a regression test that fails without the fix and passes with it. With the `senior` CLI, run `senior prove --regression --test "<command for that test>" --expect-failure "<regex matching the original failure>"` (add `--base <ref>` once the fix is committed): it reverts only the fix, watches the test fail, restores the fix byte-for-byte and re-runs. Without the CLI, do it in one shell command, not one step per turn: run the test with the fix stashed, then restored (for example `git stash push -- <fixed files> && <test>; git stash pop && <test>`), and read the full output rather than a filtered one. Without the fix, the test must fail with the original symptom; a failure from setup, imports or syntax proves nothing.
 11. **Re-run the original reproduction** and the relevant suite.
 
@@ -51,4 +51,4 @@ After three fixes that did not hold, stop patching. Repeated failures in differe
 
 ## Exit criteria
 
-Close debugging only when the root cause is explained with evidence, the other readers are named and each is fixed or shown right as it is, the original failure no longer reproduces, the regression test has been seen failing and passing, relevant verification passes, and remaining uncertainty is stated.
+Close debugging only when the root cause is explained with evidence, the other readers are named, each fixed or shown right as it is, when the fix filters or converts stored records in one reader, the original failure no longer reproduces, the regression test has been seen failing and passing, relevant verification passes, and remaining uncertainty is stated.

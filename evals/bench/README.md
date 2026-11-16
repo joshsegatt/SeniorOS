@@ -605,11 +605,11 @@ clears the field. Same six tasks, `senioros-baseline` = main after the step abov
 
 - By task, both batches: `o36` 5/5 against 0/5, `o38` 4/5 against 0/5, `o17` 5/5 against 2/5, `o19` 5/5 against
   3/5, `o20` 5/5 against 4/5, `o37` 5/5 against 4/5.
-- Bug tasks never run with SeniorOS on Sonnet before (`o9` `o10` `o18` `o34` `o35` `o39`, 3 trials): 18/18 with
-  the wording only and 18/18 with the routing; main 16/18.
+- Other bug tasks, `o18` `o34` `o35` `o39` (never run with SeniorOS on Sonnet before) and `o9` `o10` (also in the
+  control set), 3 trials: 18/18 with the wording only and 18/18 with the routing; main 16/18.
 - Control tasks `o9`–`o16` (2 trials): 16/16 at $0.14.
-- The six tasks were used to find the causes, so they are not held out; the untouched bug tasks above are, and main
-  is near the ceiling there. 154 runs, $20.17.
+- The six tasks were used to find the causes, so they are not held out; `o18` `o34` `o35` `o39` are, and main is near
+  the ceiling there. 154 runs, $20.17.
 - Adopted.
 
 ### Grok (grok-4.7, Grok CLI 1.0.70, November 2026)
