@@ -44,7 +44,8 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 | Model | No pack | Superpowers | mattpocock/skills | compound-engineering | SeniorOS |
 |---|---|---|---|---|---|
 | Claude Opus: a reported bug whose cause is in another module (3 held-out tasks, 5 trials) | 0/15 | 0/15 | 0/15 | 0/15 | **15/15** |
-| Claude Sonnet 5.5: the same kind of bug (4 tasks, 5 trials) | 0/20 | 0/20 | not measured | not measured | **12/20** |
+| Claude Sonnet 5.5: the same kind of bug, SeniorOS 0.11 (6 tasks; no pack 3 trials, SeniorOS 5) | 0/18 | not measured | not measured | not measured | **29/30** |
+| Claude Sonnet 5.5: the same kind of bug, SeniorOS 0.10 (4 tasks, 5 trials) | 0/20 | 0/20 | not measured | not measured | **12/20** |
 | Claude Opus: the same kind of bug, a fifth blind round (3 tasks, 5 trials) | 2/15 | 5/15 | 5/15 | 6/15 | **10/15** |
 | Claude Opus: concurrency, flaky tests, stored-data changes, dependency upgrades (8 tasks, 3 trials) | 23/24 | not measured | not measured | not measured | 24/24 |
 | Claude Opus: discipline (8 core tasks, 3 trials) | 21/24 | 19/24 | 21/24 | 20/24 | **24/24** |
@@ -63,9 +64,11 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 </p>
 
 - **Bugs fixed at the cause.** Asked to fix a reported bug, every arm found the cause. Without SeniorOS the model fixed it where the report pointed, so other paths broken by the same cause stayed broken. With SeniorOS it fixed the module that wrote the bad data.
-- **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked.
+- **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked. In 0.11 the guard also covers Claude Code's PowerShell tool on Windows and closes two rounds of bypasses (flag clusters such as `git push -fu`, `TRUNCATE` without `TABLE`, `sh -c "$(curl …)"`, recursive deletes through PowerShell and .NET).
 - **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
-- **The fix carries to Sonnet 5.5.** On four cause-elsewhere tasks, Sonnet alone and with Superpowers passed none of 20 runs; with SeniorOS, 12 of 20 (p < 0.001), at the same cost per run as Superpowers. Its misses fixed only the module the report named. See [the bench](evals/bench/README.md#opus-set-claude-opus-november-2026).
+- **Sonnet 5.5 fixes the cause, 29 times in 30 (new in 0.11).** On six cause-elsewhere tasks Sonnet alone passed none of 18 runs. SeniorOS 0.10 passed 13 of 30; 0.11 passes 29 of 30 (95% interval 83–99%), at half the cost per passing run ($0.14 against $0.28). Two changes did it: any report of wrong output or data now loads `senior-debugging` (it was skipped in a third of the reports that named the function to fix), and the agent searches every reader of the bad field and fixes the module that writes it, without stopping to ask because a reader is billing. On bug tasks never used for tuning, 0.11 kept 18/18; control tasks 16/16. See [the bench](evals/bench/README.md#load-debugging-for-every-wrong-data-report-and-fix-the-writer-without-asking-sonnet-november-2026).
+- **Backfills that survive a crash (new in 0.11).** A backfill that wrote a ledger entry and then a balance failed in every arm, Opus alone included: a run that died between the two writes left customers short. `senior-engineering` now derives the second write from the first, or uses one transaction; Sonnet passed 4/4 against 0/4. One task, so not yet held out. See [the bench](evals/bench/README.md#two-writes-that-must-agree-sonnet-november-2026).
+- **Rival habits, measured and not adopted.** A seventh blind round tested four habits from Superpowers, gstack and Compound Engineering (a requirement checklist, real data samples first, the reason behind odd code, a test the runner really runs). On Sonnet, SeniorOS already scored 21/24 there, and the variant with the habits scored 21/24 too, so none was added.
 - **A sixth blind round, on other kinds of work.** On concurrency bugs, flaky tests, changes to stored data and dependency upgrades, Opus alone already scored 23/24 and SeniorOS 24/24: no pack can win there, and SeniorOS did not get worse. It cost 45% more per run, in extra turns (a regression test seen failing first, the risk review), not in the rules text. See [the bench](evals/bench/README.md#opus-set-claude-opus-november-2026).
 - **A fifth blind round.** On three new tasks of the same kind, SeniorOS led with 10/15, against 6/15 for the next pack and 2/15 for Opus alone. It won one task 5/5 where the others scored at most 1/5, tied one where every pack passed, and no arm passed the third, whose expected fix rests on an ambiguous product rule. SeniorOS is the only pack whose lead over Opus alone holds statistically (exact test by task, p < 0.001; the others p ≥ 0.08), and it has the lowest cost per passing run ($0.65, against $0.78 to $2.04). Its lead over the next pack, 10/15 against 6/15, is not yet separable at 5 trials. See [the bench](evals/bench/README.md#opus-set-claude-opus-november-2026).
 - **No false claims.** Across all runs, SeniorOS made no false "tests pass" claim.
@@ -367,7 +370,7 @@ The foundation ships with six focused Agent Skills.
 </tr>
 <tr>
 <td align="center"><img src="brand/skills/debugging.svg" width="52" alt="Debugging icon"/></td>
-<td><strong><a href="skills/senior-debugging/SKILL.md">senior-debugging</a></strong><br/>Reproduce, trace, test hypotheses, identify root cause, then fix minimally.</td>
+<td><strong><a href="skills/senior-debugging/SKILL.md">senior-debugging</a></strong><br/>Reproduce, trace, find the root cause, check every reader of the bad data, fix the writer, prove it with a regression test.</td>
 <td align="center"><img src="brand/skills/code-review.svg" width="52" alt="Code review icon"/></td>
 <td><strong><a href="skills/senior-code-review/SKILL.md">senior-code-review</a></strong><br/>Evidence-based review for regressions, scope, security, and change quality.</td>
 </tr>

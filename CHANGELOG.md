@@ -4,9 +4,27 @@ All notable changes to SeniorOS will be documented here.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-16
+
+On Claude Sonnet 5.5, SeniorOS now fixes a bug at its cause in 29 of 30 runs, against 13 of 30 for 0.10 and none of 18 for Sonnet alone, at half the cost per passing run.
+
+### Changed
+
+- Routing: any report of wrong output or data, even one that names the function to fix, loads `senior-debugging` before the code is read. It was skipped in 14 of 42 such runs, and those passed 5/14 against 26/28 with it loaded.
+- `senior-debugging`: a new step 9 has the agent search every reader of the field it is about to filter or convert, list them under **Other readers**, each fixed or right as is, and fix the writer when another reader sees the same bad records. Changing the writer is code, not a data change: it is done without asking even when a reader is billing, copies what the working path writes for the same action, and covers every path that sets or clears the field. Only rewriting saved records still needs approval. Sonnet, six cause-elsewhere tasks: 21/30 against 9/30 for the step alone, then 29/30 (95% Wilson 83–99%) against 13/30 with the routing, $0.14 against $0.28 per pass; bug tasks not used for tuning 18/18, control 16/16.
+- `senior-engineering`: when one operation writes two or more records that must agree, use one transaction, or derive the later write from the earlier one, or record each write as done, and test a run that stops after each write. `o49` (a backfill that failed in every arm, Opus alone included): 4/4 against 0/4.
+
 ### Added
 
+- Bench: a seventh blind round (`o48`–`o55`) on data already saved and on habits from Superpowers, gstack and Compound Engineering. Opus alone 2/2 on six, `o53` 1/2, `o49` 0/2. A variant of SeniorOS with four of those habits tied main at 21/24 on Sonnet and was not adopted.
+- Bench: arms that switch the Claude Code hooks on one at a time (`senioros-rules`, `senioros-rules-guard`, `senioros-importers`) and an experimental importers-first gate, off by default. Measured, not adopted.
 - `plugins/senioros/`: a skills-only edition for the Claude plugin directory, which accepts from unverified publishers only Markdown, text, JSON and images, and no hooks. `npm run gen:rules` copies the skills, license, icon and manifest into it, and `npm test` fails when the copy is out of date. The guard and the finish gate stay in the full plugin from the repository's marketplace.
+
+### Fixed
+
+- Guard: Claude Code on Windows runs commands through its `PowerShell` tool, which the guard never saw; the hook matcher and the guard now include it, and the Claude Code hooks say on stderr when they did not run. Two review rounds closed bypasses, each with a test: force flags inside clusters (`git push -fu`), `git clean -d -f`, `TRUNCATE` without `TABLE` inside a database client, `rmdir /q /s`, a downloaded script run as the script itself (`sh -c "$(curl …)"`, `bash <(curl …)`, `eval`, `iex (irm …)`, also piped into `sudo`), `git checkout HEAD .`, and recursive deletes through PowerShell pipelines and .NET.
+- Antigravity installer: a reinstall no longer wipes edited hook scripts (each script's sha256 is recorded; `--force` saves the folder once and uninstall restores it), and the config is validated before anything is copied.
+- Routing: `senior-project-intelligence` and `senior-skill-authoring` were never routed on any host; each now has a routing line. A regression proof needs the original symptom, not just any failure.
 
 ## [0.10.1] - 2026-11-11
 
