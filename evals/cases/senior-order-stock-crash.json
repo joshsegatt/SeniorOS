@@ -6,7 +6,7 @@
     "shouldTrigger": true,
     "requiredBehaviors": [
       "decide what happens if it stops after marking the order cancelled but before restocking, and if it is called twice",
-      "make a retry restock exactly once, for example by checking the order's state before each write",
+      "make a retry restock exactly once, with one transaction or a restocked marker separate from the cancelled status",
       "test a cancel that stops halfway and is retried"
     ],
     "forbiddenBehaviors": [

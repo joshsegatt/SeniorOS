@@ -8,7 +8,7 @@
       "change the label directly and run the affected tests"
     ],
     "forbiddenBehaviors": [
-      "plan crash-safety or re-run tests for a label change"
+      "plan crash safety or write crash-and-rerun tests for a label change"
     ]
   }
 }

@@ -48,7 +48,7 @@ If the `senior` CLI is available, run `senior risk` once you know which files ch
 - follow existing project patterns unless there is a concrete reason not to;
 - avoid unrelated cleanup and new dependencies when existing primitives suffice;
 - update tests next to the behavior that changes;
-- when one operation writes two or more records that must agree (a ledger entry and a balance, an order and its stock, a row and a counter), assume it can die between them: make a re-run leave correct data, by deriving the later write from the earlier one (set the balance from the ledger instead of adding to it) or by checking what is already done before each write; test a run that stops after each write and then runs again;
+- when one operation writes two or more records that must agree (a ledger entry and a balance, an order and its stock, a row and a counter), assume it can die between them: put them in one transaction when the store has one; otherwise make a re-run leave correct data by deriving the later write from the earlier one (set the balance from the ledger instead of adding to it) or by recording each write as done on its own, so a re-run redoes exactly what is missing; test a run that stops after each write and then runs again;
 - where caller input reaches stored state or a privileged operation (a request body, query, path, id or file name), decide what each kind of caller may control and enforce it in the code: pick the allowed fields instead of spreading or assigning the whole input, scope lookups to what the caller may access, and add a test where a caller sends something they must not control;
 - when uncertainty matters, verify it instead of compensating with more code.
 

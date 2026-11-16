@@ -597,7 +597,7 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
 
 ### Two writes that must agree (Sonnet, November 2026)
 
-`o49-points-backfill` (seventh blind round) asks for a backfill whose every award writes a ledger entry and then a
+`o49-points-backfill` (seventh blind round, added in #76) asks for a backfill whose every award writes a ledger entry and then a
 balance. Every arm failed it, Opus alone included (0/2, and main 0/3 on Sonnet): the scripts skipped orders already
 in the ledger but added to the stored balance, so a run that died between the two writes left a customer short.
 `senior-engineering` now says, when one operation writes two or more records that must agree, to assume it can die
