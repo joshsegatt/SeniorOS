@@ -64,7 +64,10 @@ test("amounts with the Swiss thousands separator (6'400.00)", () => {
 });
 
 test('a statement with no transactions: an empty file, or only the header', () => {
-  assert.deepEqual(importText(''), { imported: 0, txs: [] });
+  // The ticket says a file without the header is refused, so a 0-byte file may import nothing or be refused; either way no rows.
+  let empty;
+  try { empty = importText(''); } catch (e) { assert.match(String(e?.message), /not an Alpstein Bank statement/); }
+  if (empty) assert.deepEqual(empty, { imported: 0, txs: [] });
   assert.deepEqual(importText(`${HEADER}\r\n`), { imported: 0, txs: [] });
   assert.deepEqual(importText(`﻿${HEADER}\r\n`), { imported: 0, txs: [] });
 });
