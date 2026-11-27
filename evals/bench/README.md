@@ -683,11 +683,10 @@ Codex login offered) through the `codex` backend, with the user's `~/.agents/ski
 
 - Alone, both fixed only the function the report named, in about five tool calls; Fable's one pass was on `o38`.
 - Fable cost $0.46 a run alone and about $0.65 with SeniorOS: $5.57 against $0.65 per passing run. Codex runs on a
-  ChatGPT login report no cost.
+  ChatGPT login report no cost. Total spend on Fable, including the overloaded runs: $14.91.
 - Eight Fable runs with SeniorOS first ended on API overload (529) before the agent worked; they were rerun one at a
   time and the overloaded runs are not counted.
 - These tasks were used to tune 0.11 on Sonnet, so they are not held out; no SeniorOS text was tuned on either model.
-  $14.91 on Fable.
 
 ### Two writes that must agree (Sonnet, November 2026)
 
