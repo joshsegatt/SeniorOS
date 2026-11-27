@@ -693,7 +693,7 @@ under **Not applied**. Sonnet, `senioros-baseline` = SeniorOS before the line, s
 |---|---|---|
 | `i5`, 4 trials (two batches) | **3/4** | 0/4 |
 | `i7` `i8` `i9`, written after the line, 2 trials | 6/6 | 6/6 |
-| Control: `i1`–`i4` `i6` `o36` `o38` `h20` `h22`, 1 trial | 9/9 | 7/8 (first wording) |
+| Control: `i1`–`i4` `i6` `o36` `o38` `h20` `h22`, 1 trial | 9/9 | 7/8 (same tasks without `i3`, which ran 2/2 in both arms as dev) |
 
 - The first wording (goal and method only, no claim check) tied on `i5` (0/2 against 0/2); the claim check is what
   moved it.

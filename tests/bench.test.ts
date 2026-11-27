@@ -291,6 +291,9 @@ test('evolve splits a scan, judges a candidate and reads the proposer and test o
   assert.deepEqual(e.decide(g(1, 0, 1, 0, 8, 8)).reasons, ['dev gain 1 < 2']);
   assert.match(e.decide(g(4, 0, 0, 1, 8, 8)).reasons.join(), /holdout 0 < 1/);
   assert.match(e.decide(g(4, 0, 2, 0, 7, 8)).reasons.join(), /control 7 < 8/);
+  const lost = g(4, 0, 1, 0, 8, 8);
+  lost.dev.b.runs = 0;
+  assert.match(e.decide(lost).reasons.join(), /dev runs differ: 4 vs 0/, 'runs lost to the API on one side give no verdict');
 
   assert.equal(e.parseHypothesis('done.\n{"hypothesis": "Agents skip the \\"writer\\" step"}'), 'Agents skip the "writer" step');
   assert.equal(e.parseHypothesis('no json here'), null);

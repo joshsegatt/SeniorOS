@@ -86,6 +86,8 @@ export function decide(g, { minGain = 2 } = {}) {
   const need = Math.max(minGain, Math.ceil(g.dev.c.runs / 4));
   const reasons = [];
   if (g.dev.c.runs === 0) reasons.push('no dev runs');
+  // A run lost to the API on one side makes raw counts incomparable: no verdict rather than a wrong one.
+  for (const k of ['dev', 'holdout', 'control']) if (g[k].c.runs !== g[k].b.runs) reasons.push(`${k} runs differ: ${g[k].c.runs} vs ${g[k].b.runs}`);
   if (devGain < need) reasons.push(`dev gain ${devGain} < ${need}`);
   if (g.holdout.c.pass < g.holdout.b.pass) reasons.push(`holdout ${g.holdout.c.pass} < ${g.holdout.b.pass}`);
   if (g.control.c.pass < g.control.b.pass) reasons.push(`control ${g.control.c.pass} < ${g.control.b.pass}`);

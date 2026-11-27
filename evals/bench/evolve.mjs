@@ -13,7 +13,7 @@
 //          [--trials 2] [--parallel 3] [--budget 25] [--pr]
 // Needs what the claude bench needs (a login in CLAUDE_CODE_OAUTH_TOKEN, no user CLAUDE.md reaching the runs).
 import { spawn, spawnSync } from 'node:child_process';
-import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { BENCH_HOME, REPO_ROOT, loadTasks } from './lib/util.mjs';
 import { EDITABLE, decide, failedTestNames, parseHypothesis, proposerPrompt, readLog, readResults, splitScan, tally } from './lib/evolve.mjs';
@@ -63,14 +63,18 @@ function evidence(task, file) {
   const repo = join(BENCH_HOME, 'runs', r.runId, 'repo');
   let failedTests = [];
   let changed = [];
-  if (existsSync(repo)) {
+  // Run folders are reused by later batches (same task, arm and trial): one newer than the result describes another run.
+  const meta = join(BENCH_HOME, 'runs', r.runId, 'meta.json');
+  if (existsSync(repo) && existsSync(meta) && statSync(meta).mtimeMs <= statSync(file).mtimeMs) {
     changed = sh('git', ['status', '--porcelain'], repo).stdout.split('\n').filter(Boolean).map((l) => l.slice(3));
     const hidden = join(task.dir, 'hidden');
     if (existsSync(hidden)) {
       const target = join(repo, 'test', '__evolve__');
       cpSync(hidden, target, { recursive: true });
       const { NODE_TEST_CONTEXT: _p, ...env } = process.env;
-      const t = spawnSync(process.execPath, ['--test', 'test/__evolve__/'], { cwd: repo, env, encoding: 'utf8', timeout: 120_000 });
+      // Bonus tests are not graded, so they are not shown as what the user needed.
+      const core = readdirSync(hidden).filter((f) => f.endsWith('.test.js') && !f.endsWith('.bonus.test.js')).map((f) => `test/__evolve__/${f}`);
+      const t = spawnSync(process.execPath, ['--test', ...core], { cwd: repo, env, encoding: 'utf8', timeout: 120_000 });
       failedTests = failedTestNames(`${t.stdout}\n${t.stderr}`);
       rmSync(target, { recursive: true, force: true });
     }
@@ -88,6 +92,9 @@ function evidence(task, file) {
 
 async function main() {
   mkdirSync(work, { recursive: true });
+  // The candidate is cut from HEAD and the baseline is this working tree: uncommitted skill text would be measured too.
+  const dirty = sh('git', ['status', '--porcelain', '--', 'skills', 'rules', 'adapters', 'plugins'], REPO_ROOT).stdout.trim();
+  if (dirty) throw new Error(`commit or stash these first, the baseline would include them:\n${dirty}`);
   const tasks = Object.fromEntries(loadTasks().map((t) => [t.id, t]));
 
   // 1. Scan
@@ -98,7 +105,8 @@ async function main() {
     scanDir = await bench(REPO_ROOT, ['--arms', 'senioros', '--tasks', pool.join(','), '--trials', '1', '--parallel', PARALLEL]);
   }
   const scan = readResults(scanDir);
-  spent += scan.costUsd;
+  // A scan read with --from was paid for by an earlier run.
+  if (!opt('from')) spent += scan.costUsd;
   // 2. Split
   const split = splitScan(scan.byTask, 'senioros', { seed: scanDir });
   console.log(`\n== Split (scan cost $${scan.costUsd.toFixed(2)}): dev ${split.dev.join(' ') || '-'} | holdout ${split.holdout.join(' ') || '-'} | control ${split.control.length} tasks`);
@@ -121,11 +129,15 @@ async function main() {
     const p = spawnSync('claude', ['-p', '--model', PROPOSER, '--setting-sources', 'project', '--strict-mcp-config', '--no-session-persistence',
       '--permission-mode', 'acceptEdits', '--allowedTools', 'Read,Edit,Write,Grep,Glob', '--output-format', 'json'],
       { cwd: cand, input: prompt, encoding: 'utf8', timeout: 25 * 60_000, shell: process.platform === 'win32', maxBuffer: 64 * 1024 * 1024 });
+    // A proposer that timed out or crashed may have left a half-written edit: nothing is measured.
+    if (p.status !== 0 || p.error) return record({ scan: scanDir, verdict: 'proposer-failed', reasons: [String(p.error?.message ?? `exit ${p.status}${p.signal ? ` ${p.signal}` : ''}`)] });
     let result = {};
     try { result = JSON.parse(p.stdout); } catch {}
     spent += result.total_cost_usd ?? 0;
     const hypothesis = parseHypothesis(result.result) ?? '(no hypothesis line)';
-    const files = sh('git', ['status', '--porcelain'], cand).stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/\\/g, '/'));
+    // New files count as changes too: intent-to-add puts them in the diff, -uall lists them one by one.
+    sh('git', ['add', '-N', '.'], cand);
+    const files = sh('git', ['status', '--porcelain', '-uall'], cand).stdout.split('\n').filter(Boolean).map((l) => l.slice(3).replace(/\\/g, '/'));
     const diff = sh('git', ['diff'], cand).stdout;
     console.log(`Hypothesis: ${hypothesis}\nFiles: ${files.join(', ') || 'none'}`);
     const base = { scan: scanDir, hypothesis, files, diff: diff.slice(0, 8000), dev: null, split };
@@ -145,6 +157,7 @@ async function main() {
     // Codex has no baseline arm: the current SeniorOS runs as `senioros` from this checkout, in a second batch.
     let vDir;
     let v;
+    try {
     if (BACKEND === 'codex') {
       const runs = ['--arms', 'senioros', '--tasks', groups.join(','), '--trials', TRIALS, '--parallel', PARALLEL];
       const cDir = await bench(cand, runs);
@@ -158,6 +171,11 @@ async function main() {
       vDir = await bench(cand, ['--arms', 'senioros,senioros-baseline', '--tasks', groups.join(','), '--trials', TRIALS, '--parallel', PARALLEL], { ...process.env, SENIOROS_BENCH_BASELINE: REPO_ROOT });
       v = readResults(vDir);
     }
+    } catch (e) {
+      // The proposal was paid for: a crashed verify still goes to the log, so it is not tried again blind.
+      record({ ...base, verdict: 'error', reasons: [String(e.message ?? e)], spent: Number(spent.toFixed(2)) });
+      throw e;
+    }
     spent += v.costUsd;
     const g = Object.fromEntries(['dev', 'holdout', 'control'].map((k) => [k, { c: tally(v.byTask, split[k], 'senioros'), b: tally(v.byTask, split[k], 'senioros-baseline') }]));
     // 5. Decide
@@ -168,7 +186,8 @@ async function main() {
     // 7. Pull request
     if (d.adopt && argv.includes('--pr')) {
       const branch = `evolve/${stamp.slice(0, 16)}`;
-      appendFileSync(join(cand, 'evals', 'bench', 'evolution', 'log.jsonl'), `${JSON.stringify({ at: new Date().toISOString(), model: MODEL, proposer: PROPOSER, ...entry })}\n`);
+      // The pull request carries the same log the next local cycle reads.
+      cpSync(LOG, join(cand, 'evals', 'bench', 'evolution', 'log.jsonl'));
       for (const args of [['checkout', '-b', branch], ['add', 'skills', 'rules', 'plugins', 'adapters', 'evals/bench/evolution'], ['commit', '-m', `evolve: ${hypothesis.slice(0, 60)}`], ['push', '-u', 'origin', branch]]) {
         const s = sh('git', args, cand);
         if (s.status !== 0) throw new Error(`git ${args[0]} failed: ${s.stderr}`);
