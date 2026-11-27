@@ -266,3 +266,35 @@ test('LEADERBOARD.md is current with the submissions', () => {
   const result = spawnSync(process.execPath, [path.join(root, 'evals', 'bench', 'bench.mjs'), 'leaderboard', '--check'], { cwd: root, encoding: 'utf8' });
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
 });
+
+test('evolve splits a scan, judges a candidate and reads the proposer and test output', async () => {
+  const e = (await import(pathToFileURL(path.join(root, 'evals', 'bench', 'lib', 'evolve.mjs')).href)) as {
+    splitScan: (b: Record<string, Record<string, { pass: number; runs: number }>>, arm: string, o: { seed: string }) => { dev: string[]; holdout: string[]; control: string[] };
+    decide: (g: Record<string, { c: { pass: number; runs: number }; b: { pass: number; runs: number } }>) => { adopt: boolean; reasons: string[] };
+    parseHypothesis: (t: string) => string | null;
+    failedTestNames: (t: string) => string[];
+    EDITABLE: RegExp;
+  };
+  const byTask = Object.fromEntries(['a', 'b', 'c', 'd', 'e'].map((t, i) => [t, { senioros: { pass: i < 3 ? 0 : 1, runs: 1 } }]));
+  const s = e.splitScan(byTask, 'senioros', { seed: 'x' });
+  assert.deepEqual(e.splitScan(byTask, 'senioros', { seed: 'x' }), s, 'the same scan splits the same way');
+  assert.deepEqual([...s.dev, ...s.holdout].sort(), ['a', 'b', 'c']);
+  assert.equal(s.dev.length, 2);
+  assert.deepEqual([...s.control].sort(), ['d', 'e']);
+
+  const g = (dc: number, db: number, hc: number, hb: number, cc: number, cb: number) => ({
+    dev: { c: { pass: dc, runs: 4 }, b: { pass: db, runs: 4 } },
+    holdout: { c: { pass: hc, runs: 4 }, b: { pass: hb, runs: 4 } },
+    control: { c: { pass: cc, runs: 8 }, b: { pass: cb, runs: 8 } },
+  });
+  assert.equal(e.decide(g(3, 0, 1, 0, 8, 8)).adopt, true);
+  assert.deepEqual(e.decide(g(1, 0, 1, 0, 8, 8)).reasons, ['dev gain 1 < 2']);
+  assert.match(e.decide(g(4, 0, 0, 1, 8, 8)).reasons.join(), /holdout 0 < 1/);
+  assert.match(e.decide(g(4, 0, 2, 0, 7, 8)).reasons.join(), /control 7 < 8/);
+
+  assert.equal(e.parseHypothesis('done.\n{"hypothesis": "Agents skip the \\"writer\\" step"}'), 'Agents skip the "writer" step');
+  assert.equal(e.parseHypothesis('no json here'), null);
+  assert.deepEqual(e.failedTestNames('✔ ok (1ms)\n✖ session 2: money uses cents (2.1ms)\n✖ failing tests:\n✖ session 2: money uses cents (2.1ms)'), ['session 2: money uses cents']);
+  for (const f of ['skills/senior-debugging/SKILL.md', 'skills/senior-finish/references/x.md', 'rules/core.md']) assert.match(f, e.EDITABLE);
+  for (const f of ['src/index.ts', 'adapters/shared/guard.mjs', 'evals/bench/tasks/x.json', 'rules/senioros.md']) assert.doesNotMatch(f, e.EDITABLE);
+});
