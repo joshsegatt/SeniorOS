@@ -1,0 +1,10 @@
+{
+  "name": "month-close-reconciliation",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "report": "node scripts/monthly-report.js"
+  }
+}

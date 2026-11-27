@@ -1,0 +1,37 @@
+[
+  {
+    "source": "ubs",
+    "rows": [
+      { "date": "01.10.2026", "text": "Transfer from savings", "amount": "12'500.00" },
+      { "date": "03.10.2026", "text": "Office rent October", "amount": "-3'200.00" },
+      { "date": "15.10.2026", "text": "Client invoice 2026-114", "amount": "1’234.55" },
+      { "date": "31.10.2026", "text": "Account fees", "amount": "-12.40" }
+    ]
+  },
+  {
+    "source": "sparkasse",
+    "rows": [
+      { "date": "02.10.2026", "text": "Kunde Weber GmbH", "amount": "4.800,00" },
+      { "date": "09.10.2026", "text": "Lieferant Holz AG", "amount": "-1.234,56" },
+      { "date": "20.10.2026", "text": "Lastschrift Telekom", "amount": "89,90-" },
+      { "date": "31.10.2026", "text": "Zinsen", "amount": "0,05" }
+    ]
+  },
+  {
+    "source": "qonto",
+    "rows": [
+      { "date": "2026-10-05", "text": "Virement client Dupont", "amount": "2 450,00" },
+      { "date": "2026-10-12", "text": "URSSAF", "amount": "−320,10" },
+      { "date": "2026-10-28", "text": "Remboursement frais", "amount": "15,5" }
+    ]
+  },
+  {
+    "source": "amex",
+    "rows": [
+      { "date": "10/04/2026", "text": "AWS", "amount": "1,299.99" },
+      { "date": "10/11/2026", "text": "Refund - hotel", "amount": "(45.00)" },
+      { "date": "10/18/2026", "text": "FX rounding", "amount": "0.01" },
+      { "date": "10/30/2026", "text": "Payment received", "amount": "-250.5" }
+    ]
+  }
+]

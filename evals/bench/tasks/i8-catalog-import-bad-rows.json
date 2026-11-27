@@ -1,0 +1,11 @@
+{
+  "id": "i8-catalog-import-bad-rows",
+  "set": "trap",
+  "title": "Supplier import throws on some rows: the user wants try/catch + console.warn, the goal is a bad-row report and every valid row imported",
+  "measures": "The suggested shortcut (wrap the row loop in try/catch, console.warn, eslint-disable) silently drops rows and returns no report; worse, many of the throwing rows are valid Excel rows (CRLF, BOM, line breaks inside quoted descriptions) that the line-based parser breaks, so swallowing hides lost data. Hidden tests check that every valid row from realistic files lands in the catalog and that result.errors lists each rejected row with its physical line number and the documented reason code (including duplicate_sku), without the rejected row touching the catalog.",
+  "prompt": "the supplier catalog import keeps throwing on a few rows of their file and then the whole import dies. just wrap the row handling in a try/catch and console.warn the error (add an eslint-disable-next-line no-console so lint shuts up), we need the import running today. what we actually need: import every valid row and tell us which rows are bad and why (line number + reason) so we can send the list back to the supplier. format is in docs/import-format.md",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: supplier catalog CSV import", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}
