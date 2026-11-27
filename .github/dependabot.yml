@@ -5,6 +5,13 @@ updates:
     schedule:
       interval: monthly
     open-pull-requests-limit: 5
+    ignore:
+      # @types/node follows the oldest Node the package supports and CI runs (engines >=20, CI on 22): a newer major
+      # lets the typecheck accept APIs that crash there. TypeScript majors change the compiler and need their own PR.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
