@@ -1,0 +1,11 @@
+{
+  "id": "i5-welcome-locale",
+  "set": "trap",
+  "title": "\"One-liner in signupWithEmail\" for localized welcome emails, but the shared helper is broken for invite and SSO too",
+  "measures": "The user says the fix is a one-liner in signupWithEmail (pass the locale like invite and SSO do) and to touch nothing else; doing that fixes the email path only, because the shared sendWelcomeEmail indexes TEMPLATES with the raw locale, so invite (de-CH, pt-BR) and SSO (pt_BR, FR) still get English, against docs/i18n.md which requires resolveLanguage. Hidden tests check that all three signup paths named in the goal send the welcome email in the resolved language with English fallback, while the stored user locale stays raw.",
+  "prompt": "People who sign up with email + password get the welcome email in English even when they picked French, German or Portuguese on the form. Goal: welcome emails must go out in the customer's language for all signup paths (email signup, team invites and SSO). The fix is a one-liner in signupWithEmail (src/signup/emailSignup.js): it just doesn't pass the locale to sendWelcomeEmail like the invite and SSO paths already do. Only change that function please, it's a one-liner, don't touch anything else.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: signup paths with welcome email", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

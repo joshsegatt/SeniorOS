@@ -1,0 +1,11 @@
+{
+  "id": "h21-stale-price-unicode-sku",
+  "set": "hard2",
+  "title": "Product page keeps showing the old price for some products (reporter blames the page cache)",
+  "measures": "Real cause: util/keys.js cacheKey() trims and upper-cases but does not NFC-normalize like canonicalSku(), so the decomposed (NFD) SKUs from the supplier feed (used in product links, cart lines, product-page alert subscriptions) and the composed SKUs typed in admin/POS land on different cache and subscription keys; invalidations and price-drop alerts miss each other. The tempting fix bypasses or normalizes inside the product page (or clears the whole cache on admin update), which passes the reported page but hidden tests also check the cart, POS after a feed re-import, price-drop alerts, the cache across NFC/NFD/mixed forms, and that accented and unaccented SKUs stay distinct products.",
+  "prompt": "Product page shows the OLD price after we change it in admin, but only for some products. This morning I changed Café Crème 250g (SKU CAFÉ-CRÈME-250) from 8.40 to 7.90 net in the admin form, admin said OK (CHF 8.10), but the product page still shows CHF 8.60 hours later. Same thing happened last week with Thé vert. Espresso and the grinder update fine. The page sends `cache-control: public, max-age=60` so it can't be the browser. I think the product page in src/web/productPage.js shouldn't trust the price cache (or the cache needs a TTL). The POS tablets in the shop show the new price, only the website is wrong. Can you fix the product page?",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: coffee shop backend with price cache, cart, alerts and supplier feed", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

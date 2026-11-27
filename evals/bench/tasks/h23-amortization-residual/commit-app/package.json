@@ -1,0 +1,7 @@
+{
+  "name": "loanbook",
+  "version": "0.4.2",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "node --test" }
+}

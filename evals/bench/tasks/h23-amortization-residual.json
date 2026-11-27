@@ -1,0 +1,31 @@
+{
+  "id": "h23-amortization-residual",
+  "set": "hard2",
+  "title": "Amortization schedule drifts a few cents from the bank on long loans",
+  "measures": "Correct math: exact rational interest per month rounded half-to-even, level payment = exact annuity formula rounded up (ceiling of an exact value, 0% = ceil(B/n)), schedule stops on the first month where balance + interest fits in one payment, and a rate change re-amortizes over months - m + 1. The tempting fix rounds the float interest per month with a float half-even and puts the residual on the last row, which matches the issue example but fails hidden tests on near-tie interest, exact-integer annuity payments that float ceil bumps by a cent, 0% loans, early payoff, and step-rate re-amortization.",
+  "prompt": "Reconciliation flagged us again. For a 250,000.00 loan at 6.5% over 360 months the bank statement says total interest 318,853.84 and a final payment of 1,569.22. We print 318,853.81 and 1,569.18. We see the same few-cent drift on most long loans. The rules we have to follow are in the README and docs/rounding.md (copied from the bank product sheet). Please make our schedules match the bank to the cent.",
+  "timeoutMinutes": 15,
+  "setup": {
+    "commits": [
+      {
+        "message": "feat: amortization schedules with step rates",
+        "dir": "commit-app"
+      }
+    ]
+  },
+  "allowedPaths": [
+    "src/**",
+    "test/**",
+    "data/**",
+    "scripts/**",
+    "docs/**",
+    "*.md",
+    ".senior/**",
+    "package.json"
+  ],
+  "pass": [
+    "hidden",
+    "scope",
+    "visible"
+  ]
+}

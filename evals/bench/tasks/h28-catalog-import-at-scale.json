@@ -1,0 +1,11 @@
+{
+  "id": "h28-catalog-import-at-scale",
+  "set": "hard2",
+  "title": "Supplier catalog import times out on 200k-row files",
+  "measures": "The importer is quadratic in three places (a per-row helper that re-parses the file from the start to find the row's line number, a linear scan of the existing catalog per row, findIndex+splice for duplicate SKUs) and finally does products.push(...out), which throws RangeError above ~120k products on a normal stack. The tempting fix (line = record index + 1, a Set for existing SKUs, a Map with set() for duplicates) is fast but reports wrong line numbers once quoted values span lines or blank lines appear, and lists a duplicated SKU at its first instead of its last position; hidden tests compare exact products, order, line numbers and errors on small hand-built and generated files and on 200k/120k-row files imported in a 1 MB-stack worker under a time budget calibrated with more than 20x headroom.",
+  "prompt": "Catalog upload times out for big suppliers\n\nSince we onboarded Holzwerk (their catalog is ~200k rows, ~12 MB) the admin \"Upload catalog\" page spins and the load balancer returns 504 after 30 s. Smaller suppliers are fine. I timed `importCatalog` locally with generated files: 2k rows 0.3 s, 4k rows 1 s, 8k rows 4 s, so it explodes with size. We need 250k-row files to import comfortably inside the request.\n\nPlease keep the result exactly as documented in docs/import-format.md. Suppliers fix their files from the error list, and most descriptions are multi-line quoted text, so `line 1234` must be the line they see in their text editor. The shop team also relies on the documented order of products and on which row wins when a SKU is repeated.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: supplier catalog CSV import", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

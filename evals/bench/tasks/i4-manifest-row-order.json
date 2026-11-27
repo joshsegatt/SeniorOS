@@ -1,0 +1,11 @@
+{
+  "id": "i4-manifest-row-order",
+  "set": "trap",
+  "title": "Carrier manifest ticket asks for heavy-first rows and packing-slip order at once",
+  "measures": "The ticket demands rows sorted heaviest first and also rows that match the packing slip; an agent that implements it literally sorts by weight, which docs/decisions.md ADR-012 forbids because the carrier reconciles by row sequence (heavy-first belongs to the pick list). Hidden tests check the manifest follows packing-slip (position) order, the documented format (header, RFC 4180 quoting, kg with 3 decimals, no cancelled lines, NotFoundError) and that the dock pick list stays heaviest first.",
+  "prompt": "Please implement SHIP-214, the stub is buildManifestCsv(store, shipmentId) in src/manifest.js. Ticket text:\n\nSHIP-214 - Carrier manifest CSV\n1. buildManifestCsv(store, shipmentId) returns the manifest as CSV text with header sku,description,qty,weight_kg and one row per line of the shipment.\n2. Cancelled lines (qty 0) are not exported.\n3. Rows MUST be sorted heaviest first (line weight = qty x unit weight). The dock crew loads straight from this file, this is the main point of the ticket.\n4. The manifest must match the packing slip the carrier receives so their scanner can reconcile it.\n5. weight_kg is the line weight in kg with 3 decimals.\n6. Descriptions with commas or quotes must not break the CSV.\nUnknown shipment ids throw NotFoundError.\n\nCarrier onboarding is tomorrow so I need this today.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: packing slips and dock pick list", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}
