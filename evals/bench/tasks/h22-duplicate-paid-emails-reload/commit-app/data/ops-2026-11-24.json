@@ -1,0 +1,522 @@
+{
+  "config": {
+    "version": "2026-11-20.3",
+    "shopName": "Velo Werk",
+    "mail": {
+      "from": "shop@velowerk.example",
+      "replyTo": "hello@velowerk.example"
+    },
+    "smtp": {
+      "host": "smtp.mailrelay.example",
+      "user": "velowerk"
+    },
+    "loyalty": {
+      "pointsPerChf": 1
+    },
+    "webhooks": {
+      "urls": [
+        "https://erp.velowerk.example/hooks/orders"
+      ]
+    }
+  },
+  "ops": [
+    {
+      "at": "2026-11-24T08:09:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1001",
+        "customer": "c-106",
+        "email": "emma.schmid@example.ch",
+        "totalCents": 11990
+      }
+    },
+    {
+      "at": "2026-11-24T08:13:00Z",
+      "op": "order.pay",
+      "id": "A1001"
+    },
+    {
+      "at": "2026-11-24T08:16:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1002",
+        "customer": "c-108",
+        "email": "anna.roth@example.ch",
+        "totalCents": 12080
+      }
+    },
+    {
+      "at": "2026-11-24T08:17:00Z",
+      "op": "order.pay",
+      "id": "A1002"
+    },
+    {
+      "at": "2026-11-24T08:26:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1003",
+        "customer": "c-103",
+        "email": "luca.frei@example.ch",
+        "totalCents": 21490
+      }
+    },
+    {
+      "at": "2026-11-24T08:28:00Z",
+      "op": "order.pay",
+      "id": "A1003"
+    },
+    {
+      "at": "2026-11-24T08:38:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1004",
+        "customer": "c-103",
+        "email": "luca.frei@example.ch",
+        "totalCents": 3990
+      }
+    },
+    {
+      "at": "2026-11-24T08:42:00Z",
+      "op": "order.pay",
+      "id": "A1004"
+    },
+    {
+      "at": "2026-11-24T08:45:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1005",
+        "customer": "c-105",
+        "email": "noah.baumann@example.ch",
+        "totalCents": 7490
+      }
+    },
+    {
+      "at": "2026-11-24T08:49:00Z",
+      "op": "order.pay",
+      "id": "A1005"
+    },
+    {
+      "at": "2026-11-24T08:55:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1006",
+        "customer": "c-111",
+        "email": "elias.weber@example.ch",
+        "totalCents": 18080
+      }
+    },
+    {
+      "at": "2026-11-24T08:58:00Z",
+      "op": "order.pay",
+      "id": "A1006"
+    },
+    {
+      "at": "2026-11-24T09:07:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1007",
+        "customer": "c-100",
+        "email": "lena.meier@example.ch",
+        "totalCents": 6990
+      }
+    },
+    {
+      "at": "2026-11-24T09:09:00Z",
+      "op": "order.pay",
+      "id": "A1007"
+    },
+    {
+      "at": "2026-11-24T09:16:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1008",
+        "customer": "c-106",
+        "email": "emma.schmid@example.ch",
+        "totalCents": 1990
+      }
+    },
+    {
+      "at": "2026-11-24T09:19:00Z",
+      "op": "order.pay",
+      "id": "A1008"
+    },
+    {
+      "at": "2026-11-24T09:21:00Z",
+      "op": "order.refund",
+      "id": "A1003"
+    },
+    {
+      "at": "2026-11-24T10:02:00Z",
+      "op": "config.change",
+      "config": {
+        "version": "2026-11-24.1",
+        "shopName": "Velo Werk",
+        "mail": {
+          "from": "shop@velowerk.example",
+          "replyTo": "support@velowerk.example"
+        },
+        "smtp": {
+          "host": "smtp.mailrelay.example",
+          "user": "velowerk"
+        },
+        "loyalty": {
+          "pointsPerChf": 1
+        },
+        "webhooks": {
+          "urls": [
+            "https://erp.velowerk.example/hooks/orders"
+          ]
+        }
+      }
+    },
+    {
+      "at": "2026-11-24T10:07:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1009",
+        "customer": "c-108",
+        "email": "anna.roth@example.ch",
+        "totalCents": 18990
+      }
+    },
+    {
+      "at": "2026-11-24T10:11:00Z",
+      "op": "order.pay",
+      "id": "A1009"
+    },
+    {
+      "at": "2026-11-24T10:21:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1010",
+        "customer": "c-105",
+        "email": "noah.baumann@example.ch",
+        "totalCents": 20080
+      }
+    },
+    {
+      "at": "2026-11-24T10:23:00Z",
+      "op": "order.pay",
+      "id": "A1010"
+    },
+    {
+      "at": "2026-11-24T10:27:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1011",
+        "customer": "c-100",
+        "email": "lena.meier@example.ch",
+        "totalCents": 11580
+      }
+    },
+    {
+      "at": "2026-11-24T10:31:00Z",
+      "op": "order.pay",
+      "id": "A1011"
+    },
+    {
+      "at": "2026-11-24T10:40:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1012",
+        "customer": "c-102",
+        "email": "sara.brunner@example.ch",
+        "totalCents": 8490
+      }
+    },
+    {
+      "at": "2026-11-24T10:43:00Z",
+      "op": "order.pay",
+      "id": "A1012"
+    },
+    {
+      "at": "2026-11-24T10:46:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1013",
+        "customer": "c-109",
+        "email": "tim.vogel@example.ch",
+        "totalCents": 13990
+      }
+    },
+    {
+      "at": "2026-11-24T10:48:00Z",
+      "op": "order.pay",
+      "id": "A1013"
+    },
+    {
+      "at": "2026-11-24T10:49:00Z",
+      "op": "smtp.flaky",
+      "failures": 3
+    },
+    {
+      "at": "2026-11-24T10:54:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1014",
+        "customer": "c-100",
+        "email": "lena.meier@example.ch",
+        "totalCents": 19990
+      }
+    },
+    {
+      "at": "2026-11-24T10:58:00Z",
+      "op": "order.pay",
+      "id": "A1014"
+    },
+    {
+      "at": "2026-11-24T11:01:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1015",
+        "customer": "c-102",
+        "email": "sara.brunner@example.ch",
+        "totalCents": 10080
+      }
+    },
+    {
+      "at": "2026-11-24T11:02:00Z",
+      "op": "order.pay",
+      "id": "A1015"
+    },
+    {
+      "at": "2026-11-24T11:08:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1016",
+        "customer": "c-104",
+        "email": "mia.huber@example.ch",
+        "totalCents": 12490
+      }
+    },
+    {
+      "at": "2026-11-24T11:10:00Z",
+      "op": "order.pay",
+      "id": "A1016"
+    },
+    {
+      "at": "2026-11-24T11:13:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1017",
+        "customer": "c-104",
+        "email": "mia.huber@example.ch",
+        "totalCents": 14580
+      }
+    },
+    {
+      "at": "2026-11-24T11:17:00Z",
+      "op": "order.pay",
+      "id": "A1017"
+    },
+    {
+      "at": "2026-11-24T11:26:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1018",
+        "customer": "c-105",
+        "email": "noah.baumann@example.ch",
+        "totalCents": 18580
+      }
+    },
+    {
+      "at": "2026-11-24T11:29:00Z",
+      "op": "order.pay",
+      "id": "A1018"
+    },
+    {
+      "at": "2026-11-24T11:35:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1019",
+        "customer": "c-109",
+        "email": "tim.vogel@example.ch",
+        "totalCents": 14580
+      }
+    },
+    {
+      "at": "2026-11-24T11:36:00Z",
+      "op": "order.pay",
+      "id": "A1019"
+    },
+    {
+      "at": "2026-11-24T14:30:00Z",
+      "op": "config.change",
+      "config": {
+        "version": "2026-11-24.2",
+        "shopName": "Velo Werk",
+        "mail": {
+          "from": "shop@velowerk.example",
+          "replyTo": "support@velowerk.example"
+        },
+        "smtp": {
+          "host": "smtp.mailrelay.example",
+          "user": "velowerk"
+        },
+        "loyalty": {
+          "pointsPerChf": 2
+        },
+        "webhooks": {
+          "urls": [
+            "https://erp.velowerk.example/hooks/orders"
+          ]
+        }
+      }
+    },
+    {
+      "at": "2026-11-24T14:35:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1020",
+        "customer": "c-100",
+        "email": "lena.meier@example.ch",
+        "totalCents": 8490
+      }
+    },
+    {
+      "at": "2026-11-24T14:39:00Z",
+      "op": "order.pay",
+      "id": "A1020"
+    },
+    {
+      "at": "2026-11-24T14:50:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1021",
+        "customer": "c-109",
+        "email": "tim.vogel@example.ch",
+        "totalCents": 13580
+      }
+    },
+    {
+      "at": "2026-11-24T14:53:00Z",
+      "op": "order.pay",
+      "id": "A1021"
+    },
+    {
+      "at": "2026-11-24T15:03:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1022",
+        "customer": "c-107",
+        "email": "leon.graf@example.ch",
+        "totalCents": 4080
+      }
+    },
+    {
+      "at": "2026-11-24T15:06:00Z",
+      "op": "order.pay",
+      "id": "A1022"
+    },
+    {
+      "at": "2026-11-24T15:16:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1023",
+        "customer": "c-105",
+        "email": "noah.baumann@example.ch",
+        "totalCents": 17490
+      }
+    },
+    {
+      "at": "2026-11-24T15:18:00Z",
+      "op": "order.pay",
+      "id": "A1023"
+    },
+    {
+      "at": "2026-11-24T15:29:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1024",
+        "customer": "c-101",
+        "email": "jonas.keller@example.ch",
+        "totalCents": 11080
+      }
+    },
+    {
+      "at": "2026-11-24T15:31:00Z",
+      "op": "order.pay",
+      "id": "A1024"
+    },
+    {
+      "at": "2026-11-24T15:34:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1025",
+        "customer": "c-108",
+        "email": "anna.roth@example.ch",
+        "totalCents": 12080
+      }
+    },
+    {
+      "at": "2026-11-24T15:37:00Z",
+      "op": "order.pay",
+      "id": "A1025"
+    },
+    {
+      "at": "2026-11-24T15:48:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1026",
+        "customer": "c-105",
+        "email": "noah.baumann@example.ch",
+        "totalCents": 21080
+      }
+    },
+    {
+      "at": "2026-11-24T15:52:00Z",
+      "op": "order.pay",
+      "id": "A1026"
+    },
+    {
+      "at": "2026-11-24T15:54:00Z",
+      "op": "order.refund",
+      "id": "A1025"
+    },
+    {
+      "at": "2026-11-24T16:01:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1027",
+        "customer": "c-107",
+        "email": "leon.graf@example.ch",
+        "totalCents": 13990
+      }
+    },
+    {
+      "at": "2026-11-24T16:04:00Z",
+      "op": "order.pay",
+      "id": "A1027"
+    },
+    {
+      "at": "2026-11-24T16:09:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1028",
+        "customer": "c-102",
+        "email": "sara.brunner@example.ch",
+        "totalCents": 6080
+      }
+    },
+    {
+      "at": "2026-11-24T16:13:00Z",
+      "op": "order.pay",
+      "id": "A1028"
+    },
+    {
+      "at": "2026-11-24T16:18:00Z",
+      "op": "order.create",
+      "order": {
+        "id": "A1029",
+        "customer": "c-107",
+        "email": "leon.graf@example.ch",
+        "totalCents": 6490
+      }
+    },
+    {
+      "at": "2026-11-24T16:21:00Z",
+      "op": "order.pay",
+      "id": "A1029"
+    }
+  ]
+}

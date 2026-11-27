@@ -1,0 +1,31 @@
+{
+  "id": "h24-split-largest-remainder",
+  "set": "hard2",
+  "title": "Bill and invoice splits do not add up to the total",
+  "measures": "Correct math: exact largest-remainder allocation over decimal weights (numbers read via their shortest decimal string), floor toward minus infinity, equal remainders to the lower index, negative totals mirrored, no -0, and weightless orders splitting shipping equally. The tempting fix is a float largest-remainder (or rounding plus residual), which passes the issue example but fails hidden tests on exact ties with decimal weights (0.7/0.1, 1.1/2.2/3.3), mirrored negative discounts, totals near MAX_SAFE_INTEGER, and a property test checking sum, mirror symmetry and distance to the exact quota.",
+  "prompt": "Bill splits do not add up. allocate(10000, [1, 1, 1]) (100.00 split three ways) returns [3333, 3333, 3333], so the receipt is one cent short, and splitting 0.05 between six people hands out 0.06. The docs say it should be [3334, 3333, 3333]. Finance needs the parts to always add up to the total and the same result on every re-run, the rules are in docs/allocation.md. Order discounts and shipping go through the same code.",
+  "timeoutMinutes": 15,
+  "setup": {
+    "commits": [
+      {
+        "message": "feat: bill and order adjustment splitting",
+        "dir": "commit-app"
+      }
+    ]
+  },
+  "allowedPaths": [
+    "src/**",
+    "test/**",
+    "data/**",
+    "scripts/**",
+    "docs/**",
+    "*.md",
+    ".senior/**",
+    "package.json"
+  ],
+  "pass": [
+    "hidden",
+    "scope",
+    "visible"
+  ]
+}

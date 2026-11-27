@@ -9,7 +9,7 @@
 //   5. decide   adopt only with a dev gain, no holdout loss and no control loss (lib/evolve.mjs `decide`);
 //   6. record   every attempt goes to evals/bench/evolution/log.jsonl, won or lost, so no idea is tried twice blind;
 //   7. pr       with --pr, an adopted change becomes a draft pull request. Merging stays with a person.
-// Usage: node evals/bench/evolve.mjs [--model sonnet] [--proposer opus] [--pool <ids>|all] [--from <results>]
+// Usage: node evals/bench/evolve.mjs [--backend claude|codex] [--model sonnet] [--proposer opus] [--pool <ids>|all] [--from <results>]
 //          [--trials 2] [--parallel 3] [--budget 25] [--pr]
 // Needs what the claude bench needs (a login in CLAUDE_CODE_OAUTH_TOKEN, no user CLAUDE.md reaching the runs).
 import { spawn, spawnSync } from 'node:child_process';
@@ -23,7 +23,8 @@ const opt = (name, fallback) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 && argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[i + 1] : fallback;
 };
-const MODEL = opt('model', 'sonnet');
+const BACKEND = opt('backend', 'claude');
+const MODEL = opt('model', BACKEND === 'codex' ? 'gpt-6.1-sol' : 'sonnet');
 const PROPOSER = opt('proposer', 'opus');
 const TRIALS = opt('trials', '2');
 const PARALLEL = opt('parallel', '3');
@@ -39,7 +40,7 @@ const sh = (cmd, args, cwd, env) => spawnSync(cmd, args, { cwd, env: env ?? proc
 /** Runs one bench batch from `cwd`, echoing its progress, and returns its results folder. */
 function bench(cwd, args, env = process.env) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, ['evals/bench/bench.mjs', 'run', '--backend', 'claude', '--model', MODEL, ...args], { cwd, env, stdio: ['ignore', 'pipe', 'inherit'] });
+    const child = spawn(process.execPath, ['evals/bench/bench.mjs', 'run', '--backend', BACKEND, '--model', MODEL, ...args], { cwd, env, stdio: ['ignore', 'pipe', 'inherit'] });
     let out = '';
     child.stdout.on('data', (d) => { out += d; process.stdout.write(d); });
     child.on('close', (code) => {
@@ -52,7 +53,7 @@ function bench(cwd, args, env = process.env) {
 
 function record(entry) {
   mkdirSync(join(REPO_ROOT, 'evals', 'bench', 'evolution'), { recursive: true });
-  appendFileSync(LOG, `${JSON.stringify({ at: new Date().toISOString(), model: MODEL, proposer: PROPOSER, ...entry })}\n`);
+  appendFileSync(LOG, `${JSON.stringify({ at: new Date().toISOString(), backend: BACKEND, model: MODEL, proposer: PROPOSER, ...entry })}\n`);
   console.log(`\nRecorded in ${LOG}: ${entry.verdict}${entry.reasons?.length ? ` (${entry.reasons.join('; ')})` : ''}`);
 }
 
@@ -141,8 +142,22 @@ async function main() {
     // 4. Verify: candidate (`senioros` from the worktree) against current (`senioros-baseline` = this checkout)
     const groups = [...split.dev, ...split.holdout, ...split.control];
     console.log(`\n== Verify on ${groups.length} tasks, ${TRIALS} trials`);
-    const vDir = await bench(cand, ['--arms', 'senioros,senioros-baseline', '--tasks', groups.join(','), '--trials', TRIALS, '--parallel', PARALLEL], { ...process.env, SENIOROS_BENCH_BASELINE: REPO_ROOT });
-    const v = readResults(vDir);
+    // Codex has no baseline arm: the current SeniorOS runs as `senioros` from this checkout, in a second batch.
+    let vDir;
+    let v;
+    if (BACKEND === 'codex') {
+      const runs = ['--arms', 'senioros', '--tasks', groups.join(','), '--trials', TRIALS, '--parallel', PARALLEL];
+      const cDir = await bench(cand, runs);
+      const bDir = await bench(REPO_ROOT, runs);
+      const c = readResults(cDir);
+      const b = readResults(bDir);
+      for (const [task, arms] of Object.entries(b.byTask)) ((c.byTask[task] ??= {})['senioros-baseline'] = arms.senioros);
+      vDir = `${cDir} + ${bDir}`;
+      v = { byTask: c.byTask, costUsd: c.costUsd + b.costUsd };
+    } else {
+      vDir = await bench(cand, ['--arms', 'senioros,senioros-baseline', '--tasks', groups.join(','), '--trials', TRIALS, '--parallel', PARALLEL], { ...process.env, SENIOROS_BENCH_BASELINE: REPO_ROOT });
+      v = readResults(vDir);
+    }
     spent += v.costUsd;
     const g = Object.fromEntries(['dev', 'holdout', 'control'].map((k) => [k, { c: tally(v.byTask, split[k], 'senioros'), b: tally(v.byTask, split[k], 'senioros-baseline') }]));
     // 5. Decide

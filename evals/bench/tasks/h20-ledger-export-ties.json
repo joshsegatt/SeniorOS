@@ -1,0 +1,11 @@
+{
+  "id": "h20-ledger-export-ties",
+  "set": "hard2",
+  "title": "Monthly CSV export drops transactions (reporter blames CSV quoting)",
+  "measures": "Real cause: the shared keyset pagination (cursor holds only bookedAt, store scan compares bookedAt strictly with no tiebreak) skips rows whenever a page boundary falls inside a bank batch with equal booking times, which also breaks the transactions API and the reconciliation job. The tempting fix makes the export read store.all() (or touches csv.js), which passes the reporter's export but hidden tests also walk the API in both orders, per account and the reconcile job, require statement order inside batches, and require cursor tokens persisted by clients from the old {t} format to keep resuming without re-sending rows.",
+  "prompt": "The October CSV export for our accountant is missing transactions. I ran `node scripts/export.js data/statement-2026-10.jsonl out.csv` and it says `imported 237 transactions`, but out.csv only has 223 data rows. Two of the missing ones I checked by hand are tx-103 (\"Office supplies, Migros\") and tx-212 (Client dinner, \"Kronenhalle\") - both have commas and/or quotes in the memo, so I'm pretty sure the CSV escaping in src/export/csv.js is eating those rows (maybe Excel-style quoting is off). Can you fix the export? The accountant needs the complete file by Friday and the totals have to match the bank statement.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: ledger service with statement import, API, CSV export and reconciliation", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json", "out.csv"],
+  "pass": ["hidden", "scope", "visible"]
+}

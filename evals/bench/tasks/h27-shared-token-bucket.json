@@ -1,0 +1,31 @@
+{
+  "id": "h27-shared-token-bucket",
+  "set": "hard2",
+  "title": "Shared Redis token bucket lets pods exceed the partner API limit and starves steady traffic",
+  "measures": "The limiter does get -> compute -> set against a shared store, so concurrent callers in different pods spend the same token (including the first write for a new key and the refill written on denial), and its refill rounds tokens down and resets the timestamp, so traffic faster than one token per gap never refills; drifting pod clocks must not move the timestamp backwards either. The tempting fix (an in-process per-key mutex plus fractional refill with negative elapsed time clamped) passes the single-pod scenario from the issue, but hidden tests run several limiter instances on a store with interleaving latency, a deterministic clock with time moving while calls are in flight, skewed pod clocks and acquire() waiters, and check exact admission counts and the capacity + rate*T budget.",
+  "prompt": "Acme 429s again: our rate limiter isn't holding\n\nWe got Acme 429s three times this week and a warning that the account gets suspended for an hour next time. Our limiter is set to 45 req/s (capacity 45, ratePerSec 45) and Acme's limit is 50/s, so we should have margin. Their logs show bursts of 70-80 requests in a second from us, always when the month-end autoscaling kicks in (we go from 6 to 12 sync pods, plus the cron jobs, all on the same Redis).\n\nThe weird thing is that the opposite happens too. When the shipment sync runs as a steady stream (it's about 60-70 req/s of demand, so it should just get the 45/s), `acquire()` lets the first burst through and then almost everything sits waiting or times out with RateLimitError. Grafana shows us doing ~0 req/s to Acme for minutes at a time while the queue backs up.\n\nLocally I can reproduce something: 20 concurrent `tryTake('acme')` calls in one process with the memory store and a capacity of 5 all come back allowed. docs/rate-limits.md has what the limiter has to guarantee and our deployment facts (pod clocks drift by up to ~1 s). The store interface (memory/Redis) is in the README; please don't add Redis-only tricks, the memory store and Redis store must both work.",
+  "timeoutMinutes": 15,
+  "setup": {
+    "commits": [
+      {
+        "message": "feat: shared token-bucket limiter for the Acme client",
+        "dir": "commit-app"
+      }
+    ]
+  },
+  "allowedPaths": [
+    "src/**",
+    "test/**",
+    "data/**",
+    "scripts/**",
+    "docs/**",
+    "*.md",
+    ".senior/**",
+    "package.json"
+  ],
+  "pass": [
+    "hidden",
+    "scope",
+    "visible"
+  ]
+}

@@ -64,6 +64,9 @@ export function prepareCodex(arms, model, userSkills = join(homedir(), '.agents'
   if (!arms.includes('senioros')) return;
   // The cache is keyed by version, so an edited checkout at the same version would otherwise run stale code.
   rmSync(join(CODEX_HOME, 'plugins', 'cache', 'senioros'), { recursive: true, force: true });
+  // The marketplace may point at another checkout (a candidate worktree, an earlier bench): Codex refuses to add it from
+  // a second place, so it is removed first. Absent, the remove fails harmlessly.
+  codex(['plugin', 'marketplace', 'remove', 'senioros']);
   for (const args of [['plugin', 'marketplace', 'add', SHELL ? `"${REPO_ROOT}"` : REPO_ROOT], ['plugin', 'add', 'senioros@senioros']]) {
     const r = codex(args);
     if (r.code !== 0) throw new Error(`codex ${args.join(' ')} failed: ${r.text.trim().slice(0, 300)}`);

@@ -1,0 +1,31 @@
+{
+  "id": "h25-bigint-fx-convert",
+  "set": "hard2",
+  "title": "FX conversion of balances above 2^53 is off",
+  "measures": "Correct math: BigInt minor units times the exact decimal rate (all of its digits), scaled by the currency exponents, rounded once half-to-even (symmetric for negatives); inverse quotes are exactly 1/rate, USD-pivot cross rates multiply exact legs and round once, totals round once per currency, and parse/format are exact BigInt string operations. The tempting fix moves to BigInt with the rate scaled to 8 decimals via Number and half-up rounding, which passes the issue example but fails hidden tests on half-even ties, negative amounts, long-decimal rates, exact inverses, single rounding through the pivot, and per-currency totals.",
+  "prompt": "The treasury report is wrong for our big accounts. convert(9223372036854775807n, 'USD', 'CHF', '0.8794') returns 8111033369210089472n but the bank confirmation says 8111033369210089845n (81,110,333,692,100,898.45 CHF). The same account prints as 92,233,720,368,547,760.00 USD instead of 92,233,720,368,547,758.07. Smaller balances look fine. The FX rules the auditors check are in docs/fx-rules.md.",
+  "timeoutMinutes": 15,
+  "setup": {
+    "commits": [
+      {
+        "message": "feat: treasury fx conversion and rate table",
+        "dir": "commit-app"
+      }
+    ]
+  },
+  "allowedPaths": [
+    "src/**",
+    "test/**",
+    "data/**",
+    "scripts/**",
+    "docs/**",
+    "*.md",
+    ".senior/**",
+    "package.json"
+  ],
+  "pass": [
+    "hidden",
+    "scope",
+    "visible"
+  ]
+}

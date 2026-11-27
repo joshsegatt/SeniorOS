@@ -1,0 +1,11 @@
+{
+  "id": "h22-duplicate-paid-emails-reload",
+  "set": "hard2",
+  "title": "Customers get the 'Payment received' email two or three times (reporter blames SMTP retry)",
+  "measures": "Real cause: every config hot reload calls wireSubscribers() again, which builds fresh handler closures (so bus.on's same-function dedupe never applies) and stacks them on top of the old ones; after N reloads each order event runs N+1 email, loyalty and webhook handlers, the old ones with stale config. The tempting fix dedupes in the mailer/sender (or skips re-wiring, or clears all listeners), which passes the reporter's one-email-per-order replay but hidden tests also check loyalty points and webhooks after reloads, that the live config (replyTo, SMTP user, points rate, webhook URLs) applies after a reload, that the audit trail keeps its own listener, and that a rejected reload leaves the running handlers intact.",
+  "prompt": "Since Monday (24 Nov) customers are getting the \"Payment received\" email twice, some even three times. Monday our SMTP relay was flaky (you can see `retrying send to ... after ECONNRESET` in the logs around 11:00), so I'm pretty sure src/mail/sender.js retries a send that actually went through and the customer gets a copy. Please make the mailer stop sending duplicates - each order should get exactly one payment email. You can reproduce with the ops journal from that day: `node scripts/replay.js data/ops-2026-11-24.json`.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: order backend with events, emails, loyalty, webhooks and config hot reload", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

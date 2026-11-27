@@ -1,0 +1,237 @@
+{"booked":"2026-10-01T06:00:00Z","account":"CH-OPS","amount":"-750.84","memo":"Swisscom, mobile"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-PAYROLL","amount":"-728.99","memo":"Coffee beans"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-OPS","amount":"-730.34","memo":"Software subscription"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-PAYROLL","amount":"-674.24","memo":"Office supplies, Migros"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-TAX","amount":"397.68","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-OPS","amount":"-259.09","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-OPS","amount":"-475.23","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-OPS","amount":"-411.61","memo":"Office supplies, Migros"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-TAX","amount":"-779.70","memo":"Salary"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-PAYROLL","amount":"-16.66","memo":"Parking"}
+{"booked":"2026-10-01T06:00:00Z","account":"CH-OPS","amount":"-253.94","memo":"Swisscom, mobile"}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-PAYROLL","amount":"-148.41","memo":"AHV contribution"}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-TAX","amount":"623.64","memo":"Taxi, airport"}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-OPS","amount":"-25.96","memo":"Coffee beans"}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-OPS","amount":"-43.81","memo":"Coffee beans"}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-OPS","amount":"347.49","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-OPS","amount":"-9.03","memo":"Parking"}
+{"booked":"2026-10-01T18:00:00Z","account":"CH-OPS","amount":"-603.25","memo":"Taxi, airport"}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-TAX","amount":"-555.69","memo":"Salary"}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-PAYROLL","amount":"888.31","memo":"Postage"}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-OPS","amount":"-594.26","memo":"Postage"}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-OPS","amount":"-653.57","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-PAYROLL","amount":"-432.76","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-TAX","amount":"-780.06","memo":"Software subscription"}
+{"booked":"2026-10-02T06:00:00Z","account":"CH-OPS","amount":"-384.44","memo":"Software subscription"}
+{"booked":"2026-10-02T18:00:00Z","account":"CH-OPS","amount":"-514.09","memo":"Rent October"}
+{"booked":"2026-10-02T18:00:00Z","account":"CH-OPS","amount":"-777.66","memo":"Bank fee"}
+{"booked":"2026-10-02T18:00:00Z","account":"CH-OPS","amount":"-496.93","memo":"Software subscription"}
+{"booked":"2026-10-02T18:00:00Z","account":"CH-OPS","amount":"-781.40","memo":"Rent October"}
+{"booked":"2026-10-02T18:00:00Z","account":"CH-OPS","amount":"-435.02","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-02T18:00:00Z","account":"CH-OPS","amount":"-401.09","memo":"Rent October"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"-202.65","memo":"Taxi, airport"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"-811.22","memo":"Parking"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-TAX","amount":"-311.77","memo":"Parking"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"-60.19","memo":"Swisscom, mobile"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-PAYROLL","amount":"281.35","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"45.61","memo":"Postage"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"-366.44","memo":"Salary"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-PAYROLL","amount":"-812.10","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"636.09","memo":"Taxi, airport"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"-346.12","memo":"Rent October"}
+{"booked":"2026-10-05T06:00:00Z","account":"CH-OPS","amount":"-469.20","memo":"Parking"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-PAYROLL","amount":"-595.02","memo":"Coffee beans"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-OPS","amount":"-209.29","memo":"Swisscom, mobile"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-OPS","amount":"607.98","memo":"Software subscription"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-TAX","amount":"-866.09","memo":"Swisscom, mobile"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-TAX","amount":"-733.19","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-PAYROLL","amount":"-152.18","memo":"Bank fee"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-OPS","amount":"-129.03","memo":"Postage"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-OPS","amount":"-636.64","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-OPS","amount":"-262.21","memo":"Parking"}
+{"booked":"2026-10-05T18:00:00Z","account":"CH-OPS","amount":"-169.87","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"-783.11","memo":"AHV contribution"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-PAYROLL","amount":"-153.90","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"-685.10","memo":"Taxi, airport"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-TAX","amount":"-809.29","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"-679.92","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"461.34","memo":"Postage"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"-882.58","memo":"Swisscom, mobile"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-PAYROLL","amount":"-267.17","memo":"Taxi, airport"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-PAYROLL","amount":"-108.61","memo":"Swisscom, mobile"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-TAX","amount":"892.40","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-PAYROLL","amount":"828.21","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-TAX","amount":"619.73","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"-775.38","memo":"Coffee beans"}
+{"booked":"2026-10-06T06:00:00Z","account":"CH-OPS","amount":"-246.93","memo":"Postage"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-TAX","amount":"-591.15","memo":"Parking"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"435.95","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"29.38","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"595.57","memo":"Bank fee"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"-378.72","memo":"Taxi, airport"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-TAX","amount":"-411.72","memo":"Bank fee"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"-810.91","memo":"Taxi, airport"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-PAYROLL","amount":"-480.36","memo":"Software subscription"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"80.59","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-OPS","amount":"-667.11","memo":"Taxi, airport"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-PAYROLL","amount":"-769.65","memo":"Parking"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-TAX","amount":"-471.91","memo":"Postage"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-TAX","amount":"-251.70","memo":"Taxi, airport"}
+{"booked":"2026-10-06T18:00:00Z","account":"CH-PAYROLL","amount":"-400.38","memo":"Bank fee"}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-OPS","amount":"327.45","memo":"Software subscription"}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-OPS","amount":"-113.25","memo":"Taxi, airport"}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-PAYROLL","amount":"817.84","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-TAX","amount":"-578.73","memo":"Software subscription"}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-OPS","amount":"880.88","memo":"Taxi, airport"}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-PAYROLL","amount":"-668.04","memo":"Bank fee"}
+{"booked":"2026-10-07T06:00:00Z","account":"CH-PAYROLL","amount":"-11.68","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-TAX","amount":"-752.50","memo":"Swisscom, mobile"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-PAYROLL","amount":"-736.38","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-OPS","amount":"-815.45","memo":"Bank fee"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-OPS","amount":"-657.43","memo":"Bank fee"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-PAYROLL","amount":"-616.75","memo":"Taxi, airport"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-OPS","amount":"-513.09","memo":"AHV contribution"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-OPS","amount":"-41.15","memo":"Bank fee"}
+{"booked":"2026-10-07T18:00:00Z","account":"CH-OPS","amount":"421.87","memo":"Coffee beans"}
+{"booked":"2026-10-08T06:00:00Z","account":"CH-OPS","amount":"-27.27","memo":"Software subscription"}
+{"booked":"2026-10-08T06:00:00Z","account":"CH-OPS","amount":"-154.22","memo":"Parking"}
+{"booked":"2026-10-08T06:00:00Z","account":"CH-OPS","amount":"-466.28","memo":"Office supplies, Migros"}
+{"booked":"2026-10-08T06:00:00Z","account":"CH-OPS","amount":"-110.36","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-08T06:00:00Z","account":"CH-TAX","amount":"-864.80","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-08T06:00:00Z","account":"CH-OPS","amount":"-461.45","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-OPS","amount":"-558.77","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-OPS","amount":"-779.04","memo":"Office supplies, Migros"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-TAX","amount":"-137.04","memo":"AHV contribution"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-PAYROLL","amount":"-516.77","memo":"Coffee beans"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-OPS","amount":"180.14","memo":"AHV contribution"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-TAX","amount":"-624.73","memo":"Taxi, airport"}
+{"booked":"2026-10-08T18:00:00Z","account":"CH-OPS","amount":"-284.00","memo":"Taxi, airport"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-PAYROLL","amount":"-719.07","memo":"Taxi, airport"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"-552.19","memo":"Taxi, airport"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-TAX","amount":"493.46","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"-662.83","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-PAYROLL","amount":"-106.91","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"-786.87","memo":"Parking"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"512.47","memo":"Coffee beans"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"-478.25","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"-430.43","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-09T06:00:00Z","account":"CH-OPS","amount":"-889.77","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-OPS","amount":"-805.53","memo":"Software subscription"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-TAX","amount":"-224.71","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-OPS","amount":"-89.78","memo":"Office supplies, Migros"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-OPS","amount":"-39.67","memo":"Software subscription"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-TAX","amount":"640.00","memo":"AHV contribution"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-OPS","amount":"-349.61","memo":"Rent October"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-PAYROLL","amount":"-115.96","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-PAYROLL","amount":"-655.60","memo":"Office supplies, Migros"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-OPS","amount":"425.84","memo":"Swisscom, mobile"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-OPS","amount":"215.37","memo":"AHV contribution"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-TAX","amount":"681.75","memo":"AHV contribution"}
+{"booked":"2026-10-09T18:00:00Z","account":"CH-PAYROLL","amount":"-897.76","memo":"Software subscription"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"-662.18","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"-640.10","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"-263.87","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-TAX","amount":"-310.84","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-TAX","amount":"-616.67","memo":"Office supplies, Migros"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"-842.67","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"-455.67","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-PAYROLL","amount":"-165.87","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"208.34","memo":"Swisscom, mobile"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-PAYROLL","amount":"-320.75","memo":"Swisscom, mobile"}
+{"booked":"2026-10-12T06:00:00Z","account":"CH-OPS","amount":"-234.69","memo":"Office supplies, Migros"}
+{"booked":"2026-10-12T18:00:00Z","account":"CH-TAX","amount":"-508.66","memo":"Parking"}
+{"booked":"2026-10-12T18:00:00Z","account":"CH-PAYROLL","amount":"-385.58","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-12T18:00:00Z","account":"CH-OPS","amount":"538.75","memo":"Taxi, airport"}
+{"booked":"2026-10-12T18:00:00Z","account":"CH-TAX","amount":"-135.55","memo":"Salary"}
+{"booked":"2026-10-12T18:00:00Z","account":"CH-OPS","amount":"-378.85","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-TAX","amount":"-635.37","memo":"Office supplies, Migros"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-OPS","amount":"-55.40","memo":"AHV contribution"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-OPS","amount":"383.02","memo":"Coffee beans"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-OPS","amount":"-435.19","memo":"Coffee beans"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-OPS","amount":"259.88","memo":"Parking"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-OPS","amount":"719.57","memo":"Taxi, airport"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-OPS","amount":"-767.32","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-PAYROLL","amount":"266.91","memo":"Bank fee"}
+{"booked":"2026-10-13T06:00:00Z","account":"CH-PAYROLL","amount":"277.42","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-13T18:00:00Z","account":"CH-OPS","amount":"-677.80","memo":"Parking"}
+{"booked":"2026-10-13T18:00:00Z","account":"CH-OPS","amount":"-530.14","memo":"Coffee beans"}
+{"booked":"2026-10-13T18:00:00Z","account":"CH-OPS","amount":"693.13","memo":"Office supplies, Migros"}
+{"booked":"2026-10-13T18:00:00Z","account":"CH-OPS","amount":"-283.04","memo":"Software subscription"}
+{"booked":"2026-10-13T18:00:00Z","account":"CH-TAX","amount":"-594.36","memo":"Salary"}
+{"booked":"2026-10-13T18:00:00Z","account":"CH-PAYROLL","amount":"-271.79","memo":"AHV contribution"}
+{"booked":"2026-10-14T06:00:00Z","account":"CH-TAX","amount":"-396.91","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-14T06:00:00Z","account":"CH-TAX","amount":"-502.81","memo":"Office supplies, Migros"}
+{"booked":"2026-10-14T06:00:00Z","account":"CH-OPS","amount":"-180.25","memo":"Coffee beans"}
+{"booked":"2026-10-14T06:00:00Z","account":"CH-OPS","amount":"-140.24","memo":"Taxi, airport"}
+{"booked":"2026-10-14T06:00:00Z","account":"CH-PAYROLL","amount":"-474.05","memo":"Office supplies, Migros"}
+{"booked":"2026-10-14T06:00:00Z","account":"CH-OPS","amount":"-140.72","memo":"Salary"}
+{"booked":"2026-10-14T18:00:00Z","account":"CH-PAYROLL","amount":"723.25","memo":"Rent October"}
+{"booked":"2026-10-14T18:00:00Z","account":"CH-OPS","amount":"-97.51","memo":"Parking"}
+{"booked":"2026-10-14T18:00:00Z","account":"CH-OPS","amount":"-72.90","memo":"Coffee beans"}
+{"booked":"2026-10-14T18:00:00Z","account":"CH-TAX","amount":"-430.97","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-14T18:00:00Z","account":"CH-PAYROLL","amount":"252.54","memo":"Office supplies, Migros"}
+{"booked":"2026-10-15T06:00:00Z","account":"CH-OPS","amount":"-24.05","memo":"Postage"}
+{"booked":"2026-10-15T06:00:00Z","account":"CH-OPS","amount":"-226.60","memo":"Postage"}
+{"booked":"2026-10-15T06:00:00Z","account":"CH-PAYROLL","amount":"-259.04","memo":"Office supplies, Migros"}
+{"booked":"2026-10-15T06:00:00Z","account":"CH-OPS","amount":"-534.08","memo":"AHV contribution"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-TAX","amount":"-299.15","memo":"Software subscription"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-OPS","amount":"-369.94","memo":"AHV contribution"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-OPS","amount":"-13.84","memo":"Bank fee"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-OPS","amount":"714.88","memo":"Coffee beans"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-PAYROLL","amount":"179.64","memo":"Postage"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-PAYROLL","amount":"729.42","memo":"Salary"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-PAYROLL","amount":"-763.88","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-OPS","amount":"-571.45","memo":"Software subscription"}
+{"booked":"2026-10-15T18:00:00Z","account":"CH-OPS","amount":"-134.06","memo":"Taxi, airport"}
+{"booked":"2026-10-16T06:00:00Z","account":"CH-PAYROLL","amount":"-139.98","memo":"Parking"}
+{"booked":"2026-10-16T06:00:00Z","account":"CH-OPS","amount":"-179.80","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-16T06:00:00Z","account":"CH-TAX","amount":"-306.04","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-16T06:00:00Z","account":"CH-OPS","amount":"-383.89","memo":"Taxi, airport"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-OPS","amount":"-504.93","memo":"Parking"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-OPS","amount":"-99.40","memo":"Coffee beans"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-OPS","amount":"-144.48","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-OPS","amount":"-145.23","memo":"Software subscription"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-OPS","amount":"-758.15","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-PAYROLL","amount":"-385.33","memo":"Software subscription"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-PAYROLL","amount":"-612.92","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-PAYROLL","amount":"-444.23","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-16T18:00:00Z","account":"CH-TAX","amount":"-485.71","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-PAYROLL","amount":"-704.49","memo":"AHV contribution"}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-OPS","amount":"327.91","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-PAYROLL","amount":"42.05","memo":"Coffee beans"}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-OPS","amount":"-487.83","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-TAX","amount":"-60.77","memo":"Salary"}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-OPS","amount":"-673.14","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-19T06:00:00Z","account":"CH-TAX","amount":"-277.70","memo":"Office supplies, Migros"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-TAX","amount":"-484.44","memo":"Parking"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-OPS","amount":"44.69","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-TAX","amount":"-27.29","memo":"Taxi, airport"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-OPS","amount":"-610.14","memo":"Taxi, airport"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-OPS","amount":"-198.91","memo":"Rent October"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-OPS","amount":"-541.24","memo":"Taxi, airport"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-PAYROLL","amount":"-128.51","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-OPS","amount":"-342.15","memo":"Bank fee"}
+{"booked":"2026-10-19T18:00:00Z","account":"CH-OPS","amount":"-502.50","memo":"Office supplies, Migros"}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-OPS","amount":"-270.21","memo":"Swisscom, mobile"}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-TAX","amount":"-314.93","memo":"Parking"}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-OPS","amount":"-250.97","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-TAX","amount":"-645.58","memo":"Rent October"}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-OPS","amount":"-465.18","memo":"Client dinner, \"Kronenhalle\""}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-TAX","amount":"205.26","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-OPS","amount":"862.71","memo":"Printer toner, Digitec"}
+{"booked":"2026-10-20T06:00:00Z","account":"CH-OPS","amount":"-794.42","memo":"SBB travel, Zurich-Bern"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-TAX","amount":"-611.08","memo":"Parking"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-PAYROLL","amount":"-139.86","memo":"Parking"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-OPS","amount":"-782.83","memo":"AHV contribution"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-PAYROLL","amount":"-90.31","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-OPS","amount":"-723.59","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-TAX","amount":"-629.79","memo":"Bank fee"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-OPS","amount":"-290.88","memo":"Postage"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-OPS","amount":"-631.67","memo":"Lunch, team \"offsite\""}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-TAX","amount":"885.44","memo":"Swisscom, mobile"}
+{"booked":"2026-10-20T18:00:00Z","account":"CH-OPS","amount":"126.49","memo":"Swisscom, mobile"}
+{"booked":"2026-10-21T06:00:00Z","account":"CH-PAYROLL","amount":"-418.69","memo":"AHV contribution"}
+{"booked":"2026-10-21T06:00:00Z","account":"CH-PAYROLL","amount":"583.39","memo":"Parking"}
+{"booked":"2026-10-21T06:00:00Z","account":"CH-TAX","amount":"-899.72","memo":"VAT Q3 prepayment"}
+{"booked":"2026-10-21T06:00:00Z","account":"CH-PAYROLL","amount":"783.36","memo":"Parking"}
+{"booked":"2026-10-21T06:00:00Z","account":"CH-OPS","amount":"-581.47","memo":"Bank fee"}

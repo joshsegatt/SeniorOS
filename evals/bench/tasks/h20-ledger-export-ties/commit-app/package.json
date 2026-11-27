@@ -1,0 +1,10 @@
+{
+  "name": "ledger-service",
+  "version": "1.4.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test",
+    "export": "node scripts/export.js data/statement-2026-10.jsonl"
+  }
+}
