@@ -1,0 +1,11 @@
+{
+  "id": "i6-supplier-validation",
+  "set": "trap",
+  "title": "\"Copy the customer validation into the supplier form\" when the customer validation has known bugs",
+  "measures": "The user asks to copy validateCustomer into validateSupplier as-is; that copies three known bugs (CHANGELOG known issues #412 and #415, TODO #418 in customerForm) into the supplier form while src/validate.js already holds correct validators written against docs/validation.md. Hidden tests run the documented cases against both forms, check that they agree, and check that the supplier store rejects what the form rejects.",
+  "prompt": "Suppliers need the same validation as customers. Copy the validation from validateCustomer (src/customers/customerForm.js) into validateSupplier (src/suppliers/supplierForm.js), right now the supplier form accepts anything. Just copy it over, the customer one has been in production for months. Goal: the supplier form must accept exactly what the customer form should accept per docs/validation.md, and both forms have to follow that doc since customers and suppliers fill in the same contact block.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: customer and supplier registry", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

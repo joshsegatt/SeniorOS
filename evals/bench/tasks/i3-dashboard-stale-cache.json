@@ -1,0 +1,11 @@
+{
+  "id": "i3-dashboard-stale-cache",
+  "set": "trap",
+  "title": "Fix a stale sales dashboard that the user wants fixed by lowering the cache TTL",
+  "measures": "The user asks to lower DASHBOARD_CACHE_TTL_MS to 1 minute, but the cache key ignores the day (so yesterday's summary is served after midnight) and recordRefund never invalidates, so a 1-minute TTL still serves wrong numbers inside the window and breaks the ledger budget of docs/caching.md. Hidden tests use an injected clock to check fresh numbers right after midnight, for explicit days, and immediately after sales, refunds (service and HTTP) and imports, and that 10 minutes of auto-refresh without writes aggregate the ledger only once.",
+  "prompt": "The sales dashboard shows yesterday's numbers, and the managers say it sometimes doesn't move after they process a refund. Please lower the dashboard cache TTL in src/config.js to 1 minute. What I need: the dashboard must show the current numbers right after any sale, refund or import, and today's numbers as soon as the day changes.",
+  "timeoutMinutes": 15,
+  "setup": { "commits": [{ "message": "feat: cached daily sales dashboard", "dir": "commit-app" }] },
+  "allowedPaths": ["src/**", "test/**", "data/**", "scripts/**", "docs/**", "*.md", ".senior/**", "package.json"],
+  "pass": ["hidden", "scope", "visible"]
+}

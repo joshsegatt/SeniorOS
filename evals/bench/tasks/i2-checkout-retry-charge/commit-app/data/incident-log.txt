@@ -1,0 +1,12 @@
+2026-11-26T09:14:02.118Z INFO  checkout start customer=cu_8812 items=BOOK-1x1,GIFT-50x1
+2026-11-26T09:14:02.390Z INFO  gateway charge ok order=o-48213 charge=ch_9f2a11 amount=8600 CHF
+2026-11-26T09:14:02.391Z ERROR POST /checkout -> 500 internal_error
+2026-11-26T09:14:03.002Z INFO  checkout start customer=cu_3307 items=LAMP-2x1
+2026-11-26T09:14:03.260Z INFO  gateway charge ok order=o-48214 charge=ch_9f2a12 amount=10100 CHF
+2026-11-26T09:14:03.262Z INFO  POST /checkout -> 201 order=o-48214
+2026-11-26T11:40:51.774Z INFO  checkout start customer=cu_5120 items=GIFT-50x2
+2026-11-26T11:40:52.031Z INFO  gateway charge ok order=o-48377 charge=ch_9f2b90 amount=10000 CHF
+2026-11-26T11:40:52.033Z ERROR POST /checkout -> 500 internal_error
+2026-11-26T14:02:10.415Z INFO  checkout start customer=cu_0091 items=BOOK-1x2
+2026-11-26T14:02:10.700Z INFO  gateway charge ok order=o-48502 charge=ch_9f2c41 amount=6500 CHF
+2026-11-26T14:02:10.702Z INFO  POST /checkout -> 201 order=o-48502
