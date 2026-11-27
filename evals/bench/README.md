@@ -670,6 +670,24 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
   refusal ends the run. Runs use `--always-approve`, and under it the SeniorOS guard denies instead of asking, since
   Grok approves a hook's question by itself there.
 
+### Claude Fable 5.2 and GPT-6.1 Sol (November 2026)
+
+SeniorOS 0.11, unchanged, on the newest models, with the six cause-elsewhere tasks of the section above (`o17` `o19`
+`o20` `o36` `o37` `o38`), 2 trials. Fable through the `claude` backend; GPT-6.1 Sol (the newest model the bench's
+Codex login offered) through the `codex` backend, with the user's `~/.agents/skills` moved aside during the runs.
+
+| Model | Alone | SeniorOS 0.11 |
+|---|---|---|
+| Claude Fable 5.2 | 1/12 (1–35%) | **12/12 (76–100%)** |
+| GPT-6.1 Sol, Codex CLI | 0/12 (0–24%) | **12/12 (76–100%)** |
+
+- Alone, both fixed only the function the report named, in about five tool calls; Fable's one pass was on `o38`.
+- Fable cost $0.46 a run alone and about $0.65 with SeniorOS: $5.57 against $0.65 per passing run. Codex runs on a
+  ChatGPT login report no cost. Total spend on Fable, including the overloaded runs: $14.91.
+- Eight Fable runs with SeniorOS first ended on API overload (529) before the agent worked; they were rerun one at a
+  time and the overloaded runs are not counted.
+- These tasks were used to tune 0.11 on Sonnet, so they are not held out; no SeniorOS text was tuned on either model.
+
 ### Hard blind rounds and goal over method (November 2026)
 
 Eighteen new tasks, written blind by agents that never saw SeniorOS, 1 trial each:

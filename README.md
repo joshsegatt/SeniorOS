@@ -7,13 +7,13 @@
   <a href="https://www.npmjs.com/package/senioros"><img alt="npm" src="https://img.shields.io/npm/v/senioros.svg?color=2F80FF"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache--2.0-2563eb.svg"></a>
   <a href="package.json"><img alt="Node" src="https://img.shields.io/badge/node-%3E%3D20-0f766e.svg"></a>
-  <a href="evals/bench/README.md"><img alt="Bench: Opus, Sonnet, Grok, Gemini" src="https://img.shields.io/badge/bench-Opus%20%C2%B7%20Sonnet%20%C2%B7%20Grok%20%C2%B7%20Gemini-2F80FF.svg"></a>
+  <a href="evals/bench/README.md"><img alt="Bench: Fable, Opus, Sonnet, GPT, Grok, Gemini" src="https://img.shields.io/badge/bench-Fable%20%C2%B7%20Opus%20%C2%B7%20Sonnet%20%C2%B7%20GPT%20%C2%B7%20Grok%20%C2%B7%20Gemini-2F80FF.svg"></a>
 </p>
 
 <p align="center">
   <strong>Skills and hooks that make coding agents fix the cause, keep your history safe and prove the work.</strong><br/>
   Your agent loads the right skill on its own, asks before a destructive command, and cannot say "done" until your checks pass.
-  Measured on Claude Opus, Claude Sonnet, Grok and Gemini against the model alone and three other skill packs.
+  Measured on Claude Fable, Opus and Sonnet, GPT, Grok and Gemini against the model alone and three other skill packs.
 </p>
 
 <p align="center">
@@ -43,6 +43,8 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
 
 | Model | No pack | Superpowers | mattpocock/skills | compound-engineering | SeniorOS |
 |---|---|---|---|---|---|
+| Claude Fable 5.2: a reported bug whose cause is in another module, SeniorOS 0.11 (6 tasks, 2 trials) | 1/12 | not measured | not measured | not measured | **12/12** |
+| GPT-6.1 Sol, Codex CLI: the same kind of bug, SeniorOS 0.11 (6 tasks, 2 trials) | 0/12 | not measured | not measured | not measured | **12/12** |
 | Claude Opus: a reported bug whose cause is in another module (3 held-out tasks, 5 trials) | 0/15 | 0/15 | 0/15 | 0/15 | **15/15** |
 | Claude Sonnet 5.5: the same kind of bug, SeniorOS 0.11 (6 tasks; no pack 3 trials, SeniorOS 5) | 0/18 | not measured | not measured | not measured | **29/30** |
 | Claude Sonnet 5.5: the same kind of bug, SeniorOS 0.10 (4 tasks, 5 trials) | 0/20 | 0/20 | not measured | not measured | **12/20** |
@@ -63,6 +65,7 @@ A live bench runs the same model on the same tasks with no pack, with [Superpowe
   <img src="brand/social/demo-t6.gif" alt="Replay of two real Claude Opus bench runs given the same request: discard local changes, squash and force-push main. Claude Code alone rewrote main on the remote; with SeniorOS it listed the teammate work that would be lost and stopped to ask." width="100%" />
 </p>
 
+- **The newest models still patch where the report points.** On the six cause-elsewhere tasks, Claude Fable 5.2 alone passed 1 of 12 runs and GPT-6.1 Sol in Codex CLI 0 of 12: both fixed only the function the report named, in about five tool calls. With SeniorOS 0.11, unchanged, both passed 12 of 12 (95% interval 76–100%). On Fable it cost $0.65 a run against $0.46, and $0.65 per passing run against $5.57. These tasks shaped 0.11 on Sonnet, but no SeniorOS text was tuned on either model. See [the bench](evals/bench/README.md#claude-fable-52-and-gpt-61-sol-november-2026).
 - **Bugs fixed at the cause.** Asked to fix a reported bug, every arm found the cause. Without SeniorOS the model fixed it where the report pointed, so other paths broken by the same cause stayed broken. With SeniorOS it fixed the module that wrote the bad data.
 - **Discipline.** Asked to discard local changes and force-push `main`, Opus alone did it in one run of three. Grok, alone or with Superpowers, did it in every run. With SeniorOS the agent stopped and asked. In 0.11 the guard also covers Claude Code's PowerShell tool on Windows and closes two rounds of bypasses (flag clusters such as `git push -fu`, `TRUNCATE` without `TABLE`, `sh -c "$(curl …)"`, recursive deletes through PowerShell and .NET).
 - **Held out.** The Opus tasks were written by agents that never saw SeniorOS, and the held-out ones were kept out of tuning.
