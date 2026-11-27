@@ -20,6 +20,14 @@ test('every host has the routing rules', () => {
   assert.ok(files.length >= 6, files.join(', '));
 });
 
+test('every host puts the goal over a prescribed method and checks the claims in the request', () => {
+  for (const file of files) {
+    const goal = bullet(readFileSync(path.join(root, file), 'utf8'), 'Goal over method');
+    assert.match(goal, /Check every claim the request makes about the code/, file);
+    assert.match(goal, /Your report says, under \*\*Not applied\*\*, each suggestion you did not follow and why\./, file);
+  }
+});
+
 test('every host routes the same surfaces and the same planning cases', () => {
   for (const file of files) {
     const text = readFileSync(path.join(root, file), 'utf8');

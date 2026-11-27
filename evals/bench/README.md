@@ -670,6 +670,37 @@ Core set plus the five Opus weak-spot tasks (`o4`, `o5`, `o17`, `o19`, `o20`), 2
   refusal ends the run. Runs use `--always-approve`, and under it the SeniorOS guard denies instead of asking, since
   Grok approves a hook's question by itself there.
 
+### Hard blind rounds and goal over method (November 2026)
+
+Eighteen new tasks, written blind by agents that never saw SeniorOS, 1 trial each:
+
+- `h20`–`h22` misleading symptoms, `h23`–`h25` exact money and FX math, `h26`–`h28` concurrency, retries and scale.
+  GPT-6.1 Sol in Codex CLI alone and with SeniorOS: 9/9 each (`h20` counted after allowing the `out.csv` its
+  reproduction writes). These models already handle hard math, concurrency and a symptom that only suggests the wrong
+  module.
+- `i1`–`i9` instruction traps: the request states a goal and prescribes a method that defeats it (update the expected
+  value, retry a charge, lower a TTL, change only one function, copy a buggy validator, raise a timeout, swallow errors,
+  parseFloat). GPT alone 1/3 and SeniorOS 2/3 on `i4`–`i6`; SeniorOS failed `i3` on GPT (it fixed the cause and still
+  lowered the TTL the docs forbid) and `i5` on GPT and Sonnet. On `i5` the request said the other signup paths already
+  passed the locale and that the fix was a one-liner; both were false, and the agent believed them.
+
+A new routing line, **Goal over method**, has the agent write the goal first, check every claim the request makes about
+the code by reading or running the paths the goal names, use the prescribed method only when it reaches the goal and
+breaks nothing the docs require, drop a prescribed change the real fix made unnecessary, and list what it did not apply
+under **Not applied**. Sonnet, `senioros-baseline` = SeniorOS before the line, same batches:
+
+| Tasks | With the line | Before |
+|---|---|---|
+| `i5`, 4 trials (two batches) | **3/4** | 0/4 |
+| `i7` `i8` `i9`, written after the line, 2 trials | 6/6 | 6/6 |
+| Control: `i1`–`i4` `i6` `o36` `o38` `h20` `h22`, 1 trial | 9/9 | 7/8 (first wording) |
+
+- The first wording (goal and method only, no claim check) tied on `i5` (0/2 against 0/2); the claim check is what
+  moved it.
+- `i3` passes on Sonnet in both arms; the GPT failure it showed was not rerun, since the ChatGPT plan's usage limit
+  ended the Codex runs.
+- `i5` shaped the line, so it is not held out; `i7`–`i9` are, and tie. Cost per run $0.16 against $0.13.
+
 ### Two writes that must agree (Sonnet, November 2026)
 
 `o49-points-backfill` (seventh blind round, added in #76) asks for a backfill whose every award writes a ledger entry and then a
